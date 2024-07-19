@@ -5,32 +5,63 @@
 
 <h1>Multimedia fetch data webapp</h1>
 <ol type="A">
-	<li>Enter URL.</li>
-	<ul>
-		<li>Discrete data: https://nominatim.openstreetmap.org/search?q=LOCATION_NAME&format=json</li>
-		<li>Time-series data: https://api.open-meteo.com/v1/forecast?latitude=LATITUDE&longitude=LONGITUDE&hourly=temperature_2m</li>
-		<li>Image PDF: https://raw.githubusercontent.com/CodeSolutions2/pdf_to_text_webapp/main/document_imagepdf.pdf</li>
-		<!-- <li>Text PDF:https://s3-us-west-2.amazonaws.com/openai-assets/research-covers/language-unsupervised/language_understanding_paper.pdf</li> -->
-		<li>Image: https://storage.googleapis.com/on-the-way2selfrespect/yellow.png</li>
-	</ul>
-	<li>method: 'GET', 'POST'</li>
-	<li>data: {}</li>
-  	<li>w_or_wo_proxyhandler: w_proxyhandler, wo_proxyhandler</li>
-	<li>return_type: json, blob, blob_file_pdf, arrayBuffer, text</li>
-	
+	<li>Input a data url.</li>
+		<ul>
+			<li>Discrete data: https://nominatim.openstreetmap.org/search?q=LOCATION_NAME&format=json</li>
+			<li>Time-series data: https://api.open-meteo.com/v1/forecast?latitude=LATITUDE&longitude=LONGITUDE&hourly=temperature_2m</li>
+			<li>Text PDF: https://raw.githubusercontent.com/CodeSolutions2/pdf_to_text_webapp/main/document.pdf</li>
+			<li>Image PDF: https://raw.githubusercontent.com/CodeSolutions2/pdf_to_text_webapp/main/document_imagepdf.pdf</li>
+			<!-- <li>Text PDF: https://s3-us-west-2.amazonaws.com/openai-assets/research-covers/language-unsupervised/language_understanding_paper.pdf</li> -->
+			<li>Image: https://storage.googleapis.com/on-the-way2selfrespect/yellow.png</li>
+		</ul>
+	<li>View fetched data.</li>
 </ol>
-	
-<input id="url" type="text" value="" placeholder="url" rows="10" cols="100" style="display:block; text-align: left; width: 600px;">
-<input id="method" type="text" value="" placeholder="method" rows="10" cols="100" style="display:block; text-align: left; width: 600px;">
-<input id="data" type="text" value="" placeholder="data" rows="10" cols="100" style="display:block; text-align: left; width: 600px;">
-<input id="w_or_wo_proxyhandler" type="text" value="" placeholder="w_or_wo_proxyhandler" rows="10" cols="100" style="display:block; text-align: left; width: 600px;">
-<input id="return_type" type="text" value="" placeholder="return_type" rows="10" cols="100" style="display:block; text-align: left; width: 600px;">
-	
-<button id="run_fetch_CORS" onclick="run_fetch_CORS()">run_fetch_CORS</button>
-	
-<button id="run_jQuery_CORS" onclick="run_jQuery_CORS()">run_jQuery_CORS</button>
 
-<button id="get_forecast_temperature_data" onclick="get_forecast_temperature_data()">get_forecast_temperature_data</button>
+  
+<!-- ---------------------------------------- -->
+<!-- View two split window -->
+<div align="left">
+<table>
+	<tr>
+		<th id="data_viewer_input">[Step A] Input a data url.</th>
+		<th id="data_viewer_output">[Step B] View fetched data.</th>
+	</tr>
+	<tr>
+		<td><input id="url" type="text" value="" placeholder="url" rows="10" cols="100" style="display:block; text-align: left; width: 600px;">
+		<input id="method" type="text" value="" placeholder="method: 'GET' or 'POST' or 'PUT'" rows="10" cols="100" style="display:none; text-align: left; width: 600px;">
+		<input id="data" type="text" value="" placeholder="data: {'key0': 'value0', 'key1': 'value1'}" rows="10" cols="100" style="display:none; text-align: left; width: 600px;">
+		<input id="headers" type="text" value="" placeholder="headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + API_KEY}" rows="10" cols="100" style="display:none; text-align: left; width: 600px;">
+		<input id="return_type" type="text" value="" placeholder="return_type: json or blob or arrayBuffer or text" rows="10" cols="100" style="display:none; text-align: left; width: 600px;"><br><button id="display_data" onclick="display_data()">Display data</button><br><div id="notification"></div><div id="error"></div>
+		</td>
+		<td><div id="data_display" style="display:block; text-align: left; width: 600px;"></div></td>
+	</tr>
+</table>
+</div>  
+<!-- ---------------------------------------- -->
+
+
+<!-- ---------------------------------------- -->
+<!-- CSS -->
+<style>
+div { padding: 10px; display:block; font-family:courier; font-size:15px; height:300px; }
+	
+div#notification { position: relative; color: #3236a8; }
+div#error { position: relative; color: #bd1f17; }
+
+table {vertical-align: top; border-collapse: collapse; position: relative; z-index: 0; border: 0px solid black; letter-spacing: 1px; text-align: left; width: 100%; display:block}
+
+tr {vertical-align: top; border: 0px solid black; padding: 30px 30px; }
+
+th, td {vertical-align: top; border: 0px solid black; padding: 10px 10px; width: 50%; }
+th#pdf_viewer_input {width: 100%; background-color: #d6ecd4;}
+th#pdf_viewer_output {width: 100%; background-color: #d6ecd4;}
+
+object#pdf_object_element {position: absolute; vertical-align: top; top: 200; z-index: 200; }
+embed#pdf_embed_element {position: absolute; vertical-align: top; top: 200; z-index: 200; }
+iframe#pdf_iframe_element {position: absolute; vertical-align: top; top: 200; z-index: 200; }
+</style>
+
+<!-- --------------------------------------------------- -->
 	
 	
 <!-- <script src='https://code.jquery.com/jquery-3.6.3.min.js'></script> -->
@@ -45,21 +76,170 @@
 window.addEventListener('beforeunload', function() {
     window.location.href = window.location.href + '?nocache=' + new Date().getTime();
 });
+
+// ----------------------------------------------------
+
+async function display_data() {
 	
-// -----------------------------------------------
+	const url = document.getElementById("url").value;
 
-async function run_fetch_CORS() {
-
-	var url = document.getElementById('url').value;  // url: url address
-	var method = document.getElementById('method').value;  // method: 'GET', 'POST'
-	var data = document.getElementById('data').value;  // data: required data format for url address
-	var w_or_wo_proxyhandler = document.getElementById('w_or_wo_proxyhandler').value;  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
-	var return_type = document.getElementById('return_type').value;  // return_type: 'json', 'blob', 'blob_file_pdf', 'arrayBuffer', 'text'
-
-	var data = await fetch_CORS(url, method, data, w_or_wo_proxyhandler, return_type);
-	console.log('data: ', data); 
+	// Determine which type of media
+	const media_type = url.split('/').pop();
+	
+	if ((/pdf/i).test(media_type) == true) {
+		// PDF data
+		var desired_media_type = 'pdf';
+		await determine_same_or_different_domain(url, desired_media_type);
+		
+	} else if ((/text|txt|yaml|rtf|/i).test(media_type) == true) {
+		// Text data
+		var desired_media_type = 'text';
+		await determine_same_or_different_domain(url, desired_media_type);
+		
+	} else if ((/html/i).test(media_type) == true) {
+		// Html data: web scraping
+		var desired_media_type = 'html';
+		await determine_same_or_different_domain(url, desired_media_type);
+		
+	} else if ((/png|jpg|jpeg|gif/i).test(media_type) == true) {
+		// Image data
+		var desired_media_type = 'image';
+		await determine_same_or_different_domain(url, desired_media_type);
+		
+	} else if ((/\?/i).test(media_type) == true) {
+		// GET JSONP query string
+		var desired_media_type = 'GET_JSONP_endpoint';
+		await determine_same_or_different_domain(url, desired_media_type);
+		
+	} else {
+		// Unclear
+		// It could be an end point(ie: GET https://api.openai.com/v1/threads/"+THREAD_ID+"/runs/"+RUN_ID, OR it could be a POST) OR a file without a file extension
+		// maybe ask the user if it is GET, POST, or file request
+		document.getElementById('notification').innerHTML = "It is not clear which type of data fetch request you would like to perform. Fill out the manual data fetch request."
+	}
 }
 
+
+	
+async function determine_same_or_different_domain(url, desired_media_type) {
+
+	var fetch_method;
+	var CORS_method_list = ['fetch_CORS', 'jQuery_CORS', 'Image_CORS'];
+	
+	// Determine if the data is in the same domain or different domain
+	if ((/github/g).test(url) == true) {
+		fetch_method = 'fetch_nonCORS';
+	} else {
+		
+		var error = "";
+		var count = 0;
+		while(error != "NO_ERROR" && count < CORS_method_list.length) {
+			fetch_method = CORS_method_list.at(count);
+			// need to keep calling the function for the next CORS_method_list, until there is no error
+			try {
+				await fetch_parameters_for_media_type(url, desired_media_type, fetch_method);
+				error = "NO_ERROR";
+			} catch (err) {
+				document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + err;
+				// document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + error + ' . If url is correct, the server that you wish to read the data from has not granted CORS access permission. Try a different url.';
+				error = err;
+			}
+			count += 1;
+		}
+	}
+
+}
+
+// -----------------------------------------------
+
+async function fetch_parameters_for_media_type(url, desired_media_type, fetch_method) {
+
+	if (desired_media_type == 'pdf') {
+		var method = 'GET';
+		var data = {};
+		var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
+		var return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
+		var data_out = await fetch_methods(fetch_method);
+	
+		// display data
+		var file_blob_object = await new File ([data_out], "file_download", {type: "application/pdf"});
+		let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
+		await show_pdf_on_page_objectElement(github_url_of_externally_downloaded_data);
+		
+		// a file was loaded before, so remove the blob URL from memory to use resources effectively
+		await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
+		
+	} else if (desired_media_type == 'text') {
+		var url = document.getElementById('url').value;  // url: url address
+		var method = 'GET';
+		var data = {};
+		var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
+		var return_type = 'text';  // return_type: json or blob or arrayBuffer or text
+		var data_out = await fetch_methods(fetch_method);
+	
+		// display data
+		document.getElementById('data_display').innerHTML = data_out;
+		
+	} else if (desired_media_type == 'html') {
+		var url = document.getElementById('url').value;  // url: url address
+		var method = 'GET';
+		var data = {};
+		var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
+		var return_type = 'text';  // return_type: json or blob or arrayBuffer or text
+		var data_out = await fetch_methods(fetch_method);
+	
+		// display data
+		document.getElementById('data_display').innerHTML = data_out;
+	
+	} else if (desired_media_type == 'image') {
+		
+		var url = document.getElementById('url').value;  // url: url address
+		var method = 'GET';
+		var data = {};
+		var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
+		var return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
+		var data_out = await fetch_methods(fetch_method);
+	
+		// display data
+		document.getElementById('data_display').innerHTML = data_out;
+		
+	} else if (desired_media_type == 'GET_JSONP_endpoint') {
+		var url = document.getElementById('url').value;  // url: url address
+		var method = 'GET';
+		var data = {};
+		var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
+		var return_type = 'json';  // return_type: json or blob or arrayBuffer or text
+		var data_out = await fetch_methods(fetch_method);
+	
+		// display data
+		document.getElementById('data_display').innerHTML = data_out;
+	}
+}
+
+// -----------------------------------------------
+
+async function fetch_methods(fetch_method) {
+	if (fetch_method == 'fetch_nonCORS') {
+		return await fetch_nonCORS(url, method, data, w_or_wo_proxyhandler, return_type);
+	} else if (fetch_method == 'fetch_CORS') {
+		prev_method = 'fetch_CORS';
+		return await fetch_CORS(url, method, data, w_or_wo_proxyhandler, return_type);
+	} else if (fetch_method == 'jQuery_CORS') {
+		prev_method = 'jQuery_CORS';
+		return await jQuery_CORS(url, method, data, return_type);
+	} else if (fetch_method == 'Image_CORS') {
+		prev_method = 'Image_CORS';
+		return await Image_CORS(url, method, data, return_type);
+	}
+}
+
+	
+// ----------------------------------------------------
+// Types of data to fetch
+// ----------------------------------------------------
+
+
+	
 // -----------------------------------------------
 
 async function run_jQuery_CORS() {
@@ -76,7 +256,7 @@ async function run_jQuery_CORS() {
 	
 // -----------------------------------------------
 	
-async function get_forecast_temperature_data(url) {
+async function GET_timeseries_data(url) {
 	
 	// [Step 0] Get latitude and longitude
 	var url = 'https://nominatim.openstreetmap.org/search?q=Lyon&format=json';
@@ -111,19 +291,128 @@ async function get_forecast_temperature_data(url) {
 // -----------------------------------------------
 	
 
+
+
+// -----------------------------------------------
+// NON-CORS methods
+// -----------------------------------------------
+async function fetch_nonCORS(url, method, data, w_or_wo_proxyhandler, return_type) {
+
+	// url: url address
+	// method: 'GET', 'POST'
+	// data: required data format for url address
+	// w_or_wo_proxyhandler: w_proxyhandler, wo_proxyhandler
+	// return_type: json, blob, arrayBuffer, text
+
+	// --------------------------------
+
+	// Determine request method
+	var headers = {
+		"Content-Type": "application/json",
+		"Referer": url,
+		"Origin": "https://codesolutions2.github.io",
+		"Connection": "keep-alive",
+		//"Sec-Fetch-Dest": "empty",
+		//"Sec-Fetch-Mode": "no-cors", 
+		//"Sec-Fetch-Site": "cross-site",
+		//"Sec-Fetch-User": "?1",
+		"User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
+		"Access-Control-Allow-Origin": "*",
+		//'Access-Control-Allow-Credentials': false, 
+		//"Access-Control-Request-Method": method,
+		//"Access-Control-Request-Headers": 'content-type,x-pingother',
+		//'Cache-Control': 'max-age=0',
+	};
 	
+	var options = { 
+		method : method,
+		mode: 'no-cors',
+		headers: new Headers(headers),
+		cache: "no-cache",
+		redirect: "follow"
+	};
+
+	if (method == 'POST') {
+		options.body = JSON.stringify(data);
+	}
+
+	// --------------------------------
+
+	// Determine the type of output to return 
+	
+	if (return_type == 'json') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(response => response.json())
+				.then(async function(data) { console.log('data: ', data); return data; })
+				.catch(error => console.error("error: ", error));
+		} else { 
+			return await fetch(url, options)
+				.then(response => response.json())
+				.then(async function(data) { console.log('data: ', data); return data; })
+				.catch(error => console.error("error: ", error));
+		}
+		
+	} else if (return_type == 'blob') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(response => response.blob())
+				.then(async function(blob_object) { console.log('blob_object: ', blob_object); return blob_object; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url, options)
+				.then(response => response.blob())
+				.then(async function(blob_object) { console.log('blob_object: ', blob_object); return blob_object; })
+				.catch(error => console.error("error: ", error));
+		}
+		
+	} else if (return_type == 'arrayBuffer') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(response => response.arrayBuffer())
+				.then(async function(arraybuffer) { console.log("arraybuffer:", arraybuffer); return arraybuffer; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url, options)
+				.then(response => response.arrayBuffer())
+				.then(async function(arraybuffer) { console.log("arraybuffer:", arraybuffer); return arraybuffer; })
+				.catch(error => console.error("error: ", error));
+		}
+		
+	} else if (return_type == 'text') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(res => res.text())
+				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url, options)
+				.then(res => res.text())
+				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
+				.catch(error => console.error("error: ", error));
+		}
+	}
+
+	// --------------------------------
+}
+
+// ----------------------------------------------------
+
 
 // -----------------------------------------------
-// SUBFUNCTIONS
+// CORS methods
 // -----------------------------------------------
-
 async function fetch_CORS(url, method, data, w_or_wo_proxyhandler, return_type) {
 
 	// url: url address
 	// method: 'GET', 'POST'
 	// data: required data format for url address
 	// w_or_wo_proxyhandler: w_proxyhandler, wo_proxyhandler
-	// return_type: json, blob, blob_file_pdf, arrayBuffer, text
+	// return_type: json, blob, arrayBuffer, text
 
 	// --------------------------------
 
@@ -191,61 +480,17 @@ async function fetch_CORS(url, method, data, w_or_wo_proxyhandler, return_type) 
 				.catch(error => console.error("error: ", error));
 		}
 		
-	} else if (return_type == 'blob_file_pdf') {
-		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
-			const proxy3 = await define_proxy_handler();
-			return await proxy3(url, options)
-				.then(response => response.blob())
-				.then(async function(blob_object) { 
-					console.log('blob_object: ', blob_object);
-					return new File ([blob_object], "file_download", {type: "application/pdf"});
-				})
-				.then(async function(file_blob_object) {
-					console.log('file_blob_object: ', file_blob_object);
-					let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
-					console.log('github_url_of_externally_downloaded_data: ', github_url_of_externally_downloaded_data);
-					await show_pdf_on_page(github_url_of_externally_downloaded_data);
-
-					// a file was loaded before, so remove the blob URL from memory to use resources effectively
-					// URL.revokeObjectURL(github_url_of_externally_downloaded_data);
-					await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
-					
-					return "File blob loaded with success";
-				})
-				.catch(error => console.error("error: ", error));
-		} else {
-			return await fetch(url, options)
-				.then(response => response.blob())
-				.then(async function(blob_object) { 
-					console.log('blob_object: ', blob_object);
-					return new File ([blob_object], "file_download", {type: "application/pdf"});
-				})
-				.then(async function(file_blob_object) {
-					console.log('file_blob_object: ', file_blob_object);
-					let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
-					console.log('github_url_of_externally_downloaded_data: ', github_url_of_externally_downloaded_data);
-					await show_pdf_on_page(github_url_of_externally_downloaded_data);
-
-					// a file was loaded before, so remove the blob URL from memory to use resources effectively
-					// URL.revokeObjectURL(github_url_of_externally_downloaded_data);
-					await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
-					
-					return "File blob loaded with success";
-				})
-				.catch(error => console.error("error: ", error));
-		}
-		
 	} else if (return_type == 'arrayBuffer') {
 		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
 			const proxy3 = await define_proxy_handler();
 			return await proxy3(url, options)
 				.then(response => response.arrayBuffer())
-				.then(async function(arraybuffer) { console.log("arraybuffer:", arraybuffer); return blob_object; })
+				.then(async function(arraybuffer) { console.log("arraybuffer:", arraybuffer); return arraybuffer; })
 				.catch(error => console.error("error: ", error));
 		} else {
 			return await fetch(url, options)
 				.then(response => response.arrayBuffer())
-				.then(async function(arraybuffer) { console.log("arraybuffer:", arraybuffer); return blob_object; })
+				.then(async function(arraybuffer) { console.log("arraybuffer:", arraybuffer); return arraybuffer; })
 				.catch(error => console.error("error: ", error));
 		}
 		
@@ -315,7 +560,7 @@ async function jQuery_CORS(url, method, data, return_type) {
 	// url: url address
 	// method: 'GET', 'POST', 'PUT'
 	// data: required data format for url address
-	// return_type: json, blob, blob_file_pdf, arrayBuffer, text
+	// return_type: json, blob, arrayBuffer, text
 
 	var headers = {
 		"Accept": "application/json",
@@ -370,39 +615,11 @@ async function jQuery_CORS(url, method, data, return_type) {
 		settings.xhrFields = {responseType: 'blob'};
 
 		var text_pdf = await $.ajax(url, [,settings]).done(function(response) { console.log('response: ', response); return response; });
-
-		text_pdf.split()
 										       
 		var blob_object = new Blob([text_pdf], {type:"application/pdf"});
 		// var blob_object = new Blob([text_pdf], { type: 'application/octet-stream' });
 		console.log('blob_object: ', blob_object);
 		return blob_object;
-		
-	} else if (return_type == 'blob_file_pdf') {
-		settings.xhrFields = {responseType: 'blob'};
-
-		var jquery_blob = await $.ajax(url, [,settings]).done(function(response) { console.log('response: ', response); return response; });
-
-		// Convert the jquery_blob to a string
-		var text_pdf = jquery_blob.toString();
-		console.log('text_pdf: ', text_pdf);
-		
-		var blob_object = new Blob([text_pdf], {type:"application/pdf"});
-		// var blob_object = new Blob([text_pdf], { type: 'application/octet-stream' });
-		console.log('blob_object: ', blob_object);
-		
-		// var file_blob_object = new File ([blob_object], "file_download", {type: "application/pdf"});
-		// console.log('file_blob_object: ', file_blob_object);
-		// let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
-		let github_url_of_externally_downloaded_data = URL.createObjectURL(blob_object);
-		console.log('github_url_of_externally_downloaded_data: ', github_url_of_externally_downloaded_data);
-		
-		await show_pdf_on_page(github_url_of_externally_downloaded_data);
-	
-		// a file was loaded before, so remove the blob URL from memory to use resources effectively
-		await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
-		
-		return "File blob loaded with success";
 		
 	} else if (return_type == 'arrayBuffer') {
 		// settings.xhrFields.responseType = 'arrayBuffer';
@@ -429,15 +646,24 @@ async function jQuery_CORS(url, method, data, return_type) {
 
 // -----------------------------------------------
 
-async function show_pdf_on_page(file_download_url_name) {
 
- 	var objectElement = document.createElement('object');
-  	objectElement.setAttribute("id", "pdf_object_element");
-  	objectElement.setAttribute("type", "application/pdf");
-  	objectElement.setAttribute("width", 800);
-  	objectElement.setAttribute("height", 1200);
-  	objectElement.setAttribute("data", file_download_url_name);
-  	document.getElementsByTagName('body')[0].appendChild(objectElement);
+
+
+
+	
+async function show_pdf_on_page_objectElement(github_url_of_externally_downloaded_data) {
+
+	try {
+	  	var objectElement = document.createElement('object');
+	  	objectElement.setAttribute("id", "pdf_object_element");
+	  	objectElement.setAttribute("type", "application/pdf");
+	  	objectElement.setAttribute("width", 800);
+	  	objectElement.setAttribute("height", 1200);
+	  	objectElement.setAttribute("data", github_url_of_externally_downloaded_data);
+	  	document.getElementById('data_display').appendChild(objectElement);
+	} catch (error) {
+		document.getElementById('error').innerHTML = 'Check if pdf url is typed in correctly. ' + error;
+	}
 }
 
 // -----------------------------------------------
