@@ -510,7 +510,7 @@ async function fetch_nonCORS(url, method, data, headers, return_type) {
 	// url: url address
 	// method: 'GET', 'POST'
 	// data: required data format for url address
-	var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
+	var w_or_wo_proxyhandler = 'wo_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
 	// return_type: json, blob, arrayBuffer, text
 
 	// --------------------------------
@@ -556,7 +556,7 @@ async function fetch_nonCORS(url, method, data, headers, return_type) {
 				.then(async function(data) { console.log('data: ', data); return data; })
 				.catch(error => console.error("error: ", error));
 		} else { 
-			return await fetch(url, options)
+			return await fetch(url)
 				.then(response => response.json())
 				.then(async function(data) { console.log('data: ', data); return data; })
 				.catch(error => console.error("error: ", error));
@@ -570,7 +570,7 @@ async function fetch_nonCORS(url, method, data, headers, return_type) {
 				.then(async function(blob_object) { console.log('blob_object: ', blob_object); return blob_object; })
 				.catch(error => console.error("error: ", error));
 		} else {
-			return await fetch(url, options)
+			return await fetch(url)
 				.then(response => response.blob())
 				.then(async function(blob_object) { console.log('blob_object: ', blob_object); return blob_object; })
 				.catch(error => console.error("error: ", error));
@@ -584,7 +584,7 @@ async function fetch_nonCORS(url, method, data, headers, return_type) {
 				.then(async function(arraybuffer) { console.log("arraybuffer:", arraybuffer); return arraybuffer; })
 				.catch(error => console.error("error: ", error));
 		} else {
-			return await fetch(url, options)
+			return await fetch(url)
 				.then(response => response.arrayBuffer())
 				.then(async function(arraybuffer) { console.log("arraybuffer:", arraybuffer); return arraybuffer; })
 				.catch(error => console.error("error: ", error));
@@ -598,7 +598,7 @@ async function fetch_nonCORS(url, method, data, headers, return_type) {
 				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
 				.catch(error => console.error("error: ", error));
 		} else {
-			return await fetch(url, options)
+			return await fetch(url)
 				.then(res => res.text())
 				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
 				.catch(error => console.error("error: ", error));
@@ -612,7 +612,7 @@ async function fetch_nonCORS(url, method, data, headers, return_type) {
 				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
 				.catch(error => console.error("error: ", error));
 		} else {
-			return await fetch(url, options)
+			return await fetch(url)
 				.then(res => res.text())
 				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
 				.catch(error => console.error("error: ", error));
