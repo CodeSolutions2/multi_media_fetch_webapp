@@ -146,7 +146,7 @@ async function detect_type_of_media(url) {
 	var first_found_text_index = await find_sequential_characters_simple(media_type, ['.text', '.txt', '.yaml', '.rtf']);
 	console.log('first_found_text_index: ', first_found_text_index);
 
-	var found_html = (/\.html/i).test(media_type).test(media_type);
+	var found_html = (/\.html/i).test(media_type);
 	console.log('found_html: ', found_html);
 	var first_found_html_index = await find_sequential_characters_simple(media_type, ['.html']);
 	console.log('first_found_html_index: ', first_found_html_index);
@@ -156,7 +156,7 @@ async function detect_type_of_media(url) {
 	var first_found_image_index = await find_sequential_characters_simple(media_type, ['.png', '.jpg', '.jpeg', '.gif']);
 	console.log('first_found_image_index: ', first_found_image_index);
 
-	var found_jsonp = (/\?/i).test(media_type).test(media_type);
+	var found_jsonp = (/\?/i).test(media_type);
 	console.log('found_jsonp: ', found_jsonp);
 	var first_found_jsonp_index = await find_sequential_characters_simple(media_type, ['?']);
 	console.log('first_found_jsonp_index: ', first_found_jsonp_index);
@@ -894,7 +894,9 @@ async function find_sequential_characters_simple(str_to_search, strarr_to_find) 
 		var str_to_find_char_arr = str_to_find.split('');
 		var sequential_range = str_to_find_char_arr.length;
 		
-		var ind = [...Array(str_to_search_char_arr.length-sequential_range).keys()].map((x) => x);
+		var ind = [...Array(str_to_search_char_arr.length-sequential_range).keys()].map((x) => return x;);
+		console.log('ind: ', ind);
+		
 		var first_found_index = ind.map((i) => {
 			if ( [str_to_search_char_arr.slice(i,i+sequential_range).join('')].includes(str_to_find_char_arr.join('')) == true ) {
 				console.log('[simple] sequence found map: ', str_to_search_char_arr.slice(i,i+sequential_range).join(''));
