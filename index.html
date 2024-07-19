@@ -894,7 +894,10 @@ async function find_sequential_characters_simple(str_to_search, strarr_to_find) 
 		var str_to_find_char_arr = str_to_find.split('');
 		var sequential_range = str_to_find_char_arr.length;
 		
-		var ind = [...Array(str_to_search_char_arr.length-sequential_range).keys()].map((x) => return x;);
+		var ind0 = [...Array(str_to_search_char_arr.length-sequential_range).keys()].map((x) => x);
+		console.log('ind0: ', ind0);
+		// OR
+		var ind = Array.from({ length: str_to_search_char_arr.length-sequential_range }, (_, i) => i);
 		console.log('ind: ', ind);
 		
 		var first_found_index = ind.map((i) => {
