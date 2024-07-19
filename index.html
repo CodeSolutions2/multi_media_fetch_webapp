@@ -215,6 +215,7 @@ async function determine_same_or_different_domain(url, desired_media_type) {
 	if (first_found_index.length > 0) {
 		console.log('nonCORS url');
 		fetch_method = 'fetch_nonCORS';
+		await fetch_parameters_for_media_type(url, desired_media_type, fetch_method);
 	} else {
 		console.log('CORS url');
 		var error = "";
