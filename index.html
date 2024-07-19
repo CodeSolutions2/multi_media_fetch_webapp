@@ -163,33 +163,23 @@ async function detect_type_of_media(url) {
 
 	// --------------------------------
 	
-	// if (found_pdf == true) {	// with regex
-	// OR
-	if (first_found_pdf_index.length > 0) {
+	if (found_pdf == true || first_found_pdf_index.length > 0) {
 		console.log('PDF data');
 		var desired_media_type = 'pdf';
 		
-	//} else if (found_text == true) {
-	// OR
-	} else if (first_found_text_index.length > 0) {
+	} else if (found_text == true || first_found_text_index.length > 0) {
 		console.log('Text data');
 		var desired_media_type = 'text';
 		
-	// } else if (found_html == true) {
-	// OR
-	} else if (first_found_html_index.length > 0) {
+	} else if (found_html == true || first_found_html_index.length > 0) {
 		console.log('Html data: web scraping');
 		var desired_media_type = 'html';
 		
-	// } else if (found_image == true) {
-	// OR
-	} else if (first_found_image_index.length > 0) {
+	} else if (found_image == true || first_found_image_index.length > 0) {
 		console.log('Image data');
 		var desired_media_type = 'image';
 		
-	// } else if (found_jsonp == true) {
-	// OR
-	} else if (first_found_jsonp_index.length > 0) {
+	} else if (found_jsonp == true || first_found_jsonp_index.length > 0) {
 		console.log('GET JSONP query string');
 		var desired_media_type = 'GET_JSONP_endpoint';
 	} else {
@@ -893,10 +883,10 @@ async function find_sequential_characters_simple(str_to_search, strarr_to_find) 
 	strarr_to_find.forEach(async function(str_to_find, index) {
 		
 		var str_to_find_char_arr = str_to_find.split('');
-		console.log('str_to_find_char_arr: ', str_to_find_char_arr);
+		// console.log('str_to_find_char_arr: ', str_to_find_char_arr);
 		
 		var sequential_range = str_to_find_char_arr.length;
-		console.log('sequential_range: ', sequential_range);
+		// console.log('sequential_range: ', sequential_range);
 
 		// pad the last sequential_range character on the end of str_to_find_char_arr. Below we search from 0 to the entire [length of the string to find] minus sequential_range, thus we miss the last sequential_range if we do not pad.
 		var pad_arr = str_to_find_char_arr.map((x) => {return '0';});
@@ -904,11 +894,8 @@ async function find_sequential_characters_simple(str_to_search, strarr_to_find) 
 
 		// --------------------------------------------
 		
-		// Way 0
 		var ind = [...Array(str_to_search_char_arr.length-sequential_range).keys()].map((x) => x);
-		// OR
-		// var ind = Array.from({ length: str_to_search_char_arr.length-sequential_range }, (_, i) => i);
-		console.log('ind: ', ind);
+		// console.log('ind: ', ind);
 		
 		var first_found_index = ind.map((i) => {
 			if ( [str_to_search_char_arr.slice(i,i+sequential_range).join('')].includes(str_to_find) == true ) {
@@ -918,29 +905,11 @@ async function find_sequential_characters_simple(str_to_search, strarr_to_find) 
 				return '';
 			}
 		});
-		console.log('first_found_index: ', first_found_index);
-		
-		// --------------------------------------------
-		
-		// Way 1
-		var first_found_index1 = [];
-		for (let i=0; i < (str_to_search_char_arr.length-sequential_range); i++) {
-			var cut_string = str_to_search_char_arr.slice(i,i+sequential_range).join('');
-			console.log('cut_string: ', cut_string);
-			if ( [cut_string].includes(str_to_find) == true ) {
-				console.log('sequence found');
-				first_found_index1.push([i, str_to_search_char_arr.slice(i,i+sequential_range).join('')]);
-			} else {
-				return '';
-			}
-		}
-
-		// All found except the last [sequential_range]
-		console.log('first_found_index1: ', first_found_index1);
+		// console.log('first_found_index: ', first_found_index);
 
 		// --------------------------------------------
 		
-		// Remove empty spaces
+		// Remove empty spaces created by the map function
 		total_index = total_index.concat(first_found_index.filter(isNotEmpty));
 	});
 	return total_index;
