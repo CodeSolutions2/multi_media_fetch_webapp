@@ -354,7 +354,7 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			const method = 'GET';
 			const data = {};
 			const headers = {};
-			const return_type = 'text';  // return_type: json or blob or arrayBuffer or text
+			const return_type = 'html';  // return_type: json or blob or arrayBuffer or text, html
 		} else {
 			const method = document.getElementById("method").value;
 			const data = document.getElementById("data").value;
@@ -581,6 +581,20 @@ async function fetch_nonCORS(url, method, data, headers, return_type) {
 				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
 				.catch(error => console.error("error: ", error));
 		}
+
+	} else if (return_type == 'html') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(res => res.text())
+				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url, options)
+				.then(res => res.text())
+				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
+				.catch(error => console.error("error: ", error));
+		}
 	}
 
 	// --------------------------------
@@ -696,6 +710,20 @@ async function fetch_CORS(url, method, data, headers, return_type) {
 				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
 				.catch(error => console.error("error: ", error));
 		}
+
+	} else if (return_type == 'html') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(res => res.text())
+				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url, options)
+				.then(res => res.text())
+				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
+				.catch(error => console.error("error: ", error));
+		}
 	}
 
 	// --------------------------------
@@ -771,7 +799,6 @@ async function jQuery_CORS(url, method, data, headers, return_type) {
 	var settings = {
 		// url: url,
 		type : method,
-		dataType: 'json', // data type response format: 'xml', html, script, json, jsonp, text
 		async: true,
 		crossDomain: true,
 		beforeSend: function(xhr) {xhr.withCredentials = true;},
@@ -791,17 +818,17 @@ async function jQuery_CORS(url, method, data, headers, return_type) {
 	// Determine the type of output to return 
 	
 	if (return_type == 'json') {
-		// settings.xhrFields.responseType = 'json';
-		// OR
+		
 		settings.xhrFields = {responseType: 'json'};
+		settings.dataType = 'json'; // data type response format: 'xml', html, script, json, jsonp, text
 
 		return $.ajax(url, [,settings])
 			.done(function(response) { console.log('response: ', response); return response; });
 		
 	} else if (return_type == 'blob') {
-		// settings.xhrFields.responseType = 'blob';
-		// OR
+		
 		settings.xhrFields = {responseType: 'blob'};
+		settings.dataType = 'binary'; // data type response format: 'xml', html, script, json, jsonp, text, binary
 
 		var text_pdf = await $.ajax(url, [,settings]).done(function(response) { console.log('response: ', response); return response; });
 										       
@@ -811,17 +838,26 @@ async function jQuery_CORS(url, method, data, headers, return_type) {
 		return blob_object;
 		
 	} else if (return_type == 'arrayBuffer') {
-		// settings.xhrFields.responseType = 'arrayBuffer';
-		// OR
+		
 		settings.xhrFields = {responseType: 'arrayBuffer'};
+		settings.dataType = 'binary'; // data type response format: 'xml', html, script, json, jsonp, text, binary
 
 		return $.ajax(url, [,settings])
 			.done(function(response) { console.log('response: ', response); return response; });
 		
 	} else if (return_type == 'text') {
-		// settings.xhrFields.responseType = 'text';
-		// OR
+		
 		settings.xhrFields = {responseType: 'text'};
+		settings.dataType = 'text'; // data type response format: 'xml', html, script, json, jsonp, text, binary
+
+		return $.ajax(url, [,settings])
+			.done(function(response) { console.log('response: ', response); return response; });
+	}
+
+	} else if (return_type == 'html') {
+		
+		settings.xhrFields = {responseType: 'text'};
+		settings.dataType = 'html'; // data type response format: 'xml', html, script, json, jsonp, text, binary
 
 		return $.ajax(url, [,settings])
 			.done(function(response) { console.log('response: ', response); return response; });
