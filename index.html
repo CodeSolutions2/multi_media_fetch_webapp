@@ -209,7 +209,7 @@ async function determine_same_or_different_domain(url, desired_media_type) {
 	// Determine if the data is in the same domain or different domain
 	// if ((/github/g).test(url) == true) {   // with regex
 	// OR
-	let first_found_index = await find_sequential_characters_simple(url, ['github']).then(function(arr) {return arr.at(0); });  // without regex
+	let first_found_index = await find_sequential_characters_simple(url, ['github']);  // without regex
 	console.log('first_found_index: ', first_found_index);
 	
 	if (first_found_index.length > 0) {
