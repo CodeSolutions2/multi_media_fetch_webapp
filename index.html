@@ -308,7 +308,9 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 async function fetch_parameters_for_media_type(url, desired_media_type, fetch_method, automatic_OR_manual) {
 
 	console.log('fetch_parameters_for_media_type: desired_media_type: ', desired_media_type);
-	
+	console.log('automatic_OR_manual: ', automatic_OR_manual);
+
+	automatic_OR_manual = 'automatic';
 	if (desired_media_type == 'pdf') {
 
 		if (automatic_OR_manual == 'automatic') {
