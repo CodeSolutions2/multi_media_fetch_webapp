@@ -9,8 +9,8 @@
 		<ul>
 			<li>Discrete data: https://nominatim.openstreetmap.org/search?q=LOCATION_NAME&format=json</li>
 			<li>Time-series data: https://api.open-meteo.com/v1/forecast?latitude=LATITUDE&longitude=LONGITUDE&hourly=temperature_2m</li>
-			<li>Text PDF: https://raw.githubusercontent.com/CodeSolutions2/pdf_to_text_webapp/main/document.pdf</li>
-			<li>Image PDF: https://raw.githubusercontent.com/CodeSolutions2/pdf_to_text_webapp/main/document_imagepdf.pdf</li>
+			<!-- <li>Text PDF: https://raw.githubusercontent.com/CodeSolutions2/multi_media_fetch_webapp/main/document.pdf</li> -->
+			<li>Image PDF: https://raw.githubusercontent.com/CodeSolutions2/multi_media_fetch_webapp/main/document_imagepdf.pdf</li>
 			<!-- <li>Text PDF: https://s3-us-west-2.amazonaws.com/openai-assets/research-covers/language-unsupervised/language_understanding_paper.pdf</li> -->
 			<li>Image: https://storage.googleapis.com/on-the-way2selfrespect/yellow.png</li>
 		</ul>
@@ -265,6 +265,7 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 		} else if (desired_media_type == "pdf") {
 			// fetch gives CORS error, jQuery can obtain and not display correctly
 			CORS_method_list = ['fetch_CORS'];
+			//CORS_method_list = ['jQuery_CORS'];
 			
 		} else if (desired_media_type == "text") {
 			CORS_method_list = ['fetch_CORS', 'jQuery_CORS'];
