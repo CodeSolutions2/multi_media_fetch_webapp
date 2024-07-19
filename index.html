@@ -311,18 +311,25 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 	console.log('fetch_method: ', fetch_method);
 	console.log('automatic_OR_manual: ', automatic_OR_manual);
 
+	var method;
+	var data
+	var headers;
+	var return_type;
+	
 	if (desired_media_type == 'pdf') {
 
 		if (automatic_OR_manual == 'automatic') {
-			const method = 'GET';
-			const data = {};
-			const headers = {};
-			const return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
+			console.log('automatic');
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
 		} else {
-			const method = document.getElementById("method").value;
-			const data = document.getElementById("data").value;
-			const headers = document.getElementById("headers").value;
-			const return_type = document.getElementById("return_type").value;
+			console.log('manual');
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
 		}
 		console.log('method: ', method);
 		console.log('data: ', data);
@@ -343,15 +350,15 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 	} else if (desired_media_type == 'text') {
 
 		if (automatic_OR_manual == 'automatic') {
-			const method = 'GET';
-			const data = {};
-			const headers = {};
-			const return_type = 'text';  // return_type: json or blob or arrayBuffer or text
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'text';  // return_type: json or blob or arrayBuffer or text
 		} else {
-			const method = document.getElementById("method").value;
-			const data = document.getElementById("data").value;
-			const headers = document.getElementById("headers").value;
-			const return_type = document.getElementById("return_type").value;
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
 		}
 		console.log('method: ', method);
 		console.log('data: ', data);
@@ -367,15 +374,15 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 	} else if (desired_media_type == 'html') {
 
 		if (automatic_OR_manual == 'automatic') {
-			const method = 'GET';
-			const data = {};
-			const headers = {};
-			const return_type = 'html';  // return_type: json or blob or arrayBuffer or text, html
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'html';  // return_type: json or blob or arrayBuffer or text, html
 		} else {
-			const method = document.getElementById("method").value;
-			const data = document.getElementById("data").value;
-			const headers = document.getElementById("headers").value;
-			const return_type = document.getElementById("return_type").value;
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
 		}
 		console.log('method: ', method);
 		console.log('data: ', data);
@@ -391,15 +398,15 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 	} else if (desired_media_type == 'image') {
 
 		if (automatic_OR_manual == 'automatic') {
-			const method = 'GET';
-			const data = {};
-			const headers = {};
-			const return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
 		} else {
-			const method = document.getElementById("method").value;
-			const data = document.getElementById("data").value;
-			const headers = document.getElementById("headers").value;
-			const return_type = document.getElementById("return_type").value;
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
 		}
 		console.log('method: ', method);
 		console.log('data: ', data);
@@ -415,15 +422,15 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 	} else if (desired_media_type == 'GET_JSONP_endpoint') {
 		
 		if (automatic_OR_manual == 'automatic') {
-			const method = 'GET';
-			const data = {};
-			const headers = {};
-			const return_type = 'json';  // return_type: json or blob or arrayBuffer or text
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'json';  // return_type: json or blob or arrayBuffer or text
 		} else {
-			const method = document.getElementById("method").value;
-			const data = document.getElementById("data").value;
-			const headers = document.getElementById("headers").value;
-			const return_type = document.getElementById("return_type").value;
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
 		}
 		console.log('method: ', method);
 		console.log('data: ', data);
