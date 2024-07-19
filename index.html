@@ -255,11 +255,23 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 		// --------------------------------
 		
 		// Determine how many methods to use depending on the desired_media_type
-		if (desired_media_type != "image") {
-			// use only the first two fetch methods
-			CORS_method_list = CORS_method_list.slice(0,2);
-		} else {
-			CORS_method_list = CORS_method_list;
+		if (desired_media_type == "image") {
+			CORS_method_list = ['fetch_CORS', 'jQuery_CORS', 'Image_CORS'];
+			
+		} else if (desired_media_type == "pdf") {
+			// fetch gives CORS error, jQuery can obtain and not display correctly
+			CORS_method_list = ['fetch_CORS'];
+			
+		} else if (desired_media_type == "text") {
+			CORS_method_list = ['fetch_CORS', 'jQuery_CORS'];
+			
+		} else if (desired_media_type == "html") {
+			CORS_method_list = ['jQuery_CORS'];
+			
+		} else if (desired_media_type == "GET_JSONP_endpoint") {
+			// CORS GET endpoints                    fetch OK, jQuery OK, script JSONP gives CORS error
+			// CORS POST endpoints                   fetch OK, jQuery never tried
+			CORS_method_list = ['fetch_CORS'];
 		}
 		console.log('CORS_method_list: ', CORS_method_list);
 		
