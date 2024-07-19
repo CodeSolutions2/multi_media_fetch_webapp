@@ -139,16 +139,16 @@ async function display_data() {
 	// --------------------------------
 
 	// Sometimes regex does not function - solution without regex
-	var first_found_pdf_index = await find_sequential_characters_simple(media_type, ['pdf']);  // without regex
+	var first_found_pdf_index = await find_sequential_characters_simple(media_type, ['.pdf']);  // without regex
 	console.log('first_found_pdf_index: ', first_found_pdf_index);
 	
-	var first_found_text_index = await find_sequential_characters_simple(media_type, ['text', 'txt', 'yaml', 'rtf']);  // without regex
+	var first_found_text_index = await find_sequential_characters_simple(media_type, ['.text', '.txt', '.yaml', '.rtf']);  // without regex
 	console.log('first_found_text_index: ', first_found_text_index);
 	
-	var first_found_html_index = await find_sequential_characters_simple(media_type, ['html']);  // without regex
+	var first_found_html_index = await find_sequential_characters_simple(media_type, ['.html']);  // without regex
 	console.log('first_found_html_index: ', first_found_html_index);
 	
-	var first_found_image_index = await find_sequential_characters_simple(media_type, ['png', 'jpg', 'jpeg', 'gif']);  // without regex
+	var first_found_image_index = await find_sequential_characters_simple(media_type, ['.png', '.jpg', '.jpeg', '.gif']);  // without regex
 	console.log('first_found_image_index: ', first_found_image_index);
 	
 	var first_found_jsonp_index = await find_sequential_characters_simple(media_type, ['?']);  // without regex
