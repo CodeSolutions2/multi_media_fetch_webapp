@@ -265,22 +265,23 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 		
 		// --------------------------------
 
-		var error = "";
+		var error = "error";
 		var count = 0;
-		while(error != "NO_ERROR" && count < CORS_method_list.length) {
+		while(error != null && count < CORS_method_list.length) {
 			fetch_method = CORS_method_list.at(count);
 			console.log('fetch_method: ', fetch_method);
 			
 			// need to keep calling the function for the next CORS_method_list, until there is no error
 			try {
 				await fetch_parameters_for_media_type(url, desired_media_type, fetch_method, automatic_OR_manual);
-				error = "NO_ERROR";
+				delete error;
 			} catch (err) {
 				document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + err;
 				// document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + error + ' . If url is correct, the server that you wish to read the data from has not granted CORS access permission. Try a different url.';
 				error = err;
 			}
 			count += 1;
+			console.log('error: ', error);
 		}
 		
 		// --------------------------------
