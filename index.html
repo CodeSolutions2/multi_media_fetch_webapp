@@ -235,7 +235,7 @@ async function display_data() {
 async function determine_same_or_different_domain(url, desired_media_type, automatic_OR_manual) {
 
 	var fetch_method;
-	var CORS_method_list = ['fetch_CORS', 'jQuery_CORS', 'Image_CORS'];
+	
 	
 	// Determine if the data is in the same domain or different domain
 	var found_github = (/github/g).test(url);
@@ -255,8 +255,9 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 		// --------------------------------
 		
 		// Determine how many methods to use depending on the desired_media_type
+		var CORS_method_list;
 		if (desired_media_type == "image") {
-			CORS_method_list = ['fetch_CORS', 'jQuery_CORS', 'Image_CORS'];
+			CORS_method_list = ['fetch_CORS', 'Image_CORS'];
 			
 		} else if (desired_media_type == "pdf") {
 			// fetch gives CORS error, jQuery can obtain and not display correctly
