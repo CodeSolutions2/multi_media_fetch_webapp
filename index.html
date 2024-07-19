@@ -581,7 +581,7 @@ async function fetch_nonCORS(url, method, data, headers, return_type) {
 				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
 				.catch(error => console.error("error: ", error));
 		}
-
+			
 	} else if (return_type == 'html') {
 		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
 			const proxy3 = await define_proxy_handler();
@@ -852,7 +852,6 @@ async function jQuery_CORS(url, method, data, headers, return_type) {
 
 		return $.ajax(url, [,settings])
 			.done(function(response) { console.log('response: ', response); return response; });
-	}
 
 	} else if (return_type == 'html') {
 		
