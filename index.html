@@ -248,7 +248,7 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		var method = 'GET';
 		var data = {};
 		var return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
-		var data_out = await fetch_methods(fetch_method, method, data, return_type);
+		var data_out = await fetch_methods(fetch_method, url, method, data, return_type);
 		console.log('data_out: ', data_out);
 	
 		// display data
@@ -263,7 +263,7 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		var method = 'GET';
 		var data = {};
 		var return_type = 'text';  // return_type: json or blob or arrayBuffer or text
-		var data_out = await fetch_methods(fetch_method, method, data, return_type);
+		var data_out = await fetch_methods(fetch_method, url, method, data, return_type);
 		console.log('data_out: ', data_out);
 	
 		// display data
@@ -273,7 +273,7 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		var method = 'GET';
 		var data = {};
 		var return_type = 'text';  // return_type: json or blob or arrayBuffer or text
-		var data_out = await fetch_methods(fetch_method, method, data, return_type);
+		var data_out = await fetch_methods(fetch_method, url, method, data, return_type);
 		console.log('data_out: ', data_out);
 	
 		// display data
@@ -283,7 +283,7 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		var method = 'GET';
 		var data = {};
 		var return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
-		var data_out = await fetch_methods(fetch_method, method, data, return_type);
+		var data_out = await fetch_methods(fetch_method, url, method, data, return_type);
 		console.log('data_out: ', data_out);
 	
 		// display data
@@ -293,7 +293,7 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		var method = 'GET';
 		var data = {};
 		var return_type = 'json';  // return_type: json or blob or arrayBuffer or text
-		var data_out = await fetch_methods(fetch_method, method, data, return_type);
+		var data_out = await fetch_methods(fetch_method, url, method, data, return_type);
 		console.log('data_out: ', data_out);
 	
 		// display data
