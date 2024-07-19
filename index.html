@@ -135,28 +135,58 @@ async function display_data() {
 	// Determine which type of media
 	const media_type = url.split('/').pop();
 	console.log('media_type: ', media_type);
+
+	// --------------------------------
+
+	// Sometimes regex does not function - solution without regex
+	let first_found_pdf_index = await find_sequential_characters_simple(media_type, ['pdf']).then(function(arr) {return arr.at(0); });  // without regex
+	console.log('first_found_pdf_index: ', first_found_pdf_index);
 	
-	if ((/pdf/i).test(media_type) == true) {
+	let first_found_text_index = await find_sequential_characters_simple(media_type, ['text', 'txt', 'yaml', 'rtf']).then(function(arr) {return arr.at(0); });  // without regex
+	console.log('first_found_text_index: ', first_found_text_index);
+	
+	let first_found_html_index = await find_sequential_characters_simple(media_type, ['html']).then(function(arr) {return arr.at(0); });  // without regex
+	console.log('first_found_html_index: ', first_found_html_index);
+	
+	let first_found_image_index = await find_sequential_characters_simple(media_type, ['png', 'jpg', 'jpeg', 'gif']).then(function(arr) {return arr.at(0); });  // without regex
+	console.log('first_found_image_index: ', first_found_image_index);
+	
+	let first_found_jsonp_index = await find_sequential_characters_simple(media_type, ['?']).then(function(arr) {return arr.at(0); });  // without regex
+	console.log('first_found_jsonp_index: ', first_found_jsonp_index);
+
+	// --------------------------------
+	
+	// if ((/pdf/i).test(media_type) == true) {	// with regex
+	// OR
+	if (first_found_pdf_index.length > 0) {
 		console.log('PDF data');
 		var desired_media_type = 'pdf';
 		await determine_same_or_different_domain(url, desired_media_type);
 		
-	} else if ((/text|txt|yaml|rtf|/i).test(media_type) == true) {
+	//} else if ((/text|txt|yaml|rtf|/i).test(media_type) == true) {
+	// OR
+	} else if (first_found_text_index.length > 0) {
 		console.log('Text data');
 		var desired_media_type = 'text';
 		await determine_same_or_different_domain(url, desired_media_type);
 		
-	} else if ((/html/i).test(media_type) == true) {
+	// } else if ((/html/i).test(media_type) == true) {
+	// OR
+	} else if (first_found_html_index.length > 0) {
 		console.log('Html data: web scraping');
 		var desired_media_type = 'html';
 		await determine_same_or_different_domain(url, desired_media_type);
 		
-	} else if ((/png|jpg|jpeg|gif/i).test(media_type) == true) {
+	// } else if ((/png|jpg|jpeg|gif/i).test(media_type) == true) {
+	// OR
+	} else if (first_found_image_index.length > 0) {
 		console.log('Image data');
 		var desired_media_type = 'image';
 		await determine_same_or_different_domain(url, desired_media_type);
 		
-	} else if ((/\?/i).test(media_type) == true) {
+	// } else if ((/\?/i).test(media_type) == true) {
+	// OR
+	} else if (first_found_jsonp_index.length > 0) {
 		console.log('GET JSONP query string');
 		var desired_media_type = 'GET_JSONP_endpoint';
 		await determine_same_or_different_domain(url, desired_media_type);
@@ -177,7 +207,12 @@ async function determine_same_or_different_domain(url, desired_media_type) {
 	var CORS_method_list = ['fetch_CORS', 'jQuery_CORS', 'Image_CORS'];
 	
 	// Determine if the data is in the same domain or different domain
-	if ((/github/g).test(url) == true) {
+	// if ((/github/g).test(url) == true) {   // with regex
+	// OR
+	let first_found_index = await find_sequential_characters_simple(url, ['github']).then(function(arr) {return arr.at(0); });  // without regex
+	console.log('first_found_index: ', first_found_index);
+	
+	if (first_found_index.length > 0) {
 		console.log('nonCORS url');
 		fetch_method = 'fetch_nonCORS';
 	} else {
@@ -225,7 +260,6 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
 		
 	} else if (desired_media_type == 'text') {
-		var url = document.getElementById('url').value;  // url: url address
 		var method = 'GET';
 		var data = {};
 		var return_type = 'text';  // return_type: json or blob or arrayBuffer or text
@@ -236,7 +270,6 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		document.getElementById('data_display').innerHTML = data_out;
 		
 	} else if (desired_media_type == 'html') {
-		var url = document.getElementById('url').value;  // url: url address
 		var method = 'GET';
 		var data = {};
 		var return_type = 'text';  // return_type: json or blob or arrayBuffer or text
@@ -247,8 +280,6 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		document.getElementById('data_display').innerHTML = data_out;
 	
 	} else if (desired_media_type == 'image') {
-		
-		var url = document.getElementById('url').value;  // url: url address
 		var method = 'GET';
 		var data = {};
 		var return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
@@ -259,7 +290,6 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		document.getElementById('data_display').innerHTML = data_out;
 		
 	} else if (desired_media_type == 'GET_JSONP_endpoint') {
-		var url = document.getElementById('url').value;  // url: url address
 		var method = 'GET';
 		var data = {};
 		var return_type = 'json';  // return_type: json or blob or arrayBuffer or text
@@ -716,6 +746,42 @@ async function automatically_download(file_download_url_name) {
  	link.click();
 }
 
+
+// ----------------------------------------------------
+
+
+async function find_sequential_characters_simple(str_to_search, strarr_to_find) {
+	
+	// In some cases, the str_to_search has unique sequential characters per interval of [search_index_start to search_index_end], that one may want to identify. This function allows one to search str_to_search over specific intervals of the string.
+	
+	// search_index_start: it is the index of str_to_search_char_arr, where one STARTS searching for sequencial matches of str_to_find_char_arr
+	// search_index_end: it is the index of str_to_search_char_arr, where one STOPS searching for sequencial matches of str_to_find_char_arr
+		
+	let str_to_search_char_arr = str_to_search.split('');
+	let search_length = str_to_search_char_arr.length;
+	const isNotEmpty = (num) => num.length > 0;
+	
+	let total_index = [];
+	strarr_to_find.forEach(async function(str_to_find, index) {
+		let str_to_find_char_arr = str_to_find.split('');
+		let sequential_range = str_to_find_char_arr.length;
+		
+		let ind = [...Array(search_length-sequential_range).keys()].map((x) => x);
+		let first_found_index = ind.map((i) => {
+			if ( [str_to_search_char_arr.slice(i,i+sequential_range).join('')].includes(str_to_find_char_arr.join('')) == true ) {
+				// console.log('[simple] sequence found map: ', str_to_search_char_arr.slice(i,i+sequential_range).join(''));
+				return [i, str_to_search_char_arr.slice(i,i+sequential_range).join('')];
+			} else {
+				return '';
+			}
+		});
+	
+		// Remove empty fields
+		total_index = total_index.concat(first_found_index.filter(isNotEmpty));
+	});
+	return total_index;
+}
+	
 // -----------------------------------------------
 	
 </script>
