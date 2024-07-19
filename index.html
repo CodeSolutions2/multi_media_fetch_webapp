@@ -130,37 +130,39 @@ document.getElementById("manual_fetch").addEventListener("click", processEvent_m
 async function display_data() {
 	
 	const url = document.getElementById("url").value;
+	console.log('url: ', url);
 
 	// Determine which type of media
 	const media_type = url.split('/').pop();
+	console.log('media_type: ', media_type);
 	
 	if ((/pdf/i).test(media_type) == true) {
-		// PDF data
+		console.log('PDF data');
 		var desired_media_type = 'pdf';
 		await determine_same_or_different_domain(url, desired_media_type);
 		
 	} else if ((/text|txt|yaml|rtf|/i).test(media_type) == true) {
-		// Text data
+		console.log('Text data');
 		var desired_media_type = 'text';
 		await determine_same_or_different_domain(url, desired_media_type);
 		
 	} else if ((/html/i).test(media_type) == true) {
-		// Html data: web scraping
+		console.log('Html data: web scraping');
 		var desired_media_type = 'html';
 		await determine_same_or_different_domain(url, desired_media_type);
 		
 	} else if ((/png|jpg|jpeg|gif/i).test(media_type) == true) {
-		// Image data
+		console.log('Image data');
 		var desired_media_type = 'image';
 		await determine_same_or_different_domain(url, desired_media_type);
 		
 	} else if ((/\?/i).test(media_type) == true) {
-		// GET JSONP query string
+		console.log('GET JSONP query string');
 		var desired_media_type = 'GET_JSONP_endpoint';
 		await determine_same_or_different_domain(url, desired_media_type);
 		
 	} else {
-		// Unclear
+		console.log('Unclear: recommend using manual_fetch');
 		// It could be an end point(ie: GET https://api.openai.com/v1/threads/"+THREAD_ID+"/runs/"+RUN_ID, OR it could be a POST) OR a file without a file extension
 		// maybe ask the user if it is GET, POST, or file request
 		document.getElementById('notification').innerHTML = "It is not clear which type of data fetch request you would like to perform. Fill out the manual data fetch request."
@@ -176,13 +178,16 @@ async function determine_same_or_different_domain(url, desired_media_type) {
 	
 	// Determine if the data is in the same domain or different domain
 	if ((/github/g).test(url) == true) {
+		console.log('nonCORS url');
 		fetch_method = 'fetch_nonCORS';
 	} else {
-		
+		console.log('CORS url');
 		var error = "";
 		var count = 0;
 		while(error != "NO_ERROR" && count < CORS_method_list.length) {
 			fetch_method = CORS_method_list.at(count);
+			console.log('fetch_method: ', fetch_method);
+			
 			// need to keep calling the function for the next CORS_method_list, until there is no error
 			try {
 				await fetch_parameters_for_media_type(url, desired_media_type, fetch_method);
@@ -202,12 +207,13 @@ async function determine_same_or_different_domain(url, desired_media_type) {
 
 async function fetch_parameters_for_media_type(url, desired_media_type, fetch_method) {
 
+	console.log('fetch_parameters_for_media_type: desired_media_type: ', desired_media_type);
+	
 	if (desired_media_type == 'pdf') {
 		var method = 'GET';
 		var data = {};
-		var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
 		var return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
-		var data_out = await fetch_methods(fetch_method);
+		var data_out = await fetch_methods(fetch_method, method, data, return_type);
 		console.log('data_out: ', data_out);
 	
 		// display data
@@ -222,9 +228,8 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		var url = document.getElementById('url').value;  // url: url address
 		var method = 'GET';
 		var data = {};
-		var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
 		var return_type = 'text';  // return_type: json or blob or arrayBuffer or text
-		var data_out = await fetch_methods(fetch_method);
+		var data_out = await fetch_methods(fetch_method, method, data, return_type);
 		console.log('data_out: ', data_out);
 	
 		// display data
@@ -234,9 +239,8 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		var url = document.getElementById('url').value;  // url: url address
 		var method = 'GET';
 		var data = {};
-		var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
 		var return_type = 'text';  // return_type: json or blob or arrayBuffer or text
-		var data_out = await fetch_methods(fetch_method);
+		var data_out = await fetch_methods(fetch_method, method, data, return_type);
 		console.log('data_out: ', data_out);
 	
 		// display data
@@ -247,9 +251,8 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		var url = document.getElementById('url').value;  // url: url address
 		var method = 'GET';
 		var data = {};
-		var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
 		var return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
-		var data_out = await fetch_methods(fetch_method);
+		var data_out = await fetch_methods(fetch_method, method, data, return_type);
 		console.log('data_out: ', data_out);
 	
 		// display data
@@ -259,9 +262,8 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		var url = document.getElementById('url').value;  // url: url address
 		var method = 'GET';
 		var data = {};
-		var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
 		var return_type = 'json';  // return_type: json or blob or arrayBuffer or text
-		var data_out = await fetch_methods(fetch_method);
+		var data_out = await fetch_methods(fetch_method, method, data, return_type);
 		console.log('data_out: ', data_out);
 	
 		// display data
@@ -271,12 +273,12 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 
 // -----------------------------------------------
 
-async function fetch_methods(fetch_method) {
+async function fetch_methods(fetch_method, url, method, data, return_type) {
 	if (fetch_method == 'fetch_nonCORS') {
-		return await fetch_nonCORS(url, method, data, w_or_wo_proxyhandler, return_type);
+		return await fetch_nonCORS(url, method, data, return_type);
 	} else if (fetch_method == 'fetch_CORS') {
 		prev_method = 'fetch_CORS';
-		return await fetch_CORS(url, method, data, w_or_wo_proxyhandler, return_type);
+		return await fetch_CORS(url, method, data, return_type);
 	} else if (fetch_method == 'jQuery_CORS') {
 		prev_method = 'jQuery_CORS';
 		return await jQuery_CORS(url, method, data, return_type);
@@ -291,21 +293,6 @@ async function fetch_methods(fetch_method) {
 // Types of data to fetch
 // ----------------------------------------------------
 
-
-	
-// -----------------------------------------------
-
-async function run_jQuery_CORS() {
-
-	var url = document.getElementById('url').value;  // url: url address
-	var method = document.getElementById('method').value;  // method: 'GET', 'POST', 'PUT'
-	var data = document.getElementById('data').value;  // data: required data format for url address
-	var return_type = document.getElementById('return_type').value;  // return_type: 'json', 'blob', 'blob_file_pdf', 'arrayBuffer', 'text'
-
-	var data = await  jQuery_CORS(url, method, data, return_type);
-	console.log('data: ', data); 
-}
-	
 	
 // -----------------------------------------------
 	
@@ -349,12 +336,12 @@ async function GET_timeseries_data(url) {
 // -----------------------------------------------
 // NON-CORS methods
 // -----------------------------------------------
-async function fetch_nonCORS(url, method, data, w_or_wo_proxyhandler, return_type) {
+async function fetch_nonCORS(url, method, data, return_type) {
 
 	// url: url address
 	// method: 'GET', 'POST'
 	// data: required data format for url address
-	// w_or_wo_proxyhandler: w_proxyhandler, wo_proxyhandler
+	var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
 	// return_type: json, blob, arrayBuffer, text
 
 	// --------------------------------
@@ -459,12 +446,12 @@ async function fetch_nonCORS(url, method, data, w_or_wo_proxyhandler, return_typ
 // -----------------------------------------------
 // CORS methods
 // -----------------------------------------------
-async function fetch_CORS(url, method, data, w_or_wo_proxyhandler, return_type) {
+async function fetch_CORS(url, method, data, return_type) {
 
 	// url: url address
 	// method: 'GET', 'POST'
 	// data: required data format for url address
-	// w_or_wo_proxyhandler: w_proxyhandler, wo_proxyhandler
+	var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
 	// return_type: json, blob, arrayBuffer, text
 
 	// --------------------------------
