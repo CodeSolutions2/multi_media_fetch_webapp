@@ -243,10 +243,12 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 	// if (found_github == true) {   // with regex
 	// OR
 	// let first_found_index = await find_sequential_characters_simple(url, ['github']);  // without regex
-	let first_found_index = await find_sequential_characters_simple(url, ['multi_media_fetch_webapp']);  // without regex
+	let first_found_index = await find_sequential_characters_simple(url, ['https://raw.githubusercontent.com/CodeSolutions2/multi_media_fetch_webapp']);  // without regex
 	console.log('first_found_index: ', first_found_index);
 	
-	if (first_found_index.length > 0) {
+	if (found_github == true && first_found_index.length > 0) {
+		// it is from github, next check to see if it is from the same repository
+		
 		console.log('nonCORS url');
 		fetch_method = 'fetch_nonCORS';
 		await fetch_parameters_for_media_type(url, desired_media_type, fetch_method, automatic_OR_manual);
@@ -893,6 +895,24 @@ async function jQuery_CORS(url, method, data, headers, return_type) {
 
 // -----------------------------------------------
 
+
+async function Image_CORS(url, method, data, headers, return_type) {
+	// var canvasElement = document.createElement('canvas');
+	// var ctx = canvasElement.getContext("2d");
+	var canvasElement_width = 150;
+	var canvasElement_height = canvasElement_width;
+	
+	const imageElement = new Image();  // image is 'HTMLImageElement'
+	imageElement.setAttribute('crossOrigin', "");
+	imageElement.setAttribute('headers', {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"});
+	imageElement.src = url;
+	imageElement.onload = async () => { ctx.drawImage(imageElement, 0, 0, canvasElement_width, canvasElement_height); };
+
+	const imageData = ctx.getImageData(0, 0, canvasElement_width, canvasElement_height);
+	return  Array.from(imageData.data);
+}
+
+// -----------------------------------------------
 
 
 
