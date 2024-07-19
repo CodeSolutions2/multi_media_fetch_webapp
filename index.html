@@ -141,17 +141,17 @@ async function detect_type_of_media(url) {
 	var first_found_pdf_index = await find_sequential_characters_simple(media_type, ['.pdf']);
 	console.log('first_found_pdf_index: ', first_found_pdf_index);
 
-	var found_text = (/.text|.txt|.yaml|.rtf|/i).test(media_type);
+	var found_text = (/\.text|\.txt|\.yaml|\.rtf|/i).test(media_type);
 	console.log('found_text: ', found_text);
 	var first_found_text_index = await find_sequential_characters_simple(media_type, ['.text', '.txt', '.yaml', '.rtf']);
 	console.log('first_found_text_index: ', first_found_text_index);
 
-	var found_html = (/.html/i).test(media_type).test(media_type);
+	var found_html = (/\.html/i).test(media_type).test(media_type);
 	console.log('found_html: ', found_html);
 	var first_found_html_index = await find_sequential_characters_simple(media_type, ['.html']);
 	console.log('first_found_html_index: ', first_found_html_index);
 
-	var found_image = (/.png|.jpg|.jpeg|.gif/i).test(media_type);
+	var found_image = (/\.png|\.jpg|\.jpeg|\.gif/i).test(media_type);
 	console.log('found_image: ', found_image);
 	var first_found_image_index = await find_sequential_characters_simple(media_type, ['.png', '.jpg', '.jpeg', '.gif']);
 	console.log('first_found_image_index: ', first_found_image_index);
