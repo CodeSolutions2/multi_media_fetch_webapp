@@ -127,11 +127,8 @@ document.getElementById("manual_fetch").addEventListener("click", processEvent_m
 
 // ----------------------------------------------------
 
-async function display_data() {
+async function detect_type_of_media(url) {
 	
-	const url = document.getElementById("url").value;
-	console.log('url: ', url);
-
 	// Determine which type of media
 	const media_type = url.split('/').pop();
 	console.log('media_type: ', media_type);
@@ -139,75 +136,121 @@ async function display_data() {
 	// --------------------------------
 
 	// Sometimes regex does not function - solution without regex
-	var first_found_pdf_index = await find_sequential_characters_simple(media_type, ['.pdf']);  // without regex
+	var found_pdf = (/\.pdf/i).test(media_type);
+	console.log('found_pdf: ', found_pdf);
+	var first_found_pdf_index = await find_sequential_characters_simple(media_type, ['.pdf']);
 	console.log('first_found_pdf_index: ', first_found_pdf_index);
-	
-	var first_found_text_index = await find_sequential_characters_simple(media_type, ['.text', '.txt', '.yaml', '.rtf']);  // without regex
+
+	var found_text = (/.text|.txt|.yaml|.rtf|/i).test(media_type);
+	console.log('found_text: ', found_text);
+	var first_found_text_index = await find_sequential_characters_simple(media_type, ['.text', '.txt', '.yaml', '.rtf']);
 	console.log('first_found_text_index: ', first_found_text_index);
-	
-	var first_found_html_index = await find_sequential_characters_simple(media_type, ['.html']);  // without regex
+
+	var found_html = (/.html/i).test(media_type).test(media_type);
+	console.log('found_html: ', found_html);
+	var first_found_html_index = await find_sequential_characters_simple(media_type, ['.html']);
 	console.log('first_found_html_index: ', first_found_html_index);
-	
-	var first_found_image_index = await find_sequential_characters_simple(media_type, ['.png', '.jpg', '.jpeg', '.gif']);  // without regex
+
+	var found_image = (/.png|.jpg|.jpeg|.gif/i).test(media_type);
+	console.log('found_image: ', found_image);
+	var first_found_image_index = await find_sequential_characters_simple(media_type, ['.png', '.jpg', '.jpeg', '.gif']);
 	console.log('first_found_image_index: ', first_found_image_index);
-	
-	var first_found_jsonp_index = await find_sequential_characters_simple(media_type, ['?']);  // without regex
+
+	var found_jsonp = (/\?/i).test(media_type).test(media_type);
+	console.log('found_jsonp: ', found_jsonp);
+	var first_found_jsonp_index = await find_sequential_characters_simple(media_type, ['?']);
 	console.log('first_found_jsonp_index: ', first_found_jsonp_index);
 
 	// --------------------------------
 	
-	// if ((/pdf/i).test(media_type) == true) {	// with regex
+	// if (found_pdf == true) {	// with regex
 	// OR
 	if (first_found_pdf_index.length > 0) {
 		console.log('PDF data');
 		var desired_media_type = 'pdf';
-		await determine_same_or_different_domain(url, desired_media_type);
 		
-	//} else if ((/text|txt|yaml|rtf|/i).test(media_type) == true) {
+	//} else if (found_text == true) {
 	// OR
 	} else if (first_found_text_index.length > 0) {
 		console.log('Text data');
 		var desired_media_type = 'text';
-		await determine_same_or_different_domain(url, desired_media_type);
 		
-	// } else if ((/html/i).test(media_type) == true) {
+	// } else if (found_html == true) {
 	// OR
 	} else if (first_found_html_index.length > 0) {
 		console.log('Html data: web scraping');
 		var desired_media_type = 'html';
-		await determine_same_or_different_domain(url, desired_media_type);
 		
-	// } else if ((/png|jpg|jpeg|gif/i).test(media_type) == true) {
+	// } else if (found_image == true) {
 	// OR
 	} else if (first_found_image_index.length > 0) {
 		console.log('Image data');
 		var desired_media_type = 'image';
-		await determine_same_or_different_domain(url, desired_media_type);
 		
-	// } else if ((/\?/i).test(media_type) == true) {
+	// } else if (found_jsonp == true) {
 	// OR
 	} else if (first_found_jsonp_index.length > 0) {
 		console.log('GET JSONP query string');
 		var desired_media_type = 'GET_JSONP_endpoint';
-		await determine_same_or_different_domain(url, desired_media_type);
-		
 	} else {
 		console.log('Unclear: recommend using manual_fetch');
 		// It could be an end point(ie: GET https://api.openai.com/v1/threads/"+THREAD_ID+"/runs/"+RUN_ID, OR it could be a POST) OR a file without a file extension
 		// maybe ask the user if it is GET, POST, or file request
 		document.getElementById('notification').innerHTML = "It is not clear which type of data fetch request you would like to perform. Fill out the manual data fetch request."
+		var desired_media_type = 'Unclear';
 	}
+	
+	return desired_media_type;
+}
+	
+// ----------------------------------------------------
+	
+async function display_data() {
+	
+	const url = document.getElementById("url").value;
+	console.log('url: ', url);
+	
+	// --------------------------------
+
+	// Detect type of media to fetch
+	var desired_media_type = await detect_type_of_media(url);
+	console.log('desired_media_type: ', desired_media_type);
+	
+	// --------------------------------
+	
+	const automatic_fetch = document.getElementById("automatic_fetch").checked;
+	const manual_fetch = document.getElementById("manual_fetch").checked;
+	
+	// --------------------------------
+
+	if (automatic_fetch == false && manual_fetch == false) {
+		document.getElementById('error').innerHTML = "Please select automatic or manual fetch.";
+	}
+	
+	if (automatic_fetch == true && manual_fetch == false) {
+		var automatic_OR_manual = "automatic";
+		await determine_same_or_different_domain(url, desired_media_type, automatic_OR_manual);
+	}
+	
+	if (automatic_fetch == false && manual_fetch == true) {
+		var automatic_OR_manual = "manual";
+		await determine_same_or_different_domain(url, desired_media_type, automatic_OR_manual);
+	}
+
+	// --------------------------------
 }
 
-
+// ----------------------------------------------------
 	
-async function determine_same_or_different_domain(url, desired_media_type) {
+async function determine_same_or_different_domain(url, desired_media_type, automatic_OR_manual) {
 
 	var fetch_method;
 	var CORS_method_list = ['fetch_CORS', 'jQuery_CORS', 'Image_CORS'];
 	
 	// Determine if the data is in the same domain or different domain
-	// if ((/github/g).test(url) == true) {   // with regex
+	var found_github = (/github/g).test(url);
+	console.log('found_github: ', found_github);
+	// if (found_github == true) {   // with regex
 	// OR
 	let first_found_index = await find_sequential_characters_simple(url, ['github']);  // without regex
 	console.log('first_found_index: ', first_found_index);
@@ -215,9 +258,23 @@ async function determine_same_or_different_domain(url, desired_media_type) {
 	if (first_found_index.length > 0) {
 		console.log('nonCORS url');
 		fetch_method = 'fetch_nonCORS';
-		await fetch_parameters_for_media_type(url, desired_media_type, fetch_method);
+		await fetch_parameters_for_media_type(url, desired_media_type, fetch_method, automatic_OR_manual);
 	} else {
 		console.log('CORS url');
+
+		// --------------------------------
+		
+		// Determine how many methods to use depending on the desired_media_type
+		if (desired_media_type != "image") {
+			// use only the first two fetch methods
+			CORS_method_list = CORS_method_list.slice(0,2);
+		} else {
+			CORS_method_list = CORS_method_list;
+		}
+		console.log('CORS_method_list: ', CORS_method_list);
+		
+		// --------------------------------
+
 		var error = "";
 		var count = 0;
 		while(error != "NO_ERROR" && count < CORS_method_list.length) {
@@ -226,7 +283,7 @@ async function determine_same_or_different_domain(url, desired_media_type) {
 			
 			// need to keep calling the function for the next CORS_method_list, until there is no error
 			try {
-				await fetch_parameters_for_media_type(url, desired_media_type, fetch_method);
+				await fetch_parameters_for_media_type(url, desired_media_type, fetch_method, automatic_OR_manual);
 				error = "NO_ERROR";
 			} catch (err) {
 				document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + err;
@@ -235,21 +292,38 @@ async function determine_same_or_different_domain(url, desired_media_type) {
 			}
 			count += 1;
 		}
+		
+		// --------------------------------
+		
 	}
 
 }
 
 // -----------------------------------------------
 
-async function fetch_parameters_for_media_type(url, desired_media_type, fetch_method) {
+async function fetch_parameters_for_media_type(url, desired_media_type, fetch_method, automatic_OR_manual) {
 
 	console.log('fetch_parameters_for_media_type: desired_media_type: ', desired_media_type);
 	
 	if (desired_media_type == 'pdf') {
-		var method = 'GET';
-		var data = {};
-		var return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
-		var data_out = await fetch_methods(fetch_method, url, method, data, return_type);
+
+		if (automatic_OR_manual == 'automatic') {
+			const method = 'GET';
+			const data = {};
+			const headers = {};
+			const return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
+		} else {
+			const method = document.getElementById("method").value;
+			const data = document.getElementById("data").value;
+			const headers = document.getElementById("headers").value;
+			const return_type = document.getElementById("return_type").value;
+		}
+		console.log('method: ', method);
+		console.log('data: ', data);
+		console.log('headers: ', headers);
+		console.log('return_type: ', return_type);
+		
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 		console.log('data_out: ', data_out);
 	
 		// display data
@@ -261,40 +335,96 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
 		
 	} else if (desired_media_type == 'text') {
-		var method = 'GET';
-		var data = {};
-		var return_type = 'text';  // return_type: json or blob or arrayBuffer or text
-		var data_out = await fetch_methods(fetch_method, url, method, data, return_type);
+
+		if (automatic_OR_manual == 'automatic') {
+			const method = 'GET';
+			const data = {};
+			const headers = {};
+			const return_type = 'text';  // return_type: json or blob or arrayBuffer or text
+		} else {
+			const method = document.getElementById("method").value;
+			const data = document.getElementById("data").value;
+			const headers = document.getElementById("headers").value;
+			const return_type = document.getElementById("return_type").value;
+		}
+		console.log('method: ', method);
+		console.log('data: ', data);
+		console.log('headers: ', headers);
+		console.log('return_type: ', return_type);
+		
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 		console.log('data_out: ', data_out);
 	
 		// display data
 		document.getElementById('data_display').innerHTML = data_out;
 		
 	} else if (desired_media_type == 'html') {
-		var method = 'GET';
-		var data = {};
-		var return_type = 'text';  // return_type: json or blob or arrayBuffer or text
-		var data_out = await fetch_methods(fetch_method, url, method, data, return_type);
+
+		if (automatic_OR_manual == 'automatic') {
+			const method = 'GET';
+			const data = {};
+			const headers = {};
+			const return_type = 'text';  // return_type: json or blob or arrayBuffer or text
+		} else {
+			const method = document.getElementById("method").value;
+			const data = document.getElementById("data").value;
+			const headers = document.getElementById("headers").value;
+			const return_type = document.getElementById("return_type").value;
+		}
+		console.log('method: ', method);
+		console.log('data: ', data);
+		console.log('headers: ', headers);
+		console.log('return_type: ', return_type);
+		
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 		console.log('data_out: ', data_out);
 	
 		// display data
 		document.getElementById('data_display').innerHTML = data_out;
 	
 	} else if (desired_media_type == 'image') {
-		var method = 'GET';
-		var data = {};
-		var return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
-		var data_out = await fetch_methods(fetch_method, url, method, data, return_type);
+
+		if (automatic_OR_manual == 'automatic') {
+			const method = 'GET';
+			const data = {};
+			const headers = {};
+			const return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
+		} else {
+			const method = document.getElementById("method").value;
+			const data = document.getElementById("data").value;
+			const headers = document.getElementById("headers").value;
+			const return_type = document.getElementById("return_type").value;
+		}
+		console.log('method: ', method);
+		console.log('data: ', data);
+		console.log('headers: ', headers);
+		console.log('return_type: ', return_type);
+		
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 		console.log('data_out: ', data_out);
 	
 		// display data
 		document.getElementById('data_display').innerHTML = data_out;
 		
 	} else if (desired_media_type == 'GET_JSONP_endpoint') {
-		var method = 'GET';
-		var data = {};
-		var return_type = 'json';  // return_type: json or blob or arrayBuffer or text
-		var data_out = await fetch_methods(fetch_method, url, method, data, return_type);
+		
+		if (automatic_OR_manual == 'automatic') {
+			const method = 'GET';
+			const data = {};
+			const headers = {};
+			const return_type = 'json';  // return_type: json or blob or arrayBuffer or text
+		} else {
+			const method = document.getElementById("method").value;
+			const data = document.getElementById("data").value;
+			const headers = document.getElementById("headers").value;
+			const return_type = document.getElementById("return_type").value;
+		}
+		console.log('method: ', method);
+		console.log('data: ', data);
+		console.log('headers: ', headers);
+		console.log('return_type: ', return_type);
+		
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 		console.log('data_out: ', data_out);
 	
 		// display data
@@ -304,18 +434,15 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 
 // -----------------------------------------------
 
-async function fetch_methods(fetch_method, url, method, data, return_type) {
+async function fetch_methods(fetch_method, url, method, data, headers, return_type) {
 	if (fetch_method == 'fetch_nonCORS') {
-		return await fetch_nonCORS(url, method, data, return_type);
+		return await fetch_nonCORS(url, method, data, headers, return_type);
 	} else if (fetch_method == 'fetch_CORS') {
-		prev_method = 'fetch_CORS';
-		return await fetch_CORS(url, method, data, return_type);
+		return await fetch_CORS(url, method, data, headers, return_type);
 	} else if (fetch_method == 'jQuery_CORS') {
-		prev_method = 'jQuery_CORS';
-		return await jQuery_CORS(url, method, data, return_type);
+		return await jQuery_CORS(url, method, data, headers, return_type);
 	} else if (fetch_method == 'Image_CORS') {
-		prev_method = 'Image_CORS';
-		return await Image_CORS(url, method, data, return_type);
+		return await Image_CORS(url, method, data, headers, return_type);
 	}
 }
 
@@ -333,9 +460,8 @@ async function GET_timeseries_data(url) {
 	var url = 'https://nominatim.openstreetmap.org/search?q=Lyon&format=json';
 	var method = 'GET';  // method: 'GET', 'POST'
 	var data = [];  // data: required data format for url address
-	var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
 	var return_type = 'json';  // return_type: 'json', 'blob', 'blob_file_pdf', 'arrayBuffer', 'text'
-	var out = await fetch_CORS(url, method, data, w_or_wo_proxyhandler, return_type);
+	var out = await fetch_CORS(url, method, data, headers, return_type);
 	console.log('out: ', out); 
 
 	// --------------------------------
@@ -352,9 +478,8 @@ async function GET_timeseries_data(url) {
 	url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m`;
 	
 	method = 'GET';  // method: 'GET', 'POST'
-	w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
 	return_type = 'json';  // return_type: 'json', 'blob', 'blob_file_pdf', 'arrayBuffer', 'text'
-	out = await fetch_CORS(url, method, data, w_or_wo_proxyhandler, return_type);
+	out = await fetch_CORS(url, method, data, headers, return_type);
 	console.log('out: ', out);
 	
 }
@@ -367,7 +492,7 @@ async function GET_timeseries_data(url) {
 // -----------------------------------------------
 // NON-CORS methods
 // -----------------------------------------------
-async function fetch_nonCORS(url, method, data, return_type) {
+async function fetch_nonCORS(url, method, data, headers, return_type) {
 
 	// url: url address
 	// method: 'GET', 'POST'
@@ -378,7 +503,7 @@ async function fetch_nonCORS(url, method, data, return_type) {
 	// --------------------------------
 
 	// Determine request method
-	var headers = {
+	var headers_final = {
 		"Content-Type": "application/json",
 		"Referer": url,
 		"Origin": "https://codesolutions2.github.io",
@@ -398,7 +523,7 @@ async function fetch_nonCORS(url, method, data, return_type) {
 	var options = { 
 		method : method,
 		mode: 'no-cors',
-		headers: new Headers(headers),
+		headers: new Headers(headers_final),
 		cache: "no-cache",
 		redirect: "follow"
 	};
@@ -477,7 +602,7 @@ async function fetch_nonCORS(url, method, data, return_type) {
 // -----------------------------------------------
 // CORS methods
 // -----------------------------------------------
-async function fetch_CORS(url, method, data, return_type) {
+async function fetch_CORS(url, method, data, headers, return_type) {
 
 	// url: url address
 	// method: 'GET', 'POST'
@@ -488,7 +613,7 @@ async function fetch_CORS(url, method, data, return_type) {
 	// --------------------------------
 
 	// Determine request method
-	var headers = {
+	var headers_final = {
 		"Content-Type": "application/json",
 		"Referer": url,
 		"Origin": "https://codesolutions2.github.io",
@@ -504,11 +629,14 @@ async function fetch_CORS(url, method, data, return_type) {
 		//"Access-Control-Request-Headers": 'content-type,x-pingother',
 		//'Cache-Control': 'max-age=0',
 	};
+
+	// Need to check if headers are in headers_final
+	// To do - loop over headers and append to headers_final
 	
 	var options = { 
 		method : method,
 		mode: 'cors',
-		headers: new Headers(headers),
+		headers: new Headers(headers_final),
 		cache: "no-cache",
 		// crossorigin: 'anonymous',
 		crossorigin: '*',
@@ -624,7 +752,7 @@ async function define_proxy_handler() {
 
 // -----------------------------------------------
 	
-async function jQuery_CORS(url, method, data, return_type) {
+async function jQuery_CORS(url, method, data, headers, return_type) {
 
 	// https://api.jquery.com/jQuery.ajax/
 	
@@ -633,7 +761,7 @@ async function jQuery_CORS(url, method, data, return_type) {
 	// data: required data format for url address
 	// return_type: json, blob, arrayBuffer, text
 
-	var headers = {
+	var headers_final = {
 		"Accept": "application/json",
 		"Referer": url,
 		"Origin": "https://codesolutions2.github.io",
@@ -657,7 +785,7 @@ async function jQuery_CORS(url, method, data, return_type) {
 		async: true,
 		crossDomain: true,
 		beforeSend: function(xhr) {xhr.withCredentials = true;},
-		// headers: new Headers(headers),
+		// headers: new Headers(headers_final),
 		success: function(response) { console.log('Success'); },
 		error: function(xhr, status, error) { console.log('Error:', error); }
 	};
@@ -769,7 +897,7 @@ async function find_sequential_characters_simple(str_to_search, strarr_to_find) 
 		var ind = [...Array(str_to_search_char_arr.length-sequential_range).keys()].map((x) => x);
 		var first_found_index = ind.map((i) => {
 			if ( [str_to_search_char_arr.slice(i,i+sequential_range).join('')].includes(str_to_find_char_arr.join('')) == true ) {
-				// console.log('[simple] sequence found map: ', str_to_search_char_arr.slice(i,i+sequential_range).join(''));
+				console.log('[simple] sequence found map: ', str_to_search_char_arr.slice(i,i+sequential_range).join(''));
 				return [i, str_to_search_char_arr.slice(i,i+sequential_range).join('')];
 			} else {
 				return '';
