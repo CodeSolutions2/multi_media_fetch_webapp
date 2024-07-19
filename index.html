@@ -5,7 +5,7 @@
 
 <h1>Multimedia fetch data webapp</h1>
 <ol type="A">
-	<li>Input a data url.</li>
+	<li>Select Automatic REST API fetch with data url only or Manual REST API fetch.</li>
 		<ul>
 			<li>Discrete data: https://nominatim.openstreetmap.org/search?q=LOCATION_NAME&format=json</li>
 			<li>Time-series data: https://api.open-meteo.com/v1/forecast?latitude=LATITUDE&longitude=LONGITUDE&hourly=temperature_2m</li>
@@ -20,6 +20,13 @@
   
 <!-- ---------------------------------------- -->
 <!-- View two split window -->
+<fieldset>
+<input type="radio" id="automatic_fetch" name="radio_name" value="automatic_fetch" />
+<label for="automatic_fetch">Automatic Fetch</label>
+<br>
+<input type="radio" id="manual_fetch" name="radio_name" value="manual_fetch" />
+<label for="manual_fetch">Manual Fetch</label>
+</fieldset>
 <div align="left">
 <table>
 	<tr>
@@ -27,11 +34,11 @@
 		<th id="data_viewer_output">[Step B] View fetched data.</th>
 	</tr>
 	<tr>
-		<td><input id="url" type="text" value="" placeholder="url" rows="10" cols="100" style="display:block; text-align: left; width: 600px;">
+		<td><input id="url" type="text" value="" placeholder="url" rows="10" cols="100" style="display:none; text-align: left; width: 600px;">
 		<input id="method" type="text" value="" placeholder="method: 'GET' or 'POST' or 'PUT'" rows="10" cols="100" style="display:none; text-align: left; width: 600px;">
 		<input id="data" type="text" value="" placeholder="data: {'key0': 'value0', 'key1': 'value1'}" rows="10" cols="100" style="display:none; text-align: left; width: 600px;">
 		<input id="headers" type="text" value="" placeholder="headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + API_KEY}" rows="10" cols="100" style="display:none; text-align: left; width: 600px;">
-		<input id="return_type" type="text" value="" placeholder="return_type: json or blob or arrayBuffer or text" rows="10" cols="100" style="display:none; text-align: left; width: 600px;"><br><button id="display_data" onclick="display_data()">Display data</button><br><div id="notification"></div><div id="error"></div>
+		<input id="return_type" type="text" value="" placeholder="return_type: json or blob or arrayBuffer or text" rows="10" cols="100" style="display:none; text-align: left; width: 600px;"><br><button id="display_data" onclick="display_data()" style="display:none;">Display data</button><br><div id="notification"></div><div id="error"></div>
 		</td>
 		<td><div id="data_display" style="display:block; text-align: left; width: 600px;"></div></td>
 	</tr>
@@ -76,6 +83,47 @@ iframe#pdf_iframe_element {position: absolute; vertical-align: top; top: 200; z-
 window.addEventListener('beforeunload', function() {
     window.location.href = window.location.href + '?nocache=' + new Date().getTime();
 });
+
+// ----------------------------------------------------
+	
+async function processEvent_automatic_fetch(event) {
+	if (this.getAttribute("checked") == false) {
+		document.getElementById("url").style.display = 'none';
+		document.getElementById("method").style.display = 'none';
+		document.getElementById("data").style.display = 'none';
+		document.getElementById("headers").style.display = 'none';
+		document.getElementById("return_type").style.display = 'none';
+		document.getElementById("display_data").style.display = 'none';
+	} else  {
+		document.getElementById("url").style.display = 'block';
+		document.getElementById("method").style.display = 'none';
+		document.getElementById("data").style.display = 'none';
+		document.getElementById("headers").style.display = 'none';
+		document.getElementById("return_type").style.display = 'none';
+		document.getElementById("display_data").style.display = 'block';
+	}
+}
+
+async function processEvent_manual_fetch(event) {
+	if (this.getAttribute("checked") == false) {
+		document.getElementById("url").style.display = 'none';
+		document.getElementById("method").style.display = 'none';
+		document.getElementById("data").style.display = 'none';
+		document.getElementById("headers").style.display = 'none';
+		document.getElementById("return_type").style.display = 'none';
+		document.getElementById("display_data").style.display = 'none';
+	} else  {
+		document.getElementById("url").style.display = 'block';
+		document.getElementById("method").style.display = 'block';
+		document.getElementById("data").style.display = 'block';
+		document.getElementById("headers").style.display = 'block';
+		document.getElementById("return_type").style.display = 'block';
+		document.getElementById("display_data").style.display = 'block';
+	}
+}
+	
+document.getElementById("automatic_fetch").addEventListener("click", processEvent_automatic_fetch, false);
+document.getElementById("manual_fetch").addEventListener("click", processEvent_manual_fetch, false);
 
 // ----------------------------------------------------
 
@@ -160,6 +208,7 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
 		var return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
 		var data_out = await fetch_methods(fetch_method);
+		console.log('data_out: ', data_out);
 	
 		// display data
 		var file_blob_object = await new File ([data_out], "file_download", {type: "application/pdf"});
@@ -176,6 +225,7 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
 		var return_type = 'text';  // return_type: json or blob or arrayBuffer or text
 		var data_out = await fetch_methods(fetch_method);
+		console.log('data_out: ', data_out);
 	
 		// display data
 		document.getElementById('data_display').innerHTML = data_out;
@@ -187,6 +237,7 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
 		var return_type = 'text';  // return_type: json or blob or arrayBuffer or text
 		var data_out = await fetch_methods(fetch_method);
+		console.log('data_out: ', data_out);
 	
 		// display data
 		document.getElementById('data_display').innerHTML = data_out;
@@ -199,6 +250,7 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
 		var return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
 		var data_out = await fetch_methods(fetch_method);
+		console.log('data_out: ', data_out);
 	
 		// display data
 		document.getElementById('data_display').innerHTML = data_out;
@@ -210,6 +262,7 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
 		var return_type = 'json';  // return_type: json or blob or arrayBuffer or text
 		var data_out = await fetch_methods(fetch_method);
+		console.log('data_out: ', data_out);
 	
 		// display data
 		document.getElementById('data_display').innerHTML = data_out;
