@@ -283,9 +283,9 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 		// *** List of which methods are most reliable for CORS ***
 		var CORS_method_list;
 		if (desired_media_type == "image") {
-			// CORS_method_list = ['Image_CORS'];       // OK
-			CORS_method_list = ['jQuery_CORS'];   // OK
 			// CORS_method_list = ['fetch_CORS'];    // CORS error
+			CORS_method_list = ['jQuery_CORS'];   // OK, but could not display image
+			// CORS_method_list = ['Image_CORS'];       // OK
 			
 		} else if (desired_media_type == "pdf") {
 			CORS_method_list = ['fetch_CORS'];	// OK
@@ -304,13 +304,13 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 
 		} else if (desired_media_type == "audio") {
 			// CORS_method_list = ['fetch_CORS'];	// CORS error
-			// CORS_method_list = ['jQuery_CORS'];	// Media resource blob:https://codesolutions2.git... could not be decoded.
-			CORS_method_list = ['Audio_CORS'];
+			CORS_method_list = ['jQuery_CORS'];	// Media resource blob:https://codesolutions2.git... could not be decoded.
+			// CORS_method_list = ['Audio_CORS'];	// OK
 			
 		} else if (desired_media_type == "video") {
 			// CORS_method_list = ['fetch_CORS'];	// CORS error
-			// CORS_method_list = ['jQuery_CORS'];	// Media resource blob:https://codesolutions2.git... could not be decoded.
-			CORS_method_list = ['Video_CORS'];	// OK
+			CORS_method_list = ['jQuery_CORS'];	// Media resource blob:https://codesolutions2.git... could not be decoded.
+			// CORS_method_list = ['Video_CORS'];	// OK
 		}
 		console.log('CORS_method_list: ', CORS_method_list);
 		
@@ -457,11 +457,10 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			return_type = document.getElementById("return_type").value;
 		}
 
-		if (fetch_method == 'Image_CORS') {
-			// The Image is append to the page using Image_CORS
-			var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
-			// console.log('data_out: ', data_out);
-		} else {
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+		// console.log('data_out: ', data_out);
+		
+		if (fetch_method != 'Image_CORS') {
 			// fetch_CORS or jQuery_CORS - display image from a blob url
 			var file_blob_object = await new File ([data_out], "file_download", {type: "image/png"});
 			let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
@@ -515,11 +514,11 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			headers = document.getElementById("headers").value;
 			return_type = document.getElementById("return_type").value;
 		}
+
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+		// console.log('data_out: ', data_out);
 		
-		if (fetch_method == 'Audio_CORS') {
-			var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
-			// console.log('data_out: ', data_out);
-		} else {
+		if (fetch_method != 'Audio_CORS') {
 			// fetch_CORS or jQuery_CORS - display image from a blob url
 			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
 			const file_blob_object = await new File ([data_out], "file_download", {type: "audio/mp3"});
@@ -565,10 +564,10 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			return_type = document.getElementById("return_type").value;
 		}
 
-		if (fetch_method == 'Video_CORS') {
-			var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
-			// console.log('data_out: ', data_out);
-		} else {
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+		// console.log('data_out: ', data_out);
+		
+		if (fetch_method != 'Video_CORS') {
 			// fetch_CORS or jQuery_CORS - display image from a blob url
 			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
 			const file_blob_object = await new File ([data_out], "file_download", {type: "video/webm"});
