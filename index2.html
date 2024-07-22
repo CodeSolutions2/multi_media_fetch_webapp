@@ -594,16 +594,27 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		try {
 			var videoElement = document.createElement('video');
 			videoElement.setAttribute("id", "video_element");
+			videoElement.setAttribute("controls", true);
 			
 			// Create the video source
-			var source = videoContext.createMediaElementSource(videoElement);
+			// var sourceElement = videoContext.createMediaElementSource(videoElement);
 			// OR
-			// var source = videoContext.createBufferSource(videoElement);
+			// var sourceElement = videoContext.createBufferSource(videoElement);
+			// OR
+			var sourceElement = document.createElement('source');
+			
 			// ----------------------------
+			
 			// videoElement.setAttribute("width", w);
 			// videoElement.setAttribute("height", w);
-			source.setAttribute("src", github_url_of_externally_downloaded_data);
+			sourceElement.setAttribute("src", github_url_of_externally_downloaded_data);
+			sourceElement.setAttribute("type", "video/mp4");
+
+			videoElement.appendChild(sourceElement);
+			
 			document.getElementById('data_display').appendChild(videoElement);
+
+			
 		} catch (error) {
 			document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + error;
 		}
