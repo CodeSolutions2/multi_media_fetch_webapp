@@ -292,12 +292,11 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 		} else if (desired_media_type == "GET_JSONP_endpoint") {
 			// CORS GET endpoints                    fetch OK, jQuery OK, script JSONP gives CORS error
 			// CORS POST endpoints                   fetch OK, jQuery never tried
-			CORS_method_list = ['fetch_CORS'];
+			CORS_method_list = ['fetch_CORS'];   // OK
 
     } else if (desired_media_type == "video") {
-			// CORS GET endpoints                    fetch OK, jQuery OK, script JSONP gives CORS error
-			// CORS POST endpoints                   fetch OK, jQuery never tried
-			CORS_method_list = ['fetch_CORS'];
+			// CORS_method_list = ['fetch_CORS'];	// CORS error
+			CORS_method_list = ['jQuery_CORS'];
 		}
 		console.log('CORS_method_list: ', CORS_method_list);
 		
@@ -409,10 +408,10 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			headers = document.getElementById("headers").value;
 			return_type = document.getElementById("return_type").value;
 		}
-		console.log('method: ', method);
-		console.log('data: ', data);
-		console.log('headers: ', headers);
-		console.log('return_type: ', return_type);
+		// console.log('method: ', method);
+		// console.log('data: ', data);
+		// console.log('headers: ', headers);
+		// console.log('return_type: ', return_type);
 		
 		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 		console.log('data_out: ', data_out);
@@ -433,10 +432,10 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			headers = document.getElementById("headers").value;
 			return_type = document.getElementById("return_type").value;
 		}
-		console.log('method: ', method);
-		console.log('data: ', data);
-		console.log('headers: ', headers);
-		console.log('return_type: ', return_type);
+		// console.log('method: ', method);
+		// console.log('data: ', data);
+		// console.log('headers: ', headers);
+		// console.log('return_type: ', return_type);
 
 		if (fetch_method == 'Image_CORS') {
 			// The Image is append to the page using Image_CORS
@@ -448,7 +447,11 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			var file_blob_object = await new File ([data_out], "file_download", {type: "image/png"});
 			let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
 
-			try {
+			// Ensure that data_display is empty - remove the old displayed image
+			console.log("see data_display: ", document.getElementById('data_display'))
+			document.getElementById('data_display').removeChild[0];
+			
+			try {	
 			  	var imgElement = document.createElement('img');
 			  	imgElement.setAttribute("id", "img_element");
 			  	// imgElement.setAttribute("width", w);
