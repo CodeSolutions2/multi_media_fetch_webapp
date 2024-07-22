@@ -13,7 +13,7 @@
 			<li>Image PDF: https://raw.githubusercontent.com/CodeSolutions2/multi_media_fetch_webapp/main/document_imagepdf.pdf</li>
 			<!-- <li>Text PDF: https://s3-us-west-2.amazonaws.com/openai-assets/research-covers/language-unsupervised/language_understanding_paper.pdf</li> -->
 			<li>Image: https://storage.googleapis.com/on-the-way2selfrespect/yellow.png</li>
-      <li>Video: </li>
+			<li>Video: https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4</li>
 		</ul>
 	<li>View fetched data.</li>
 </ol>
@@ -86,6 +86,10 @@ window.addEventListener('beforeunload', function() {
 });
 
 // ----------------------------------------------------
+
+const w = 150;
+
+// ----------------------------------------------------
 	
 async function processEvent_automatic_fetch(event) {
 	if (this.getAttribute("checked") == false) {
@@ -137,7 +141,7 @@ async function detect_type_of_media(url) {
 	// --------------------------------
 
 	// Sometimes regex does not function - solution without regex
-  var found_image = (/\.png|\.jpg|\.jpeg|\.gif/i).test(media_type);
+	var found_image = (/\.png|\.jpg|\.jpeg|\.gif/i).test(media_type);
 	console.log('found_image: ', found_image);
 	var first_found_image_index = await find_sequential_characters_simple(media_type, ['.png', '.jpg', '.jpeg', '.gif']);
 	console.log('first_found_image_index: ', first_found_image_index);
@@ -433,12 +437,33 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		console.log('data: ', data);
 		console.log('headers: ', headers);
 		console.log('return_type: ', return_type);
-		
-		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
-		console.log('data_out: ', data_out);
-	
-		// display data
-		document.getElementById('data_display').innerHTML = data_out;
+
+		if (fetch_method == 'Image_CORS') {
+			// The Image is append to the page using Image_CORS
+			var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+			console.log('data_out: ', data_out);
+		} else {
+			// fetch_CORS or jQuery_CORS
+			// display image from a blob url
+			var file_blob_object = await new File ([data_out], "file_download", {type: "image/png"});
+			let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
+
+			try {
+			  	var imgElement = document.createElement('img');
+			  	imgElement.setAttribute("id", "img_element");
+			  	// imgElement.setAttribute("width", w);
+			  	// imgElement.setAttribute("height", w);
+			  	imgElement.setAttribute("src", github_url_of_externally_downloaded_data);
+			  	document.getElementById('data_display').appendChild(imgElement);
+			} catch (error) {
+				document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + error;
+			}
+			await show_pdf_on_page_objectElement(github_url_of_externally_downloaded_data);
+			
+			// a file was loaded before, so remove the blob URL from memory to use resources effectively
+			await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
+		}
+
 		
 	} else if (desired_media_type == 'GET_JSONP_endpoint') {
 		
@@ -463,6 +488,54 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 	
 		// display data
 		document.getElementById('data_display').innerHTML = data_out;
+		
+	} else if (desired_media_type == 'video') {
+		
+		if (automatic_OR_manual == 'automatic') {
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'blob';  // return_type: json, blob, arrayBuffer, text, html
+		} else {
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
+		}
+		console.log('method: ', method);
+		console.log('data: ', data);
+		console.log('headers: ', headers);
+		console.log('return_type: ', return_type);
+		
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+		console.log('data_out: ', data_out);
+	
+		// fetch_CORS or jQuery_CORS
+		// display image from a blob url
+
+		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+		var file_blob_object = await new File ([data_out], "file_download", {type: "video/mp4"});
+		let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
+
+		try {
+			var videoElement = document.createElement('video');
+			videoElement.setAttribute("id", "video_element");
+			
+			// Create the video source
+			var source = videoContext.createMediaElementSource(videoElement);
+			// OR
+			// var source = videoContext.createBufferSource(videoElement);
+			// ----------------------------
+			// videoElement.setAttribute("width", w);
+			// videoElement.setAttribute("height", w);
+			source.setAttribute("src", github_url_of_externally_downloaded_data);
+			document.getElementById('data_display').appendChild(videoElement);
+		} catch (error) {
+			document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + error;
+		}
+		
+		// a file was loaded before, so remove the blob URL from memory to use resources effectively
+		await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
 	}
 }
 
@@ -915,7 +988,7 @@ async function jQuery_CORS(url, method, data, headers, return_type) {
 
 async function create_dynamic_canvasElement(w) {
 
-  const index = 0;
+  	const index = 0;
   
 	// Create a canvas element
 	var canvasElement = document.createElement('canvas');
@@ -940,11 +1013,11 @@ async function create_dynamic_canvasElement(w) {
 	return ctx;
 }
 
+// -----------------------------------------------
   
 async function Image_CORS(url, method, data, headers, return_type) {
-
-  const w = 150;
-  const ctx = await create_dynamic_canvasElement(w);
+	
+	const ctx = await create_dynamic_canvasElement(w);
 	
 	const imageElement = new Image();  // image is 'HTMLImageElement'
 	imageElement.setAttribute('crossOrigin', ""); // OR "anonymous"
@@ -955,9 +1028,6 @@ async function Image_CORS(url, method, data, headers, return_type) {
 	const imageData = ctx.getImageData(0, 0, w, w);
 	return  Array.from(imageData.data);
 }
-
-// -----------------------------------------------
-
 
 // -----------------------------------------------
 	
