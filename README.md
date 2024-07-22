@@ -6,6 +6,8 @@ It was found that the following fetch methods: Image, Audio, Video, fetch, and j
 
 [Url-to-multimedia display webapp] https://CodeSolutions2.github.io/multi_media_fetch_webapp/index2.html
 
+![alt_text](multi_media_webapp.png)
+
 
 ## Upwork
 [Available for purchase on Upwork](https://www.upwork.com/services/product/development-it-cors-url-to-multimedia-javascript-custom-webapp-1815412620907616175)
