@@ -9,8 +9,7 @@
 		<ul>
 			<li>Discrete data: https://nominatim.openstreetmap.org/search?q=LOCATION_NAME&format=json</li>
 			<li>Time-series data: https://api.open-meteo.com/v1/forecast?latitude=LATITUDE&longitude=LONGITUDE&hourly=temperature_2m</li>
-			<li>Text PDF: https://raw.githubusercontent.com/CodeSolutions2/multi_media_fetch_webapp/main/document.pdf</li>
-			<!-- <li>Text PDF: https://s3-us-west-2.amazonaws.com/openai-assets/research-covers/language-unsupervised/language_understanding_paper.pdf</li> -->
+			<li>Text PDF: https://s3-us-west-2.amazonaws.com/openai-assets/research-covers/language-unsupervised/language_understanding_paper.pdf</li>
 			<li>Image PDF: https://raw.githubusercontent.com/CodeSolutions2/multi_media_fetch_webapp/main/document_imagepdf.pdf</li>
 			<li>Image: https://storage.googleapis.com/on-the-way2selfrespect/yellow.png</li>
 			<li>Audio: https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3</li>
@@ -362,6 +361,14 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 	}
 
 	// --------------------------------
+
+	// Clear previous errors 
+	document.getElementById('error').innerHTML = '';
+
+	// Clear previous notifications 
+	document.getElementById('notification').innerHTML = '';
+	
+	// --------------------------------
 	
 	if (desired_media_type == 'pdf') {
 
@@ -378,10 +385,6 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			headers = document.getElementById("headers").value;
 			return_type = document.getElementById("return_type").value;
 		}
-		// console.log('method: ', method);
-		// console.log('data: ', data);
-		// console.log('headers: ', headers);
-		// console.log('return_type: ', return_type);
 		
 		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 		console.log('data_out: ', data_out);
@@ -411,10 +414,6 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			headers = document.getElementById("headers").value;
 			return_type = document.getElementById("return_type").value;
 		}
-		// console.log('method: ', method);
-		// console.log('data: ', data);
-		// console.log('headers: ', headers);
-		// console.log('return_type: ', return_type);
 		
 		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 		console.log('data_out: ', data_out);
@@ -435,10 +434,6 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			headers = document.getElementById("headers").value;
 			return_type = document.getElementById("return_type").value;
 		}
-		// console.log('method: ', method);
-		// console.log('data: ', data);
-		// console.log('headers: ', headers);
-		// console.log('return_type: ', return_type);
 		
 		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 		console.log('data_out: ', data_out);
@@ -459,10 +454,6 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			headers = document.getElementById("headers").value;
 			return_type = document.getElementById("return_type").value;
 		}
-		// console.log('method: ', method);
-		// console.log('data: ', data);
-		// console.log('headers: ', headers);
-		// console.log('return_type: ', return_type);
 
 		if (fetch_method == 'Image_CORS') {
 			// The Image is append to the page using Image_CORS
@@ -489,7 +480,6 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			// a file was loaded before, so remove the blob URL from memory to use resources effectively
 			await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
 		}
-
 		
 	} else if (desired_media_type == 'GET_JSONP_endpoint') {
 		
@@ -504,10 +494,6 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			headers = document.getElementById("headers").value;
 			return_type = document.getElementById("return_type").value;
 		}
-		// console.log('method: ', method);
-		// console.log('data: ', data);
-		// console.log('headers: ', headers);
-		// console.log('return_type: ', return_type);
 		
 		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 		console.log('data_out: ', data_out);
@@ -528,16 +514,11 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			headers = document.getElementById("headers").value;
 			return_type = document.getElementById("return_type").value;
 		}
-		// console.log('method: ', method);
-		// console.log('data: ', data);
-		// console.log('headers: ', headers);
-		// console.log('return_type: ', return_type);
 		
 		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 		console.log('data_out: ', data_out);
 	
-		// fetch_CORS or jQuery_CORS
-		// display image from a blob url
+		// fetch_CORS or jQuery_CORS - display image from a blob url
 
 		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
 		var file_blob_object = await new File ([data_out], "file_download", {type: "audio/mp3"});
@@ -546,15 +527,18 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		try {
 			var audioElement = document.createElement('audio');
 			audioElement.setAttribute("id", "audio_element");
+			audioElement.setAttribute("controls", true);
 			
 			// Create the video source
-			var source = audioContext.createMediaElementSource(audioElement);
-			// OR
-			// var source = audioContext.createBufferSource(audioElement);
-			// ----------------------------
+			var sourceElement = document.createElement('source');
+			
 			// audioElement.setAttribute("width", w);
 			// audioElement.setAttribute("height", w);
-			source.setAttribute("src", github_url_of_externally_downloaded_data);
+			sourceElement.setAttribute("src", github_url_of_externally_downloaded_data);
+			sourceElement.setAttribute("type", "audio/mp3");
+
+			audioElement.appendChild(sourceElement);
+			
 			document.getElementById('data_display').appendChild(audioElement);
 		} catch (error) {
 			document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + error;
@@ -576,16 +560,11 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			headers = document.getElementById("headers").value;
 			return_type = document.getElementById("return_type").value;
 		}
-		// console.log('method: ', method);
-		// console.log('data: ', data);
-		// console.log('headers: ', headers);
-		// console.log('return_type: ', return_type);
 		
 		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 		console.log('data_out: ', data_out);
 	
-		// fetch_CORS or jQuery_CORS
-		// display image from a blob url
+		// fetch_CORS or jQuery_CORS - display image from a blob url
 
 		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
 		var file_blob_object = await new File ([data_out], "file_download", {type: "video/mp4"});
@@ -597,13 +576,7 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			videoElement.setAttribute("controls", true);
 			
 			// Create the video source
-			// var sourceElement = videoContext.createMediaElementSource(videoElement);
-			// OR
-			// var sourceElement = videoContext.createBufferSource(videoElement);
-			// OR
 			var sourceElement = document.createElement('source');
-			
-			// ----------------------------
 			
 			// videoElement.setAttribute("width", w);
 			// videoElement.setAttribute("height", w);
@@ -613,8 +586,6 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			videoElement.appendChild(sourceElement);
 			
 			document.getElementById('data_display').appendChild(videoElement);
-
-			
 		} catch (error) {
 			document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + error;
 		}
