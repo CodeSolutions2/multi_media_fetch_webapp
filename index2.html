@@ -167,13 +167,13 @@ async function detect_type_of_media(url) {
 	var first_found_jsonp_index = await find_sequential_characters_simple(media_type, ['?']);
 	console.log('first_found_jsonp_index: ', first_found_jsonp_index);
 
-	var found_video = (/\.mov|\.mp4|\.ogv|\.webm/i).test(media_type);
-	console.log('found_video: ', found_image);
-	var first_found_video_index = await find_sequential_characters_simple(media_type, ['.mov', '.mp4', '.ogv', '.webm']);
-	console.log('first_found_video_index: ', first_found_video_index);
+	var found_audio = (/\.mp3|\.wav/i).test(media_type);
+	console.log('found_audio: ', found_audio);
+	var first_found_audio_index = await find_sequential_characters_simple(media_type, ['.mp3', '.wav']);
+	console.log('first_found_audio_index: ', first_found_audio_index);
 	
 	var found_video = (/\.mov|\.mp4|\.ogv|\.webm/i).test(media_type);
-	console.log('found_video: ', found_image);
+	console.log('found_video: ', found_video);
 	var first_found_video_index = await find_sequential_characters_simple(media_type, ['.mov', '.mp4', '.ogv', '.webm']);
 	console.log('first_found_video_index: ', first_found_video_index);
 
@@ -183,15 +183,15 @@ async function detect_type_of_media(url) {
 		console.log('Image data');
 		var desired_media_type = 'image';
 
-  } else if (found_pdf == true && first_found_pdf_index.length > 0) {
+	} else if (found_pdf == true && first_found_pdf_index.length > 0) {
 		console.log('PDF data');
 		var desired_media_type = 'pdf';
 
-  } else if (found_text == true && first_found_text_index.length > 0) {
+	} else if (found_text == true && first_found_text_index.length > 0) {
 		console.log('Text data');
 		var desired_media_type = 'text';
     
-  } else if (found_html == true && first_found_html_index.length > 0) {
+	} else if (found_html == true && first_found_html_index.length > 0) {
 		console.log('Html data: web scraping');
 		var desired_media_type = 'html';
 		
@@ -199,7 +199,11 @@ async function detect_type_of_media(url) {
 		console.log('GET JSONP query string');
 		var desired_media_type = 'GET_JSONP_endpoint';
 
-  } else if (found_video == true && first_found_video_index.length > 0) {
+	} else if (found_audio == true && first_found_audio_index.length > 0) {
+		console.log('Audio data');
+		var desired_media_type = 'audio';
+	
+	} else if (found_video == true && first_found_video_index.length > 0) {
 		console.log('Video data');
 		var desired_media_type = 'video';
     
@@ -500,7 +504,55 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 	
 		// display data
 		document.getElementById('data_display').innerHTML = data_out;
+
+	} else if (desired_media_type == 'audio') {
 		
+		if (automatic_OR_manual == 'automatic') {
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'blob';  // return_type: json, blob, arrayBuffer, text, html
+		} else {
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
+		}
+		console.log('method: ', method);
+		console.log('data: ', data);
+		console.log('headers: ', headers);
+		console.log('return_type: ', return_type);
+		
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+		console.log('data_out: ', data_out);
+	
+		// fetch_CORS or jQuery_CORS
+		// display image from a blob url
+
+		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+		var file_blob_object = await new File ([data_out], "file_download", {type: "audio/mp3"});
+		let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
+
+		try {
+			var audioElement = document.createElement('audio');
+			audioElement.setAttribute("id", "audio_element");
+			
+			// Create the video source
+			var source = audioContext.createMediaElementSource(audioElement);
+			// OR
+			// var source = audioContext.createBufferSource(audioElement);
+			// ----------------------------
+			// audioElement.setAttribute("width", w);
+			// audioElement.setAttribute("height", w);
+			source.setAttribute("src", github_url_of_externally_downloaded_data);
+			document.getElementById('data_display').appendChild(audioElement);
+		} catch (error) {
+			document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + error;
+		}
+		
+		// a file was loaded before, so remove the blob URL from memory to use resources effectively
+		await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
+	
 	} else if (desired_media_type == 'video') {
 		
 		if (automatic_OR_manual == 'automatic') {
@@ -1039,7 +1091,7 @@ async function Image_CORS(url, method, data, headers, return_type) {
 	imageElement.setAttribute('crossOrigin', ""); // OR "anonymous"
 	imageElement.setAttribute('headers', {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"});
 	imageElement.onload = async () => { ctx.drawImage(imageElement, 0, 0, w, w); };
-  imageElement.src = url;
+	imageElement.src = url;
   
 	const imageData = ctx.getImageData(0, 0, w, w);
 	return  Array.from(imageData.data);
