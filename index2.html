@@ -571,6 +571,8 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
 
 		try {
+			// Media resource blob:https://codesolutions2.github.io/0c53b305-fee4-4ec4-beac-439ca7d6e629 could not be decoded
+						   
 			var videoElement = document.createElement('video');
 			videoElement.setAttribute("id", "video_element");
 			videoElement.setAttribute("controls", true);
@@ -586,6 +588,9 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			videoElement.appendChild(sourceElement);
 			
 			document.getElementById('data_display').appendChild(videoElement);
+
+			videoElement.load();
+			
 		} catch (error) {
 			document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + error;
 		}
