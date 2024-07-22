@@ -552,8 +552,9 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		if (automatic_OR_manual == 'automatic') {
 			method = 'GET';
 			data = {};
-			headers = {}; 
-			return_type = 'arrayBuffer';  // return_type: json, blob, arrayBuffer, text, html
+			headers = {};
+			return_type = 'blob';  // return_type: json, blob, arrayBuffer, text, html
+			// return_type = 'arrayBuffer';  // return_type: json, blob, arrayBuffer, text, html
 		} else {
 			method = document.getElementById("method").value;
 			data = document.getElementById("data").value;
@@ -566,13 +567,15 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 	
 		// blob data
 		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
-		// var file_blob_object = await new File ([data_out], "file_download", {type: "video/mp4"});
-		// const github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
+		const file_blob_object = await new File ([data_out], "file_download", {type: "video/mp4"});
+		const github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
 
 		// arrayBuffer data
 		// Create a Blob object from the arrayBuffer data
-		const blob_object = new Blob([data_out], { type: 'video/mp4' });
-		const github_url_of_externally_downloaded_data = URL.createObjectURL(blob_object);
+		// const blob_object = new Blob([data_out], { type: 'video/mp4' });
+		// const github_url_of_externally_downloaded_data = URL.createObjectURL(blob_object);
+		// Media resource blob:https://codesolutions2.github.io/f5d54827-9c4d-49cb-a002-469e09f7c136 could not be decoded.
+		
 
 		try {
 			// Media resource blob:https://codesolutions2.github.io/0c53b305-fee4-4ec4-beac-439ca7d6e629 could not be decoded
@@ -1011,13 +1014,13 @@ async function jQuery_CORS(url, method, data, headers, return_type) {
 		
 	} else if (return_type == 'blob') {
 		settings.xhrFields = {responseType: 'blob'};
-		// settings.dataType = 'binary'; // data type response format: 'xml', html, script, json, jsonp, text, binary
+		settings.dataType = 'binary'; // data type response format: 'xml', html, script, json, jsonp, text, binary
 		return $.ajax(url, [,settings])
 			.done(function(response) { console.log('response: ', response); return response; });
 		
 	} else if (return_type == 'arrayBuffer') {
 		settings.xhrFields = {responseType: 'arrayBuffer'};
-		// settings.dataType = 'binary'; // data type response format: 'xml', html, script, json, jsonp, text, binary
+		settings.dataType = 'binary'; // data type response format: 'xml', html, script, json, jsonp, text, binary
 		return $.ajax(url, [,settings])
 			.done(function(response) { console.log('response: ', response); return response; });
 		
