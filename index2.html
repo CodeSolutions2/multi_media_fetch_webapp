@@ -458,7 +458,7 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 
 			// Ensure that data_display is empty - remove the old displayed image
 			console.log("see data_display: ", document.getElementById('data_display'))
-			document.getElementById('data_display').removeChild[0];
+			// document.getElementById('data_display').removeChild[0];
 			
 			try {	
 			  	var imgElement = document.createElement('img');
@@ -1020,7 +1020,8 @@ async function create_dynamic_canvasElement(w) {
 	}
 
 	// Ensure that data_display is empty
-	document.getElementById('data_display').removeChild(document.getElementById('data_display').lastElementChild);
+	console.log("data_display lastElement: ", document.getElementById('data_display').lastElementChild);
+	// document.getElementById('data_display').removeChild(document.getElementById('data_display').lastElementChild);
 	
 	// Add the canvas to the document body or any other desired element
 	document.getElementById('data_display').appendChild(canvasElement);
