@@ -205,7 +205,11 @@ async function detect_type_of_media(url) {
 	} else if (found_video == true && first_found_video_index.length > 0) {
 		console.log('Video data');
 		var desired_media_type = 'video';
-    
+
+	} else if ((/https:\/\/.*\//g).test(url)) {
+		console.log('Html data: web scraping');
+		var desired_media_type = 'html';
+		
 	} else {
 		console.log('Unclear: recommend using manual_fetch');
 		// It could be an end point(ie: GET https://api.openai.com/v1/threads/"+THREAD_ID+"/runs/"+RUN_ID, OR it could be a POST) OR a file without a file extension
@@ -284,8 +288,8 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 		var CORS_method_list;
 		if (desired_media_type == "image") {
 			// CORS_method_list = ['fetch_CORS'];    // CORS error
-			CORS_method_list = ['jQuery_CORS'];   // OK, but could not display image
-			// CORS_method_list = ['Image_CORS'];       // OK
+			// CORS_method_list = ['jQuery_CORS'];	 // OK, can not display image due to encoding
+			CORS_method_list = ['Image_CORS'];       // OK
 			
 		} else if (desired_media_type == "pdf") {
 			CORS_method_list = ['fetch_CORS'];	// OK
@@ -304,13 +308,13 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 
 		} else if (desired_media_type == "audio") {
 			// CORS_method_list = ['fetch_CORS'];	// CORS error
-			CORS_method_list = ['jQuery_CORS'];	// Media resource blob:https://codesolutions2.git... could not be decoded.
-			// CORS_method_list = ['Audio_CORS'];	// OK
+			// CORS_method_list = ['jQuery_CORS'];	// Media resource blob:https://codesolutions2.git... could not be decoded.
+			CORS_method_list = ['Audio_CORS'];	// OK
 			
 		} else if (desired_media_type == "video") {
 			// CORS_method_list = ['fetch_CORS'];	// CORS error
-			CORS_method_list = ['jQuery_CORS'];	// Media resource blob:https://codesolutions2.git... could not be decoded.
-			// CORS_method_list = ['Video_CORS'];	// OK
+			// CORS_method_list = ['jQuery_CORS'];	// Media resource blob:https://codesolutions2.git... could not be decoded.
+			CORS_method_list = ['Video_CORS'];	// OK
 		}
 		console.log('CORS_method_list: ', CORS_method_list);
 		
@@ -466,10 +470,10 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
 			
 			try {	
-			  	var imgElement = document.createElement('img');
+			  	const imgElement = document.createElement('img');
 			  	imgElement.setAttribute("id", "img_element");
-			  	// imgElement.setAttribute("width", w);
-			  	// imgElement.setAttribute("height", w);
+			  	imgElement.setAttribute("width", w);
+			  	imgElement.setAttribute("height", w);
 			  	imgElement.setAttribute("src", github_url_of_externally_downloaded_data);
 			  	document.getElementById('data_display').appendChild(imgElement);
 			} catch (error) {
