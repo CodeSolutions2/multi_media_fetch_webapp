@@ -1014,7 +1014,8 @@ async function jQuery_CORS(url, method, data, headers, return_type) {
 		
 	} else if (return_type == 'blob') {
 		settings.xhrFields = {responseType: 'blob'};
-		settings.dataType = 'binary'; // data type response format: 'xml', html, script, json, jsonp, text, binary
+		// settings.dataType = 'binary'; // data type response format: 'xml', html, script, json, jsonp, text, binary
+		settings.dataType = 'text'; // data type response format: 'xml', html, script, json, jsonp, text, binary
 		return $.ajax(url, [,settings])
 			.done(function(response) { console.log('response: ', response); return response; });
 		
