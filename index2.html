@@ -499,7 +499,7 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		console.log('data_out: ', data_out);
 	
 		// display data
-		document.getElementById('data_display').innerHTML = data_out;
+		document.getElementById('data_display').innerHTML = JSON.stringify(data_out);
 
 	} else if (desired_media_type == 'audio') {
 		
@@ -538,8 +538,8 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			sourceElement.setAttribute("type", "audio/mp3");
 
 			audioElement.appendChild(sourceElement);
-			
 			document.getElementById('data_display').appendChild(audioElement);
+			
 		} catch (error) {
 			document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + error;
 		}
@@ -552,8 +552,8 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		if (automatic_OR_manual == 'automatic') {
 			method = 'GET';
 			data = {};
-			headers = {};
-			return_type = 'blob';  // return_type: json, blob, arrayBuffer, text, html
+			headers = {}; 
+			return_type = 'arrayBuffer';  // return_type: json, blob, arrayBuffer, text, html
 		} else {
 			method = document.getElementById("method").value;
 			data = document.getElementById("data").value;
@@ -565,10 +565,12 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		console.log('data_out: ', data_out);
 	
 		// fetch_CORS or jQuery_CORS - display image from a blob url
-
 		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
-		var file_blob_object = await new File ([data_out], "file_download", {type: "video/mp4"});
-		let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
+		// var file_blob_object = await new File ([data_out], "file_download", {type: "video/mp4"});
+		// let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
+
+		// make a url for arrayBuffer data
+		let github_url_of_externally_downloaded_data = URL.createObjectURL(data_out);
 
 		try {
 			// Media resource blob:https://codesolutions2.github.io/0c53b305-fee4-4ec4-beac-439ca7d6e629 could not be decoded
