@@ -352,6 +352,16 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 	var data
 	var headers;
 	var return_type;
+
+	// --------------------------------
+	
+	// Ensure that data_display is empty
+	if (document.getElementById('data_display').lastElementChild != null) {
+		console.log("data_display lastElement: ", document.getElementById('data_display').lastElementChild);
+		document.getElementById('data_display').removeChild(document.getElementById('data_display').lastElementChild);
+	}
+
+	// --------------------------------
 	
 	if (desired_media_type == 'pdf') {
 
@@ -368,10 +378,10 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			headers = document.getElementById("headers").value;
 			return_type = document.getElementById("return_type").value;
 		}
-		console.log('method: ', method);
-		console.log('data: ', data);
-		console.log('headers: ', headers);
-		console.log('return_type: ', return_type);
+		// console.log('method: ', method);
+		// console.log('data: ', data);
+		// console.log('headers: ', headers);
+		// console.log('return_type: ', return_type);
 		
 		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 		console.log('data_out: ', data_out);
@@ -397,10 +407,10 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			headers = document.getElementById("headers").value;
 			return_type = document.getElementById("return_type").value;
 		}
-		console.log('method: ', method);
-		console.log('data: ', data);
-		console.log('headers: ', headers);
-		console.log('return_type: ', return_type);
+		// console.log('method: ', method);
+		// console.log('data: ', data);
+		// console.log('headers: ', headers);
+		// console.log('return_type: ', return_type);
 		
 		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 		console.log('data_out: ', data_out);
@@ -459,10 +469,6 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			// display image from a blob url
 			var file_blob_object = await new File ([data_out], "file_download", {type: "image/png"});
 			let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
-
-			// Ensure that data_display is empty - remove the old displayed image
-			console.log("see data_display: ", document.getElementById('data_display'))
-			// document.getElementById('data_display').removeChild[0];
 			
 			try {	
 			  	var imgElement = document.createElement('img');
@@ -494,10 +500,10 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			headers = document.getElementById("headers").value;
 			return_type = document.getElementById("return_type").value;
 		}
-		console.log('method: ', method);
-		console.log('data: ', data);
-		console.log('headers: ', headers);
-		console.log('return_type: ', return_type);
+		// console.log('method: ', method);
+		// console.log('data: ', data);
+		// console.log('headers: ', headers);
+		// console.log('return_type: ', return_type);
 		
 		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 		console.log('data_out: ', data_out);
@@ -518,10 +524,10 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			headers = document.getElementById("headers").value;
 			return_type = document.getElementById("return_type").value;
 		}
-		console.log('method: ', method);
-		console.log('data: ', data);
-		console.log('headers: ', headers);
-		console.log('return_type: ', return_type);
+		// console.log('method: ', method);
+		// console.log('data: ', data);
+		// console.log('headers: ', headers);
+		// console.log('return_type: ', return_type);
 		
 		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 		console.log('data_out: ', data_out);
@@ -566,10 +572,10 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			headers = document.getElementById("headers").value;
 			return_type = document.getElementById("return_type").value;
 		}
-		console.log('method: ', method);
-		console.log('data: ', data);
-		console.log('headers: ', headers);
-		console.log('return_type: ', return_type);
+		// console.log('method: ', method);
+		// console.log('data: ', data);
+		// console.log('headers: ', headers);
+		// console.log('return_type: ', return_type);
 		
 		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 		console.log('data_out: ', data_out);
@@ -1070,10 +1076,6 @@ async function create_dynamic_canvasElement(w) {
 		let tot = index*canvasElement.width + 40;
 		canvasElement.style.left = tot+'px';
 	}
-
-	// Ensure that data_display is empty
-	console.log("data_display lastElement: ", document.getElementById('data_display').lastElementChild);
-	// document.getElementById('data_display').removeChild(document.getElementById('data_display').lastElementChild);
 	
 	// Add the canvas to the document body or any other desired element
 	document.getElementById('data_display').appendChild(canvasElement);
