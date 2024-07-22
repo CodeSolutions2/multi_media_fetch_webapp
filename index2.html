@@ -283,8 +283,8 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 		// *** List of which methods are most reliable for CORS ***
 		var CORS_method_list;
 		if (desired_media_type == "image") {
-			CORS_method_list = ['Image_CORS'];       // OK
-			// CORS_method_list = ['jQuery_CORS'];   // OK
+			// CORS_method_list = ['Image_CORS'];       // OK
+			CORS_method_list = ['jQuery_CORS'];   // OK
 			// CORS_method_list = ['fetch_CORS'];    // CORS error
 			
 		} else if (desired_media_type == "pdf") {
@@ -304,13 +304,13 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 
 		} else if (desired_media_type == "audio") {
 			// CORS_method_list = ['fetch_CORS'];	// CORS error
-			CORS_method_list = ['jQuery_CORS'];	// 
-			// CORS_method_list = ['Audio_CORS'];
+			// CORS_method_list = ['jQuery_CORS'];	// Media resource blob:https://codesolutions2.git... could not be decoded.
+			CORS_method_list = ['Audio_CORS'];
 			
 		} else if (desired_media_type == "video") {
 			// CORS_method_list = ['fetch_CORS'];	// CORS error
-			// CORS_method_list = ['Video_CORS'];	// OK
-			CORS_method_list = ['jQuery_CORS'];	// 
+			// CORS_method_list = ['jQuery_CORS'];	// Media resource blob:https://codesolutions2.git... could not be decoded.
+			CORS_method_list = ['Video_CORS'];	// OK
 		}
 		console.log('CORS_method_list: ', CORS_method_list);
 		
