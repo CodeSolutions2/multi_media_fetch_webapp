@@ -9,10 +9,11 @@
 		<ul>
 			<li>Discrete data: https://nominatim.openstreetmap.org/search?q=LOCATION_NAME&format=json</li>
 			<li>Time-series data: https://api.open-meteo.com/v1/forecast?latitude=LATITUDE&longitude=LONGITUDE&hourly=temperature_2m</li>
-			<!-- <li>Text PDF: https://raw.githubusercontent.com/CodeSolutions2/multi_media_fetch_webapp/main/document.pdf</li> -->
-			<li>Image PDF: https://raw.githubusercontent.com/CodeSolutions2/multi_media_fetch_webapp/main/document_imagepdf.pdf</li>
+			<li>Text PDF: https://raw.githubusercontent.com/CodeSolutions2/multi_media_fetch_webapp/main/document.pdf</li>
 			<!-- <li>Text PDF: https://s3-us-west-2.amazonaws.com/openai-assets/research-covers/language-unsupervised/language_understanding_paper.pdf</li> -->
+			<li>Image PDF: https://raw.githubusercontent.com/CodeSolutions2/multi_media_fetch_webapp/main/document_imagepdf.pdf</li>
 			<li>Image: https://storage.googleapis.com/on-the-way2selfrespect/yellow.png</li>
+			<li>Audio: https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3</li>
 			<li>Video: https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4</li>
 		</ul>
 	<li>View fetched data.</li>
@@ -166,7 +167,12 @@ async function detect_type_of_media(url) {
 	var first_found_jsonp_index = await find_sequential_characters_simple(media_type, ['?']);
 	console.log('first_found_jsonp_index: ', first_found_jsonp_index);
 
-  var found_video = (/\.mov|\.mp4|\.ogv|\.webm/i).test(media_type);
+	var found_video = (/\.mov|\.mp4|\.ogv|\.webm/i).test(media_type);
+	console.log('found_video: ', found_image);
+	var first_found_video_index = await find_sequential_characters_simple(media_type, ['.mov', '.mp4', '.ogv', '.webm']);
+	console.log('first_found_video_index: ', first_found_video_index);
+	
+	var found_video = (/\.mov|\.mp4|\.ogv|\.webm/i).test(media_type);
 	console.log('found_video: ', found_image);
 	var first_found_video_index = await find_sequential_characters_simple(media_type, ['.mov', '.mp4', '.ogv', '.webm']);
 	console.log('first_found_video_index: ', first_found_video_index);
@@ -251,7 +257,6 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 
 	var fetch_method;
 	
-	
 	// Determine if the data is in the same domain or different domain
 	var found_github = (/github/g).test(url);
 	console.log('found_github: ', found_github);
@@ -275,26 +280,30 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 		// *** List of which methods are most reliable for CORS ***
 		var CORS_method_list;
 		if (desired_media_type == "image") {
-      CORS_method_list = ['Image_CORS'];       // OK
+			CORS_method_list = ['Image_CORS'];       // OK
 			// CORS_method_list = ['jQuery_CORS'];   // OK
-      // CORS_method_list = ['fetch_CORS'];    // CORS error
+			// CORS_method_list = ['fetch_CORS'];    // CORS error
 			
 		} else if (desired_media_type == "pdf") {
-			CORS_method_list = ['fetch_CORS'];
-			//CORS_method_list = ['jQuery_CORS'];    // jQuery can obtain and not display correctly
+			CORS_method_list = ['fetch_CORS'];	// OK
+			//CORS_method_list = ['jQuery_CORS'];	// jQuery can obtain and not display correctly
 			
 		} else if (desired_media_type == "text") {
-			CORS_method_list = ['fetch_CORS', 'jQuery_CORS'];
+			CORS_method_list = ['fetch_CORS'];	// OK
+			// CORS_method_list = ['jQuery_CORS'];	// OK
 			
 		} else if (desired_media_type == "html") {
-			CORS_method_list = ['jQuery_CORS'];
+			CORS_method_list = ['jQuery_CORS'];	// OK
 			
 		} else if (desired_media_type == "GET_JSONP_endpoint") {
-			// CORS GET endpoints                    fetch OK, jQuery OK, script JSONP gives CORS error
-			// CORS POST endpoints                   fetch OK, jQuery never tried
-			CORS_method_list = ['fetch_CORS'];   // OK
+			CORS_method_list = ['fetch_CORS'];	// OK
+			// CORS_method_list = ['jQuery_CORS'];	// OK GET, never tried POST, JSONP notation did not work
 
-    } else if (desired_media_type == "video") {
+		} else if (desired_media_type == "audio") {
+			// CORS_method_list = ['fetch_CORS'];	// CORS error
+			CORS_method_list = ['jQuery_CORS'];
+			
+		} else if (desired_media_type == "video") {
 			// CORS_method_list = ['fetch_CORS'];	// CORS error
 			CORS_method_list = ['jQuery_CORS'];
 		}
@@ -1009,6 +1018,9 @@ async function create_dynamic_canvasElement(w) {
 		let tot = index*canvasElement.width + 40;
 		canvasElement.style.left = tot+'px';
 	}
+
+	// Ensure that data_display is empty
+	document.getElementById('data_display').removeChild(document.getElementById('data_display').lastElementChild);
 	
 	// Add the canvas to the document body or any other desired element
 	document.getElementById('data_display').appendChild(canvasElement);
