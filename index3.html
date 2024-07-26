@@ -337,10 +337,9 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 			try {
 				response = await fetch_parameters_for_media_type(url, desired_media_type, fetch_method, automatic_OR_manual);
 				console.log('response: ', response);
-        count += 1;
+				count += 1;
 			} catch (err) {
 				document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + err;
-				// document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + error + ' . If url is correct, the server that you wish to read the data from has not granted CORS access permission. Try a different url.';
 			}
 			
 		}
@@ -588,8 +587,8 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 				// Create the video source
 				var sourceElement = document.createElement('source');
 				
-				// videoElement.setAttribute("width", w);
-				// videoElement.setAttribute("height", w);
+				videoElement.setAttribute("width", w);
+				videoElement.setAttribute("height", w);
 				sourceElement.setAttribute("src", github_url_of_externally_downloaded_data);
 				sourceElement.setAttribute("type", "video/webm");
 	
@@ -1161,7 +1160,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	analyser.getByteTimeDomainData(dataArray); // This probably uses a pointer and assigns the output to analyser
 	console.log('analyser: ', analyser);
 	
-	return analyser;
+	return dataArray;
 }
 	
 // -----------------------------------------------
