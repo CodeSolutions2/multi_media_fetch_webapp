@@ -399,18 +399,20 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		}
 		
 		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
-	
+
 		// Display data
-		// var blob_object = new Blob([data_out], {type:"application/pdf"});
-		// var blob_object = new Blob([data_out], { type: 'application/octet-stream' });
-		// console.log('blob_object: ', blob_object);
-		
-		var file_blob_object = await new File ([data_out], "file_download", {type: "application/pdf"});
-		let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
-		await show_pdf_on_page_objectElement(github_url_of_externally_downloaded_data);
-		
-		// a file was loaded before, so remove the blob URL from memory to use resources effectively
-		await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
+		if (data_out != undefined) {
+			// var blob_object = new Blob([data_out], {type:"application/pdf"});
+			// var blob_object = new Blob([data_out], { type: 'application/octet-stream' });
+			// console.log('blob_object: ', blob_object);
+			
+			var file_blob_object = await new File ([data_out], "file_download", {type: "application/pdf"});
+			let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
+			await show_pdf_on_page_objectElement(github_url_of_externally_downloaded_data);
+			
+			// a file was loaded before, so remove the blob URL from memory to use resources effectively
+			await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
+		}
 		
 	} else if (desired_media_type == 'text') {
 
@@ -467,7 +469,7 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 
 		// Display data
-		if (fetch_method != 'Image_CORS') {
+		if (fetch_method != 'Image_CORS' && data_out != undefined) {
 			// fetch_CORS or jQuery_CORS - display image from a blob url
 			var file_blob_object = await new File ([data_out], "file_download", {type: "image/png"});
 			let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
@@ -523,7 +525,7 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 
 		// Display data
-		if (fetch_method != 'Audio_CORS') {
+		if (fetch_method != 'Audio_CORS' && data_out != undefined) {
 			// fetch_CORS or jQuery_CORS - display image from a blob url
 			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
 			const file_blob_object = await new File ([data_out], "file_download", {type: "audio/mp3"});
@@ -572,7 +574,7 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
 
 		// Display data
-		if (fetch_method != 'Video_CORS') {
+		if (fetch_method != 'Video_CORS' && data_out != undefined) {
 			// fetch_CORS or jQuery_CORS - display image from a blob url
 			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
 			const file_blob_object = await new File ([data_out], "file_download", {type: "video/webm"});
@@ -605,6 +607,7 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 	}
 
 	console.log('data_out: ', data_out);
+	return data_out;
 }
 
 // -----------------------------------------------
@@ -825,12 +828,12 @@ async function fetch_CORS(url, method, data, headers, return_type) {
 			const proxy3 = await define_proxy_handler();
 			return await proxy3(url, options)
 				.then(response => response.json())
-				.then(async function(data) { console.log('data: ', data); return data; })
+				.then(async function(data) { return data; })
 				.catch(error => console.error("error: ", error));
 		} else { 
 			return await fetch(url, options)
 				.then(response => response.json())
-				.then(async function(data) { console.log('data: ', data); return data; })
+				.then(async function(data) { return data; })
 				.catch(error => console.error("error: ", error));
 		}
 		
@@ -839,12 +842,12 @@ async function fetch_CORS(url, method, data, headers, return_type) {
 			const proxy3 = await define_proxy_handler();
 			return await proxy3(url, options)
 				.then(response => response.blob())
-				.then(async function(blob_object) { console.log('blob_object: ', blob_object); return blob_object; })
+				.then(async function(blob_object) { return blob_object; })
 				.catch(error => console.error("error: ", error));
 		} else {
 			return await fetch(url, options)
 				.then(response => response.blob())
-				.then(async function(blob_object) { console.log('blob_object: ', blob_object); return blob_object; })
+				.then(async function(blob_object) { return blob_object; })
 				.catch(error => console.error("error: ", error));
 		}
 		
@@ -853,12 +856,12 @@ async function fetch_CORS(url, method, data, headers, return_type) {
 			const proxy3 = await define_proxy_handler();
 			return await proxy3(url, options)
 				.then(response => response.arrayBuffer())
-				.then(async function(arraybuffer) { console.log("arraybuffer:", arraybuffer); return arraybuffer; })
+				.then(async function(arraybuffer) { return arraybuffer; })
 				.catch(error => console.error("error: ", error));
 		} else {
 			return await fetch(url, options)
 				.then(response => response.arrayBuffer())
-				.then(async function(arraybuffer) { console.log("arraybuffer:", arraybuffer); return arraybuffer; })
+				.then(async function(arraybuffer) { return arraybuffer; })
 				.catch(error => console.error("error: ", error));
 		}
 		
@@ -867,12 +870,12 @@ async function fetch_CORS(url, method, data, headers, return_type) {
 			const proxy3 = await define_proxy_handler();
 			return await proxy3(url, options)
 				.then(res => res.text())
-				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
+				.then(str_data => { return str_data; })
 				.catch(error => console.error("error: ", error));
 		} else {
 			return await fetch(url, options)
 				.then(res => res.text())
-				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
+				.then(str_data => { return str_data; })
 				.catch(error => console.error("error: ", error));
 		}
 
@@ -881,12 +884,12 @@ async function fetch_CORS(url, method, data, headers, return_type) {
 			const proxy3 = await define_proxy_handler();
 			return await proxy3(url, options)
 				.then(res => res.text())
-				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
+				.then(str_data => { return str_data; })
 				.catch(error => console.error("error: ", error));
 		} else {
 			return await fetch(url, options)
 				.then(res => res.text())
-				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
+				.then(str_data => { return str_data; })
 				.catch(error => console.error("error: ", error));
 		}
 	}
