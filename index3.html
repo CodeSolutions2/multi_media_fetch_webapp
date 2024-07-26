@@ -287,20 +287,20 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 		// *** List of which methods are most reliable for CORS ***
 		var CORS_method_list;
 		if (desired_media_type == "image") {
-			// CORS_method_list = ['fetch_CORS'];    // CORS error
+			// CORS_method_list = ['fetch_CORS'];    // CORS error often
 			// CORS_method_list = ['Image_CORS'];    // OK
-      // CORS_method_list = ['jQuery_CORS'];	 // OK, can not display image due to encoding
-      CORS_method_list = ['fetch_CORS', 'Image_CORS', 'jQuery_CORS'];    
+      			// CORS_method_list = ['jQuery_CORS'];	 // OK, but media resource could not be decoded.
+      			CORS_method_list = ['fetch_CORS', 'Image_CORS', 'jQuery_CORS'];    
 			
 		} else if (desired_media_type == "pdf") {
 			// CORS_method_list = ['fetch_CORS'];	// OK
-			//CORS_method_list = ['jQuery_CORS'];	// jQuery can obtain and not display correctly
-      CORS_method_list = ['fetch_CORS', 'jQuery_CORS'];
+			//CORS_method_list = ['jQuery_CORS'];	// OK, but media resource could not be decoded.
+      			CORS_method_list = ['fetch_CORS', 'jQuery_CORS'];
 			
 		} else if (desired_media_type == "text") {
 			// CORS_method_list = ['fetch_CORS'];	// OK
 			// CORS_method_list = ['jQuery_CORS'];	// OK
-      CORS_method_list = ['fetch_CORS', 'jQuery_CORS'];
+      			CORS_method_list = ['fetch_CORS', 'jQuery_CORS'];
 			
 		} else if (desired_media_type == "html") {
 			CORS_method_list = ['jQuery_CORS'];	// OK
@@ -308,19 +308,19 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 		} else if (desired_media_type == "GET_JSONP_endpoint") {
 			// CORS_method_list = ['fetch_CORS'];	// OK
 			// CORS_method_list = ['jQuery_CORS'];	// OK GET, never tried POST, JSONP notation did not work
-      CORS_method_list = ['fetch_CORS', 'jQuery_CORS'];
+      			CORS_method_list = ['fetch_CORS', 'jQuery_CORS'];
 
 		} else if (desired_media_type == "audio") {
-			// CORS_method_list = ['fetch_CORS'];	// CORS error
-      // CORS_method_list = ['Audio_CORS'];	// OK
-			// CORS_method_list = ['jQuery_CORS'];	// Media resource could not be decoded.
+			// CORS_method_list = ['fetch_CORS'];	// CORS error often
+			// CORS_method_list = ['Audio_CORS'];	// OK
+			// CORS_method_list = ['jQuery_CORS'];	// OK, but media resource could not be decoded.
 			CORS_method_list = ['fetch_CORS', 'Audio_CORS', 'jQuery_CORS'];
 			
 		} else if (desired_media_type == "video") {
-			// CORS_method_list = ['fetch_CORS'];	// CORS error
-      // CORS_method_list = ['Video_CORS'];	// OK
-			// CORS_method_list = ['jQuery_CORS'];	// Media resource could not be decoded.
-      CORS_method_list = ['fetch_CORS', 'Video_CORS', 'jQuery_CORS'];
+			// CORS_method_list = ['fetch_CORS'];	// CORS error often
+      			// CORS_method_list = ['Video_CORS'];	// OK
+			// CORS_method_list = ['jQuery_CORS'];	// OK, but media resource could not be decoded.
+      			CORS_method_list = ['fetch_CORS', 'Video_CORS', 'jQuery_CORS'];
 		}
 		console.log('CORS_method_list: ', CORS_method_list);
 		
@@ -1062,24 +1062,69 @@ async function Image_CORS(url, method, data, headers, return_type) {
 	imageElement.setAttribute('headers', {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"});
 	imageElement.onload = async () => { ctx.drawImage(imageElement, 0, 0, w, w); };
 	imageElement.src = url;
-  
+
+	// drawImage(imageElement, dist_from_canvas_left_to_image_topleft=dx, dist_from_canvas_top_to_image_topleft=dy, image_Width, image_Height)
+	
 	const imageData = ctx.getImageData(0, 0, w, w);
-	return  Array.from(imageData.data);
+	const oneD_array = imageData.data; // data is a 1D array
+
+	// convert pixel data (1D array) to 2D Array
+	// var twoD_array = [];
+	// for (let i = 0; i < oneD_array.length; i += 4) {
+	//   twoD_array.push([oneD_array[i], oneD_array[i + 1], oneD_array[i + 2], oneD_array[i + 3]]);
+	// }
+	// OR
+	const twoD_array = Array.from(oneD_array)
+	
+	return twoD_array;
 }
 
 // -----------------------------------------------
 
 async function Video_CORS(url, method, data, headers, return_type) {
 	
-	const videoElement = document.createElement('video');
+	var videoElement = document.createElement('video');
 	videoElement.setAttribute("controls", true);
 	videoElement.setAttribute('crossOrigin', "anonymous"); // OR "anonymous"
 	
 	var sourceElement = document.createElement('source');
 	sourceElement.setAttribute("src", url);
+	sourceElement.start(0); // start the video at t=0secs
 	videoElement.appendChild(sourceElement);
+
+	// View video on page
 	document.getElementById('data_display').appendChild(videoElement);
 
+	// -----------------------------------------------
+
+	// Save two video frames to file
+	const videoLength = videoElement.duration;
+
+	
+	
+	var threeD_array = [];
+	
+	const ctx = await create_dynamic_canvasElement(w);
+
+	// A snapshot of the video at t=0secs
+	ctx.drawImage(videoElement, 0, 0, w, w);
+	var imageData = ctx.getImageData(0, 0, w, w);
+	var oneD_array = imageData.data; // data is a 1D array
+	var twoD_array = Array.from(oneD_array);
+	threeD_array.push(twoD_array);
+
+	videoElement.removeChild(sourceElement);
+
+	// A snapshot of the video at t=1secs
+	sourceElement.start(1); // start the video at t=1secs
+	videoElement.appendChild(sourceElement);
+	ctx.drawImage(videoElement, 0, 0, w, w);
+	imageData = ctx.getImageData(0, 0, w, w);
+	oneD_array = imageData.data; // data is a 1D array
+	twoD_array = Array.from(oneD_array);
+	threeD_array.push(twoD_array);
+	
+	return threeD_array;
 }
 
 
@@ -1096,6 +1141,27 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	audioElement.appendChild(sourceElement);
 	document.getElementById('data_display').appendChild(audioElement);
 
+	// Obtain the audio data as a data Array
+	// Create an AudioContext
+	var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+	audioContext = new AudioContext();
+	
+	// Create an AnalyserNode
+	const analyser = audioContext.createAnalyser();
+	analyser.fftSize = 2048;
+	
+	// Connect the nodes
+	sourceElement.connect(analyser);
+	analyser.connect(audioContext.destination);
+	
+	// Create a Uint8Array to store the audio data
+	const dataArray = new Uint8Array(analyser.frequencyBinCount);
+	console.log('dataArray: ', dataArray);
+
+	analyser.getByteTimeDomainData(dataArray); // This probably uses a pointer and assigns the output to analyser
+	console.log('analyser: ', analyser);
+	
+	return analyser;
 }
 	
 // -----------------------------------------------
