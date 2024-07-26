@@ -295,20 +295,20 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 		} else if (desired_media_type == "pdf") {
 			// CORS_method_list = ['fetch_CORS'];	// OK
 			//CORS_method_list = ['jQuery_CORS'];	// OK, but media resource could not be decoded.
-      			CORS_method_list = ['fetch_CORS', 'jQuery_CORS'];
+      			CORS_method_list = ['fetch_CORS', 'jQuery_CORS', 'fetch_CORS'];
 			
 		} else if (desired_media_type == "text") {
 			// CORS_method_list = ['fetch_CORS'];	// OK
 			// CORS_method_list = ['jQuery_CORS'];	// OK
-      			CORS_method_list = ['fetch_CORS', 'jQuery_CORS'];
+      			CORS_method_list = ['fetch_CORS', 'jQuery_CORS', 'fetch_CORS'];
 			
 		} else if (desired_media_type == "html") {
-			CORS_method_list = ['jQuery_CORS'];	// OK
+			CORS_method_list = ['jQuery_CORS', 'fetch_CORS', 'fetch_CORS'];	// OK
 			
 		} else if (desired_media_type == "GET_JSONP_endpoint") {
 			// CORS_method_list = ['fetch_CORS'];	// OK
 			// CORS_method_list = ['jQuery_CORS'];	// OK GET, never tried POST, JSONP notation did not work
-      			CORS_method_list = ['fetch_CORS', 'jQuery_CORS'];
+      			CORS_method_list = ['fetch_CORS', 'jQuery_CORS', 'fetch_CORS'];
 
 		} else if (desired_media_type == "audio") {
 			// CORS_method_list = ['fetch_CORS'];	// CORS error often
@@ -329,7 +329,8 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 		var response = undefined;
 		var count = 0;
     
-		while(response == undefined && count < CORS_method_list.length) {
+		// while(response == undefined && count < CORS_method_list.length) {
+		while(response == undefined && count < 3) {
 			fetch_method = CORS_method_list.at(count);
 			console.log('fetch_method: ', fetch_method);
 			
@@ -635,13 +636,13 @@ async function fetch_methods(fetch_method, url, method, data, headers, return_ty
 		
 	} else if (fetch_method == 'Video_CORS') {
 		return await Video_CORS(url, method, data, headers, return_type)
-			//.then(res => res)
-			//.then(async function(response) { return response; });
+			.then(res => res)
+			.then(async function(response) { return response; });
 		
 	} else if (fetch_method == 'Audio_CORS') {
 		return await Audio_CORS(url, method, data, headers, return_type)
-			//.then(res => res)
-			//.then(async function(response) { return response; });
+			.then(res => res)
+			.then(async function(response) { return response; });
 	}
 }
 
