@@ -479,7 +479,6 @@ async function fetch_parameters_for_media_type(url, desired_media_type, fetch_me
 			} catch (error) {
 				document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + error;
 			}
-			await show_pdf_on_page_objectElement(github_url_of_externally_downloaded_data);
 			
 			// a file was loaded before, so remove the blob URL from memory to use resources effectively
 			await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
