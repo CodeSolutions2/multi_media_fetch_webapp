@@ -635,13 +635,13 @@ async function fetch_methods(fetch_method, url, method, data, headers, return_ty
 		
 	} else if (fetch_method == 'Video_CORS') {
 		return await Video_CORS(url, method, data, headers, return_type)
-			.then(res => res)
-			.then(async function(response) { return response; });
+			//.then(res => res)
+			//.then(async function(response) { return response; });
 		
 	} else if (fetch_method == 'Audio_CORS') {
 		return await Audio_CORS(url, method, data, headers, return_type)
-			.then(res => res)
-			.then(async function(response) { return response; });
+			//.then(res => res)
+			//.then(async function(response) { return response; });
 	}
 }
 
@@ -1098,8 +1098,7 @@ async function Video_CORS(url, method, data, headers, return_type) {
 
 	// Save two video frames to file
 	const videoLength = videoElement.duration;
-
-	
+	console.log('videoLength: ', videoLength);
 	
 	var threeD_array = [];
 	
@@ -1122,6 +1121,8 @@ async function Video_CORS(url, method, data, headers, return_type) {
 	oneD_array = imageData.data; // data is a 1D array
 	twoD_array = Array.from(oneD_array);
 	threeD_array.push(twoD_array);
+
+	console.log('threeD_array: ', threeD_array);
 	
 	return threeD_array;
 }
