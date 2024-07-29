@@ -1201,10 +1201,6 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	analyser.getFloatTimeDomainData(dataArray);
 	console.log('analyser: ', analyser);
 
-	const arr = analyser.sort();
-	var max_val = [Math.abs(arr.at(0)), arr.at(analyser.length-1)].sort().pop();
-	console.log('max_val: ', max_val);
-
 	const ctx = await create_dynamic_canvasElement(w);
 	ctx.fillStyle = "rgb(200 200 200)";
 	var WIDTH = w;
@@ -1219,7 +1215,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 
 	ctx.beginPath();
 	for (let i = 0; i < bufferLength; i++) {
-		const normalized = dataArray[i] / max_val; // 0 to 1
+		const normalized = dataArray[i] / 128;
 		const y = (normalized * HEIGHT) / 2;
 
 	    if (i === 0) {
@@ -1234,6 +1230,13 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	  ctx.stroke();
 	
 	return dataArray;
+}
+
+
+function mean(arr) {
+	const initialValue = 0;
+	var sum = arr.reduce((accumulator, currentValue) => accumulator + currentValue, initialValue);
+	return sum/arr.length;
 }
 
 
