@@ -331,7 +331,6 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 		// while(response == undefined && count < CORS_method_list.length) {
 		// while(response == undefined && count < 3) {
 		// 	fetch_method = CORS_method_list.at(count);
-		// 	console.log('fetch_method: ', fetch_method);
 		// 	// need to keep calling the function for the next CORS_method_list, until there is no error
 		// 	try {
 		// 		response = await fetch_parameters_for_media_type(url, desired_media_type, fetch_method, automatic_OR_manual);
@@ -342,15 +341,11 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 		// 	}
 		// }
 		// OR
-		for (var count=0; count<3; count++) {
-			fetch_method = CORS_method_list.at(count);
-			console.log('fetch_method: ', fetch_method);
-			
-			// need to keep calling the function for the next CORS_method_list, until there is no error
+		for (var i=0; i<3; i++) {
+			fetch_method = CORS_method_list.at(i);
 			try {
 				response = await fetch_parameters_for_media_type(url, desired_media_type, fetch_method, automatic_OR_manual);
 				console.log('response: ', response);
-				count += 1;
 			} catch (err) {
 				document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + err;
 			}
@@ -1003,31 +998,31 @@ async function jQuery_CORS(url, method, data, headers, return_type) {
 		settings.xhrFields = {responseType: 'json'};
 		settings.dataType = 'json'; // data type response format: 'xml', html, script, json, jsonp, text
 		return $.ajax(url, [,settings])
-			.done(function(response) { console.log('response: ', response); return response; });
+			.done(function(response) { return response; });
 		
 	} else if (return_type == 'blob') {
 		settings.xhrFields = {responseType: 'blob'};
 		settings.dataType = 'binary'; // data type response format: 'xml', html, script, json, jsonp, text, binary
 		return $.ajax(url, [,settings])
-			.done(function(response) { console.log('response: ', response); return response; });
+			.done(function(response) { return response; });
 		
 	} else if (return_type == 'arrayBuffer') {
 		settings.xhrFields = {responseType: 'arrayBuffer'};
 		settings.dataType = 'binary'; // data type response format: 'xml', html, script, json, jsonp, text, binary
 		return $.ajax(url, [,settings])
-			.done(function(response) { console.log('response: ', response); return response; });
+			.done(function(response) { return response; });
 		
 	} else if (return_type == 'text') {
 		settings.xhrFields = {responseType: 'text'};
 		settings.dataType = 'text'; // data type response format: 'xml', html, script, json, jsonp, text, binary
 		return $.ajax(url, [,settings])
-			.done(function(response) { console.log('response: ', response); return response; });
+			.done(function(response) { return response; });
 
 	} else if (return_type == 'html') {
 		settings.xhrFields = {responseType: 'text'};
 		settings.dataType = 'html'; // data type response format: 'xml', html, script, json, jsonp, text, binary
 		return $.ajax(url, [,settings])
-			.done(function(response) { console.log('response: ', response); return response; });
+			.done(function(response) { return response; });
 	}
 
 	// --------------------------------
