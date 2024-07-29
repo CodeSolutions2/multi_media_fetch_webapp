@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html>
+<head></head>
+<body>
+
+<h1>Multimedia fetch data webapp</h1>
+<ol type="A">
+	<li>Select Automatic REST API fetch with data url only or Manual REST API fetch.</li>
+		<ul>
+			<li>Discrete data: https://nominatim.openstreetmap.org/search?q=LOCATION_NAME&format=json</li>
+			<li>Time-series data: https://api.open-meteo.com/v1/forecast?latitude=LATITUDE&longitude=LONGITUDE&hourly=temperature_2m</li>
+			<li>Text PDF: https://s3-us-west-2.amazonaws.com/openai-assets/research-covers/language-unsupervised/language_understanding_paper.pdf</li>
+			<li>Image PDF: https://raw.githubusercontent.com/CodeSolutions2/multi_media_fetch_webapp/main/document_imagepdf.pdf</li>
+			<li>Image: https://storage.googleapis.com/on-the-way2selfrespect/yellow.png</li>
+			<li>Audio: https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3</li>
+			<li>Video: https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm</li>
+		</ul>
+	<li>View fetched data.</li>
+</ol>
+
+  
+<!-- ---------------------------------------- -->
+<!-- View two split window -->
+<fieldset>
+<input type="radio" id="automatic_fetch" name="radio_name" value="automatic_fetch" />
+<label for="automatic_fetch">Automatic Fetch</label>
+<br>
+<input type="radio" id="manual_fetch" name="radio_name" value="manual_fetch" />
+<label for="manual_fetch">Manual Fetch</label>
+</fieldset>
+<div align="left">
+<table>
+	<tr>
+		<th id="data_viewer_input">[Step A] Input a data url.</th>
+		<th id="data_viewer_output">[Step B] View fetched data.</th>
+	</tr>
+	<tr>
+		<td><input id="url" type="text" value="" placeholder="url" rows="10" cols="100" style="display:none; text-align: left; width: 600px;">
+		<input id="method" type="text" value="" placeholder="method: 'GET' or 'POST' or 'PUT'" rows="10" cols="100" style="display:none; text-align: left; width: 600px;">
+		<input id="data" type="text" value="" placeholder="data: {'key0': 'value0', 'key1': 'value1'}" rows="10" cols="100" style="display:none; text-align: left; width: 600px;">
+		<input id="headers" type="text" value="" placeholder="headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + API_KEY}" rows="10" cols="100" style="display:none; text-align: left; width: 600px;">
+		<input id="return_type" type="text" value="" placeholder="return_type: json or blob or arrayBuffer or text" rows="10" cols="100" style="display:none; text-align: left; width: 600px;"><br><button id="display_data" onclick="display_data()" style="display:none;">Display data</button><br><div id="notification"></div><div id="error"></div>
+		</td>
+		<td><div id="data_display" style="display:block; text-align: left; width: 600px;"></div></td>
+	</tr>
+</table>
+</div>  
+<!-- ---------------------------------------- -->
+
+
+<!-- ---------------------------------------- -->
+<!-- CSS -->
+<style>
+div { padding: 10px; display:block; font-family:courier; font-size:15px; height:300px; }
+	
+div#notification { position: relative; color: #3236a8; }
+div#error { position: relative; color: #bd1f17; }
+
+table {vertical-align: top; border-collapse: collapse; position: relative; z-index: 0; border: 0px solid black; letter-spacing: 1px; text-align: left; width: 100%; display:block}
+
+tr {vertical-align: top; border: 0px solid black; padding: 30px 30px; }
+
+th, td {vertical-align: top; border: 0px solid black; padding: 10px 10px; width: 50%; }
+th#pdf_viewer_input {width: 100%; background-color: #d6ecd4;}
+th#pdf_viewer_output {width: 100%; background-color: #d6ecd4;}
+
+object#pdf_object_element {position: absolute; vertical-align: top; top: 200; z-index: 200; }
+embed#pdf_embed_element {position: absolute; vertical-align: top; top: 200; z-index: 200; }
+iframe#pdf_iframe_element {position: absolute; vertical-align: top; top: 200; z-index: 200; }
+</style>
+
+<!-- --------------------------------------------------- -->
+	
+	
+<!-- <script src='https://code.jquery.com/jquery-3.6.3.min.js'></script> -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+<script>
+	
+// -----------------------------------------------
+	
+window.addEventListener('beforeunload', function() {
+    window.location.href = window.location.href + '?nocache=' + new Date().getTime();
+});
+
+// ----------------------------------------------------
+
+const w = 150;
+
+// ----------------------------------------------------
+	
+async function processEvent_automatic_fetch(event) {
+	if (this.getAttribute("checked") == false) {
+		document.getElementById("url").style.display = 'none';
+		document.getElementById("method").style.display = 'none';
+		document.getElementById("data").style.display = 'none';
+		document.getElementById("headers").style.display = 'none';
+		document.getElementById("return_type").style.display = 'none';
+		document.getElementById("display_data").style.display = 'none';
+	} else  {
+		document.getElementById("url").style.display = 'block';
+		document.getElementById("method").style.display = 'none';
+		document.getElementById("data").style.display = 'none';
+		document.getElementById("headers").style.display = 'none';
+		document.getElementById("return_type").style.display = 'none';
+		document.getElementById("display_data").style.display = 'block';
+	}
+}
+
+async function processEvent_manual_fetch(event) {
+	if (this.getAttribute("checked") == false) {
+		document.getElementById("url").style.display = 'none';
+		document.getElementById("method").style.display = 'none';
+		document.getElementById("data").style.display = 'none';
+		document.getElementById("headers").style.display = 'none';
+		document.getElementById("return_type").style.display = 'none';
+		document.getElementById("display_data").style.display = 'none';
+	} else  {
+		document.getElementById("url").style.display = 'block';
+		document.getElementById("method").style.display = 'block';
+		document.getElementById("data").style.display = 'block';
+		document.getElementById("headers").style.display = 'block';
+		document.getElementById("return_type").style.display = 'block';
+		document.getElementById("display_data").style.display = 'block';
+	}
+}
+	
+document.getElementById("automatic_fetch").addEventListener("click", processEvent_automatic_fetch, false);
+document.getElementById("manual_fetch").addEventListener("click", processEvent_manual_fetch, false);
+
+// ----------------------------------------------------
+
+async function detect_type_of_media(url) {
+	
+	// Determine which type of media
+	const media_type = url.split('/').pop();
+	console.log('media_type: ', media_type);
+
+	// --------------------------------
+
+	// Sometimes regex does not function - solution without regex
+	var found_image = (/\.png|\.jpg|\.jpeg|\.gif/i).test(media_type);
+	console.log('found_image: ', found_image);
+	var first_found_image_index = await find_sequential_characters_simple(media_type, ['.png', '.jpg', '.jpeg', '.gif']);
+	console.log('first_found_image_index: ', first_found_image_index);
+  
+	var found_pdf = (/\.pdf/i).test(media_type);
+	console.log('found_pdf: ', found_pdf);
+	var first_found_pdf_index = await find_sequential_characters_simple(media_type, ['.pdf']);
+	console.log('first_found_pdf_index: ', first_found_pdf_index);
+
+	var found_text = (/\.text|\.txt|\.yaml|\.rtf|/i).test(media_type);
+	console.log('found_text: ', found_text);
+	var first_found_text_index = await find_sequential_characters_simple(media_type, ['.text', '.txt', '.yaml', '.rtf']);
+	console.log('first_found_text_index: ', first_found_text_index);
+
+	var found_html = (/\.html/i).test(media_type);
+	console.log('found_html: ', found_html);
+	var first_found_html_index = await find_sequential_characters_simple(media_type, ['.html']);
+	console.log('first_found_html_index: ', first_found_html_index);
+  
+	var found_jsonp = (/\?/i).test(media_type);
+	console.log('found_jsonp: ', found_jsonp);
+	var first_found_jsonp_index = await find_sequential_characters_simple(media_type, ['?']);
+	console.log('first_found_jsonp_index: ', first_found_jsonp_index);
+
+	var found_audio = (/\.mp3|\.wav/i).test(media_type);
+	console.log('found_audio: ', found_audio);
+	var first_found_audio_index = await find_sequential_characters_simple(media_type, ['.mp3', '.wav']);
+	console.log('first_found_audio_index: ', first_found_audio_index);
+	
+	var found_video = (/\.mov|\.mp4|\.ogv|\.webm/i).test(media_type);
+	console.log('found_video: ', found_video);
+	var first_found_video_index = await find_sequential_characters_simple(media_type, ['.mov', '.mp4', '.ogv', '.webm']);
+	console.log('first_found_video_index: ', first_found_video_index);
+
+	// --------------------------------
+	
+	if (found_image == true && first_found_image_index.length > 0) {
+		console.log('Image data');
+		var desired_media_type = 'image';
+
+	} else if (found_pdf == true && first_found_pdf_index.length > 0) {
+		console.log('PDF data');
+		var desired_media_type = 'pdf';
+
+	} else if (found_text == true && first_found_text_index.length > 0) {
+		console.log('Text data');
+		var desired_media_type = 'text';
+    
+	} else if (found_html == true && first_found_html_index.length > 0) {
+		console.log('Html data: web scraping');
+		var desired_media_type = 'html';
+		
+	} else if (found_jsonp == true && first_found_jsonp_index.length > 0) {
+		console.log('GET JSONP query string');
+		var desired_media_type = 'GET_JSONP_endpoint';
+
+	} else if (found_audio == true && first_found_audio_index.length > 0) {
+		console.log('Audio data');
+		var desired_media_type = 'audio';
+	
+	} else if (found_video == true && first_found_video_index.length > 0) {
+		console.log('Video data');
+		var desired_media_type = 'video';
+
+	} else if ((/https:\/\/.*\//g).test(url)) {
+		console.log('Html data: web scraping');
+		var desired_media_type = 'html';
+		
+	} else {
+		console.log('Unclear: recommend using manual_fetch');
+		// It could be an end point(ie: GET https://api.openai.com/v1/threads/"+THREAD_ID+"/runs/"+RUN_ID, OR it could be a POST) OR a file without a file extension
+		// maybe ask the user if it is GET, POST, or file request
+		document.getElementById('notification').innerHTML = "It is not clear which type of data fetch request you would like to perform. Fill out the manual data fetch request."
+		var desired_media_type = 'Unclear';
+	}
+	
+	return desired_media_type;
+}
+	
+// ----------------------------------------------------
+	
+async function display_data() {
+	
+	const url = document.getElementById("url").value;
+	console.log('url: ', url);
+	
+	// --------------------------------
+
+	// Detect type of media to fetch
+	var desired_media_type = await detect_type_of_media(url);
+	console.log('desired_media_type: ', desired_media_type);
+	
+	// --------------------------------
+	
+	const automatic_fetch = document.getElementById("automatic_fetch").checked;
+	const manual_fetch = document.getElementById("manual_fetch").checked;
+	
+	// --------------------------------
+
+	if (automatic_fetch == false && manual_fetch == false) {
+		document.getElementById('error').innerHTML = "Please select automatic or manual fetch.";
+	}
+	
+	if (automatic_fetch == true && manual_fetch == false) {
+		var automatic_OR_manual = "automatic";
+		await determine_same_or_different_domain(url, desired_media_type, automatic_OR_manual);
+	}
+	
+	if (automatic_fetch == false && manual_fetch == true) {
+		var automatic_OR_manual = "manual";
+		await determine_same_or_different_domain(url, desired_media_type, automatic_OR_manual);
+	}
+
+	// --------------------------------
+}
+
+// ----------------------------------------------------
+	
+async function determine_same_or_different_domain(url, desired_media_type, automatic_OR_manual) {
+
+	var fetch_method;
+	
+	// Determine if the data is in the same domain or different domain
+	var found_github = (/github/g).test(url);
+	console.log('found_github: ', found_github);
+	// if (found_github == true) {   // with regex
+	// OR
+	// let first_found_index = await find_sequential_characters_simple(url, ['github']);  // without regex
+	let first_found_index = await find_sequential_characters_simple(url, ['https://raw.githubusercontent.com/CodeSolutions2/multi_media_fetch_webapp']);  // without regex
+	console.log('first_found_index: ', first_found_index);
+	
+	if (found_github == true && first_found_index.length > 0) {
+		// it is from github, next check to see if it is from the same repository
+		
+		console.log('nonCORS url');
+		fetch_method = 'fetch_nonCORS';
+		await fetch_parameters_for_media_type(url, desired_media_type, fetch_method, automatic_OR_manual);
+	} else {
+		console.log('CORS url');
+
+		// --------------------------------
+		
+		// *** List of which methods are most reliable for CORS ***
+		var CORS_method_list;
+		if (desired_media_type == "image") {
+			// CORS_method_list = ['fetch_CORS'];    // CORS error often
+			// CORS_method_list = ['Image_CORS'];    // OK
+      			// CORS_method_list = ['jQuery_CORS'];	 // OK, but media resource could not be decoded.
+      			CORS_method_list = ['fetch_CORS', 'Image_CORS', 'jQuery_CORS'];    
+			
+		} else if (desired_media_type == "pdf") {
+			// CORS_method_list = ['fetch_CORS'];	// OK
+			//CORS_method_list = ['jQuery_CORS'];	// OK, but media resource could not be decoded.
+      			CORS_method_list = ['fetch_CORS', 'jQuery_CORS', 'fetch_CORS'];
+			
+		} else if (desired_media_type == "text") {
+			// CORS_method_list = ['fetch_CORS'];	// OK
+			// CORS_method_list = ['jQuery_CORS'];	// OK
+      			CORS_method_list = ['fetch_CORS', 'jQuery_CORS', 'fetch_CORS'];
+			
+		} else if (desired_media_type == "html") {
+			CORS_method_list = ['jQuery_CORS', 'fetch_CORS', 'fetch_CORS'];	// OK
+			
+		} else if (desired_media_type == "GET_JSONP_endpoint") {
+			// CORS_method_list = ['fetch_CORS'];	// OK
+			// CORS_method_list = ['jQuery_CORS'];	// OK GET, never tried POST, JSONP notation did not work
+      			CORS_method_list = ['fetch_CORS', 'jQuery_CORS', 'fetch_CORS'];
+
+		} else if (desired_media_type == "audio") {
+			// CORS_method_list = ['fetch_CORS'];	// CORS error often
+			// CORS_method_list = ['Audio_CORS'];	// OK
+			// CORS_method_list = ['jQuery_CORS'];	// OK, but media resource could not be decoded.
+			CORS_method_list = ['fetch_CORS', 'Audio_CORS', 'jQuery_CORS'];
+			
+		} else if (desired_media_type == "video") {
+			// CORS_method_list = ['fetch_CORS'];	// CORS error often
+      			// CORS_method_list = ['Video_CORS'];	// OK
+			// CORS_method_list = ['jQuery_CORS'];	// OK, but media resource could not be decoded.
+      			CORS_method_list = ['fetch_CORS', 'Video_CORS', 'jQuery_CORS'];
+		}
+		console.log('CORS_method_list: ', CORS_method_list);
+		
+		// --------------------------------
+
+		var response = undefined;
+		var count = 0;
+    
+		// while(response == undefined && count < CORS_method_list.length) {
+		while(response == undefined && count < 3) {
+			fetch_method = CORS_method_list.at(count);
+			console.log('fetch_method: ', fetch_method);
+			
+			// need to keep calling the function for the next CORS_method_list, until there is no error
+			try {
+				response = await fetch_parameters_for_media_type(url, desired_media_type, fetch_method, automatic_OR_manual);
+				console.log('response: ', response);
+				count += 1;
+			} catch (err) {
+				document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + err;
+			}
+			
+		}
+		
+		// --------------------------------
+		
+	}
+
+}
+
+// -----------------------------------------------
+
+async function fetch_parameters_for_media_type(url, desired_media_type, fetch_method, automatic_OR_manual) {
+
+	console.log('desired_media_type: ', desired_media_type);
+	console.log('fetch_method: ', fetch_method);
+	console.log('automatic_OR_manual: ', automatic_OR_manual);
+
+	var method;
+	var data
+	var headers;
+	var return_type;
+
+	// --------------------------------
+	
+	// Ensure that data_display is empty
+	if (document.getElementById('data_display').lastElementChild != null) {
+		console.log("data_display lastElement: ", document.getElementById('data_display').lastElementChild);
+		document.getElementById('data_display').removeChild(document.getElementById('data_display').lastElementChild);
+	}
+
+	// --------------------------------
+
+	// Clear previous errors 
+	document.getElementById('error').innerHTML = '';
+
+	// Clear previous notifications 
+	document.getElementById('notification').innerHTML = '';
+	
+	// --------------------------------
+	
+	if (desired_media_type == 'pdf') {
+
+		if (automatic_OR_manual == 'automatic') {
+			console.log('automatic');
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
+		} else {
+			console.log('manual');
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
+		}
+		
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+
+		// Display data
+		if (data_out != undefined) {
+			// var blob_object = new Blob([data_out], {type:"application/pdf"});
+			// var blob_object = new Blob([data_out], { type: 'application/octet-stream' });
+			// console.log('blob_object: ', blob_object);
+			
+			var file_blob_object = await new File ([data_out], "file_download", {type: "application/pdf"});
+			let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
+			await show_pdf_on_page_objectElement(github_url_of_externally_downloaded_data);
+			
+			// a file was loaded before, so remove the blob URL from memory to use resources effectively
+			await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
+		}
+		
+	} else if (desired_media_type == 'text') {
+
+		if (automatic_OR_manual == 'automatic') {
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'text';  // return_type: json or blob or arrayBuffer or text
+		} else {
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
+		}
+		
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+		
+		// Display data
+		document.getElementById('data_display').innerHTML = data_out;
+		
+	} else if (desired_media_type == 'html') {
+
+		if (automatic_OR_manual == 'automatic') {
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'html';  // return_type: json or blob or arrayBuffer or text, html
+		} else {
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
+		}
+		
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+	
+		// Display data
+		document.getElementById('data_display').innerHTML = data_out;
+	
+	} else if (desired_media_type == 'image') {
+
+		if (automatic_OR_manual == 'automatic') {
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
+		} else {
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
+		}
+		
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+
+		// Display data
+		if (fetch_method != 'Image_CORS' && data_out != undefined) {
+			// fetch_CORS or jQuery_CORS - display image from a blob url
+			var file_blob_object = await new File ([data_out], "file_download", {type: "image/png"});
+			let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
+			
+			try {	
+			  	const imgElement = document.createElement('img');
+			  	imgElement.setAttribute("id", "img_element");
+			  	imgElement.setAttribute("width", w);
+			  	imgElement.setAttribute("height", w);
+			  	imgElement.setAttribute("src", github_url_of_externally_downloaded_data);
+			  	document.getElementById('data_display').appendChild(imgElement);
+			} catch (error) {
+				document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + error;
+			}
+			
+			// a file was loaded before, so remove the blob URL from memory to use resources effectively
+			await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
+		}
+		
+	} else if (desired_media_type == 'GET_JSONP_endpoint') {
+		
+		if (automatic_OR_manual == 'automatic') {
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'json';  // return_type: json or blob or arrayBuffer or text
+		} else {
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
+		}
+		
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+
+		// Display data
+		document.getElementById('data_display').innerHTML = JSON.stringify(data_out);
+
+	} else if (desired_media_type == 'audio') {
+		
+		if (automatic_OR_manual == 'automatic') {
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'blob';  // return_type: json, blob, arrayBuffer, text, html
+		} else {
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
+		}
+
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+
+		// Display data
+		if (fetch_method != 'Audio_CORS' && data_out != undefined) {
+			// fetch_CORS or jQuery_CORS - display image from a blob url
+			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+			const file_blob_object = await new File ([data_out], "file_download", {type: "audio/mp3"});
+			const github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
+
+			try {
+				const audioElement = document.createElement('audio');
+				audioElement.setAttribute("id", "audio_element");
+				audioElement.setAttribute("controls", true);
+				
+				// Create the audio source
+				var sourceElement = document.createElement('source');
+				
+				// audioElement.setAttribute("width", w);
+				// audioElement.setAttribute("height", w);
+				sourceElement.setAttribute("src", github_url_of_externally_downloaded_data);
+				sourceElement.setAttribute("type", "audio/mp3");
+	
+				audioElement.appendChild(sourceElement);
+				document.getElementById('data_display').appendChild(audioElement);
+				audioElement.load();
+				
+			} catch (error) {
+				document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + error;
+			}
+			
+			// a file was loaded before, so remove the blob URL from memory to use resources effectively
+			await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
+		}
+	
+	} else if (desired_media_type == 'video') {
+		
+		if (automatic_OR_manual == 'automatic') {
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'blob';  // return_type: json, blob, arrayBuffer, text, html
+			// return_type = 'arrayBuffer';  // return_type: json, blob, arrayBuffer, text, html
+		} else {
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
+		}
+
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+
+		// Display data
+		if (fetch_method != 'Video_CORS' && data_out != undefined) {
+			// fetch_CORS or jQuery_CORS - display image from a blob url
+			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+			const file_blob_object = await new File ([data_out], "file_download", {type: "video/webm"});
+			const github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
+
+			try {
+				const videoElement = document.createElement('video');
+				videoElement.setAttribute("id", "video_element");
+				videoElement.setAttribute("controls", true);
+				
+				// Create the video source
+				var sourceElement = document.createElement('source');
+				
+				videoElement.setAttribute("width", w);
+				videoElement.setAttribute("height", w);
+				sourceElement.setAttribute("src", github_url_of_externally_downloaded_data);
+				sourceElement.setAttribute("type", "video/webm");
+	
+				videoElement.appendChild(sourceElement);
+				document.getElementById('data_display').appendChild(videoElement);
+				videoElement.load();
+				
+			} catch (error) {
+				document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + error;
+			}
+			
+			// a file was loaded before, so remove the blob URL from memory to use resources effectively
+			await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
+		}
+	}
+
+	console.log('data_out: ', data_out);
+	return data_out;
+}
+
+// -----------------------------------------------
+
+async function fetch_methods(fetch_method, url, method, data, headers, return_type) {
+	
+	if (fetch_method == 'fetch_nonCORS') {
+		return await fetch_nonCORS(url, method, data, headers, return_type)
+			.then(res => res)
+			.then(async function(response) { return response; });
+		
+	} else if (fetch_method == 'fetch_CORS') {
+		return await fetch_CORS(url, method, data, headers, return_type)
+			.then(res => res)
+			.then(async function(response) { return response; });
+		
+	} else if (fetch_method == 'jQuery_CORS') {
+		return await jQuery_CORS(url, method, data, headers, return_type)
+			.then(res => res)
+			.then(async function(response) { return response; });
+		
+	} else if (fetch_method == 'Image_CORS') {
+		return await Image_CORS(url, method, data, headers, return_type)
+			.then(res => res)
+			.then(async function(response) { return response; });
+		
+	} else if (fetch_method == 'Video_CORS') {
+		return await Video_CORS(url, method, data, headers, return_type)
+			.then(res => res)
+			.then(async function(response) { return response; });
+		
+	} else if (fetch_method == 'Audio_CORS') {
+		return await Audio_CORS(url, method, data, headers, return_type)
+			.then(res => res)
+			.then(async function(response) { return response; });
+	}
+}
+
+
+
+// -----------------------------------------------
+// NON-CORS methods
+// -----------------------------------------------
+async function fetch_nonCORS(url, method, data, headers, return_type) {
+
+	// url: url address
+	// method: 'GET', 'POST'
+	// data: required data format for url address
+	var w_or_wo_proxyhandler = 'wo_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
+	// return_type: json, blob, arrayBuffer, text
+
+	// --------------------------------
+
+	// Determine request method
+	var headers_final = {
+		"Content-Type": "application/json",
+		"Referer": url,
+		"Origin": "https://codesolutions2.github.io",
+		"Connection": "keep-alive",
+		//"Sec-Fetch-Dest": "empty",
+		//"Sec-Fetch-Mode": "no-cors", 
+		//"Sec-Fetch-Site": "cross-site",
+		//"Sec-Fetch-User": "?1",
+		"User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
+		"Access-Control-Allow-Origin": "*",
+		//'Access-Control-Allow-Credentials': false, 
+		//"Access-Control-Request-Method": method,
+		//"Access-Control-Request-Headers": 'content-type,x-pingother',
+		//'Cache-Control': 'max-age=0',
+	};
+	
+	var options = { 
+		method : method,
+		headers: new Headers(headers_final),
+		cache: "no-cache",
+		redirect: "follow"
+	};
+
+	if (method == 'POST') {
+		options.body = JSON.stringify(data);
+	}
+
+	// --------------------------------
+
+	// Determine the type of output to return 
+	
+	if (return_type == 'json') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(response => response.json())
+				.then(async function(data) { console.log('data: ', data); return data; })
+				.catch(error => console.error("error: ", error));
+		} else { 
+			return await fetch(url)
+				.then(response => response.json())
+				.then(async function(data) { console.log('data: ', data); return data; })
+				.catch(error => console.error("error: ", error));
+		}
+		
+	} else if (return_type == 'blob') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(response => response.blob())
+				.then(async function(blob_object) { console.log('blob_object: ', blob_object); return blob_object; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url)
+				.then(response => response.blob())
+				.then(async function(blob_object) { console.log('blob_object: ', blob_object); return blob_object; })
+				.catch(error => console.error("error: ", error));
+		}
+		
+	} else if (return_type == 'arrayBuffer') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(response => response.arrayBuffer())
+				.then(async function(arraybuffer) { console.log("arraybuffer:", arraybuffer); return arraybuffer; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url)
+				.then(response => response.arrayBuffer())
+				.then(async function(arraybuffer) { console.log("arraybuffer:", arraybuffer); return arraybuffer; })
+				.catch(error => console.error("error: ", error));
+		}
+		
+	} else if (return_type == 'text') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(res => res.text())
+				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url)
+				.then(res => res.text())
+				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
+				.catch(error => console.error("error: ", error));
+		}
+			
+	} else if (return_type == 'html') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(res => res.text())
+				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url)
+				.then(res => res.text())
+				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
+				.catch(error => console.error("error: ", error));
+		}
+	}
+
+	// --------------------------------
+}
+
+// ----------------------------------------------------
+
+
+// -----------------------------------------------
+// CORS methods
+// -----------------------------------------------
+async function fetch_CORS(url, method, data, headers, return_type) {
+
+	// url: url address
+	// method: 'GET', 'POST'
+	// data: required data format for url address
+	var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
+	// return_type: json, blob, arrayBuffer, text
+
+	// --------------------------------
+
+	// Determine request method
+	var headers_final = {
+		"Content-Type": "application/json",
+		"Referer": url,
+		"Origin": "https://codesolutions2.github.io",
+		"Connection": "keep-alive",
+		//"Sec-Fetch-Dest": "empty",
+		//"Sec-Fetch-Mode": "cors", 
+		//"Sec-Fetch-Site": "cross-site",
+		//"Sec-Fetch-User": "?1",
+		"User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
+		"Access-Control-Allow-Origin": "*",
+		//'Access-Control-Allow-Credentials': false, 
+		//"Access-Control-Request-Method": method,
+		//"Access-Control-Request-Headers": 'content-type,x-pingother',
+		//'Cache-Control': 'max-age=0',
+	};
+
+	// Need to check if headers are in headers_final
+	// To do - loop over headers and append to headers_final
+	
+	var options = { 
+		method : method,
+		mode: 'cors',
+		headers: new Headers(headers_final),
+		cache: "no-cache",
+		// crossorigin: 'anonymous',
+		crossorigin: '*',
+		redirect: "follow"
+	};
+
+	if (method == 'POST') {
+		options.body = JSON.stringify(data);
+	}
+
+	// --------------------------------
+
+	// Determine the type of output to return 
+	
+	if (return_type == 'json') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(response => response.json())
+				.then(async function(data) { return data; })
+				.catch(error => console.error("error: ", error));
+		} else { 
+			return await fetch(url, options)
+				.then(response => response.json())
+				.then(async function(data) { return data; })
+				.catch(error => console.error("error: ", error));
+		}
+		
+	} else if (return_type == 'blob') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(response => response.blob())
+				.then(async function(blob_object) { return blob_object; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url, options)
+				.then(response => response.blob())
+				.then(async function(blob_object) { return blob_object; })
+				.catch(error => console.error("error: ", error));
+		}
+		
+	} else if (return_type == 'arrayBuffer') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(response => response.arrayBuffer())
+				.then(async function(arraybuffer) { return arraybuffer; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url, options)
+				.then(response => response.arrayBuffer())
+				.then(async function(arraybuffer) { return arraybuffer; })
+				.catch(error => console.error("error: ", error));
+		}
+		
+	} else if (return_type == 'text') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(res => res.text())
+				.then(str_data => { return str_data; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url, options)
+				.then(res => res.text())
+				.then(str_data => { return str_data; })
+				.catch(error => console.error("error: ", error));
+		}
+
+	} else if (return_type == 'html') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(res => res.text())
+				.then(str_data => { return str_data; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url, options)
+				.then(res => res.text())
+				.then(str_data => { return str_data; })
+				.catch(error => console.error("error: ", error));
+		}
+	}
+
+	// --------------------------------
+}
+
+
+async function define_proxy_handler() {
+	// Parameters to influence Response Header
+	// The `handler` object defines a `apply` method that intercepts the `fetch` function calls and adds the "Access-Control-Allow-Origin" header with a value of "*" to the request options. The `new Proxy(fetch, handler)` creates a proxied version of the `fetch` function that applies the defined handler.
+	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers
+	const handler = {
+		apply: function(target, thisArg, args) {
+			// One needs to re-define the input arguments of the handler because a constant variable is used as a function (ie: await proxy3(url, options))
+			const [url, options] = args;
+			if (options && options.headers) {
+				options.headers['Access-Control-Allow-Origin'] = '*';
+				options.headers['Access-Control-Allow-Credentials'] = false;
+				options.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE';
+				// options.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept';
+				options.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+				options.headers['Access-Control-Max-Age'] = 0;
+			} else {
+				args[1] = {
+					headers: { 
+						'Access-Control-Allow-Origin': '*',
+						'Access-Control-Allow-Credentials': false,
+						'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE',
+						'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+						'Access-Control-Max-Age': 0
+					}
+				};
+			}
+			// console.log('args: ', args);
+			return Reflect.apply(target, thisArg, args);
+		}
+	};
+
+	// Proxy sturcture works! 
+	// Calls the function WITHOUT input variables to assign a proxy definition to a constant variable. 
+	// The constant variable is called as a function, where it resolves promises. 
+	// Call the constant variable proxy3 as a function to resolve the promise correctly
+	return await new Proxy(fetch, handler);
+}
+
+// -----------------------------------------------
+	
+async function jQuery_CORS(url, method, data, headers, return_type) {
+
+	// https://api.jquery.com/jQuery.ajax/
+	
+	// url: url address
+	// method: 'GET', 'POST', 'PUT'
+	// data: required data format for url address
+	// return_type: json, blob, arrayBuffer, text
+
+	var headers_final = {
+		"Accept": "application/json",
+		"Referer": url,
+		"Origin": "https://codesolutions2.github.io",
+		"Connection": "keep-alive",
+		//"Sec-Fetch-Dest": "empty",
+		//"Sec-Fetch-Mode": "cors", 
+		//"Sec-Fetch-Site": "cross-site",
+		//"Sec-Fetch-User": "?1",
+		"User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
+		"Access-Control-Allow-Origin": "*",
+		//'Access-Control-Allow-Credentials': false, 
+		//"Access-Control-Request-Method": method,
+		//"Access-Control-Request-Headers": 'content-type,x-pingother',
+		//'Cache-Control': 'max-age=0',
+	};
+	
+	var settings = {
+		// url: url,
+		type : method,
+		async: true,
+		crossDomain: true,
+		beforeSend: function(xhr) {xhr.withCredentials = true;},
+		// headers: new Headers(headers_final),
+		success: function(response) { console.log('Success'); },
+		error: function(xhr, status, error) { console.log('Error:', error); }
+	};
+
+	// --------------------------------
+	
+	if (method == 'POST') {
+		settings.body = JSON.stringify(data);
+	}
+
+	// --------------------------------
+
+	// Determine the type of output to return 
+	
+	if (return_type == 'json') {
+		settings.xhrFields = {responseType: 'json'};
+		settings.dataType = 'json'; // data type response format: 'xml', html, script, json, jsonp, text
+		return $.ajax(url, [,settings])
+			.done(function(response) { console.log('response: ', response); return response; });
+		
+	} else if (return_type == 'blob') {
+		settings.xhrFields = {responseType: 'blob'};
+		settings.dataType = 'binary'; // data type response format: 'xml', html, script, json, jsonp, text, binary
+		return $.ajax(url, [,settings])
+			.done(function(response) { console.log('response: ', response); return response; });
+		
+	} else if (return_type == 'arrayBuffer') {
+		settings.xhrFields = {responseType: 'arrayBuffer'};
+		settings.dataType = 'binary'; // data type response format: 'xml', html, script, json, jsonp, text, binary
+		return $.ajax(url, [,settings])
+			.done(function(response) { console.log('response: ', response); return response; });
+		
+	} else if (return_type == 'text') {
+		settings.xhrFields = {responseType: 'text'};
+		settings.dataType = 'text'; // data type response format: 'xml', html, script, json, jsonp, text, binary
+		return $.ajax(url, [,settings])
+			.done(function(response) { console.log('response: ', response); return response; });
+
+	} else if (return_type == 'html') {
+		settings.xhrFields = {responseType: 'text'};
+		settings.dataType = 'html'; // data type response format: 'xml', html, script, json, jsonp, text, binary
+		return $.ajax(url, [,settings])
+			.done(function(response) { console.log('response: ', response); return response; });
+	}
+
+	// --------------------------------
+	
+  	// return $.ajax(settings).done(function(response) { console.log('response: ', response); return response; });
+	
+}
+
+// -----------------------------------------------
+
+async function create_dynamic_canvasElement(w) {
+
+  	const index = 0;
+  
+	// Create a canvas element
+	var canvasElement = document.createElement('canvas');
+
+	// Set the width and height of the canvas
+	canvasElement.width = w;
+	canvasElement.height = canvasElement.width;
+	      
+	// Get the 2D rendering context of the canvas
+	var ctx = canvasElement.getContext("2d");
+	
+	if (index == 0) {
+		canvasElement.style.left = 40+'px';
+	} else {
+		let tot = index*canvasElement.width + 40;
+		canvasElement.style.left = tot+'px';
+	}
+	
+	// Add the canvas to the document body or any other desired element
+	document.getElementById('data_display').appendChild(canvasElement);
+
+	return ctx;
+}
+
+// -----------------------------------------------
+  
+async function Image_CORS(url, method, data, headers, return_type) {
+	
+	const ctx = await create_dynamic_canvasElement(w);
+	
+	const imageElement = new Image();  // image is 'HTMLImageElement'
+	imageElement.setAttribute('crossOrigin', ""); // OR "anonymous"
+	imageElement.setAttribute('headers', {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"});
+	imageElement.onload = async () => { ctx.drawImage(imageElement, 0, 0, w, w); };
+	imageElement.src = url;
+
+	// drawImage(imageElement, dist_from_canvas_left_to_image_topleft=dx, dist_from_canvas_top_to_image_topleft=dy, image_Width, image_Height)
+	
+	const imageData = ctx.getImageData(0, 0, w, w);
+	const oneD_array = imageData.data; // data is a 1D array
+
+	// convert pixel data (1D array) to 2D Array
+	// var twoD_array = [];
+	// for (let i = 0; i < oneD_array.length; i += 4) {
+	//   twoD_array.push([oneD_array[i], oneD_array[i + 1], oneD_array[i + 2], oneD_array[i + 3]]);
+	// }
+	// OR
+	const twoD_array = Array.from(oneD_array)
+	
+	return twoD_array;
+}
+
+// -----------------------------------------------
+
+async function Video_CORS(url, method, data, headers, return_type) {
+	
+	var videoElement = document.createElement('video');
+	videoElement.setAttribute("controls", true);
+	videoElement.setAttribute('crossOrigin', "anonymous"); // OR "anonymous"
+	
+	var sourceElement = document.createElement('source');
+	sourceElement.setAttribute("src", url);
+	sourceElement.start(0); // start the video at t=0secs
+	videoElement.appendChild(sourceElement);
+
+	// View video on page
+	document.getElementById('data_display').appendChild(videoElement);
+
+	// -----------------------------------------------
+
+	// Save two video frames to file
+	const videoLength = videoElement.duration;
+	console.log('videoLength: ', videoLength);
+	
+	var threeD_array = [];
+	
+	const ctx = await create_dynamic_canvasElement(w);
+
+	// A snapshot of the video at t=0secs
+	ctx.drawImage(videoElement, 0, 0, w, w);
+	var imageData = ctx.getImageData(0, 0, w, w);
+	var oneD_array = imageData.data; // data is a 1D array
+	var twoD_array = Array.from(oneD_array);
+	threeD_array.push(twoD_array);
+
+	videoElement.removeChild(sourceElement);
+
+	// A snapshot of the video at t=1secs
+	sourceElement.start(1); // start the video at t=1secs
+	videoElement.appendChild(sourceElement);
+	ctx.drawImage(videoElement, 0, 0, w, w);
+	imageData = ctx.getImageData(0, 0, w, w);
+	oneD_array = imageData.data; // data is a 1D array
+	twoD_array = Array.from(oneD_array);
+	threeD_array.push(twoD_array);
+
+	console.log('threeD_array: ', threeD_array);
+	
+	return threeD_array;
+}
+
+
+// -----------------------------------------------
+
+async function Audio_CORS(url, method, data, headers, return_type) {
+	
+	const audioElement = document.createElement('audio');
+	audioElement.setAttribute("controls", true);
+	audioElement.setAttribute('crossOrigin', "anonymous"); // OR "anonymous"
+	
+	var sourceElement = document.createElement('source');
+	sourceElement.setAttribute("src", url);
+	audioElement.appendChild(sourceElement);
+	document.getElementById('data_display').appendChild(audioElement);
+
+	// Obtain the audio data as a data Array
+	// Create an AudioContext
+	var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+	audioContext = new AudioContext();
+	
+	// Create an AnalyserNode
+	const analyser = audioContext.createAnalyser();
+	analyser.fftSize = 2048;
+	
+	// Connect the nodes
+	sourceElement.connect(analyser);
+	analyser.connect(audioContext.destination);
+	
+	// Create a Uint8Array to store the audio data
+	const dataArray = new Uint8Array(analyser.frequencyBinCount);
+	console.log('dataArray: ', dataArray);
+
+	analyser.getByteTimeDomainData(dataArray); // This probably uses a pointer and assigns the output to analyser
+	console.log('analyser: ', analyser);
+	
+	return dataArray;
+}
+	
+// -----------------------------------------------
+	
+async function show_pdf_on_page_objectElement(github_url_of_externally_downloaded_data) {
+
+	try {
+	  	var objectElement = document.createElement('object');
+	  	objectElement.setAttribute("id", "pdf_object_element");
+	  	objectElement.setAttribute("type", "application/pdf");
+	  	objectElement.setAttribute("width", 800);
+	  	objectElement.setAttribute("height", 1200);
+	  	objectElement.setAttribute("data", github_url_of_externally_downloaded_data);
+	  	document.getElementById('data_display').appendChild(objectElement);
+	} catch (error) {
+		document.getElementById('error').innerHTML = 'Check if pdf url is typed in correctly. ' + error;
+	}
+}
+
+// -----------------------------------------------
+
+async function automatically_download(file_download_url_name) {
+
+ 	var link = document.createElement('a');
+ 	link.href = file_download_url_name;  // link.href = canvas.toDataURL("image/png");
+ 	link.download = file_download_url_name.split('/').pop();
+ 	link.click();
+}
+
+
+// ----------------------------------------------------
+
+
+async function find_sequential_characters_simple(str_to_search, strarr_to_find) {
+	
+	// In some cases, the str_to_search has unique sequential characters per interval of [search_index_start to search_index_end], that one may want to identify. This function allows one to search str_to_search over specific intervals of the string.
+	
+	// search_index_start: it is the index of str_to_search_char_arr, where one STARTS searching for sequencial matches of str_to_find_char_arr
+	// search_index_end: it is the index of str_to_search_char_arr, where one STOPS searching for sequencial matches of str_to_find_char_arr
+		
+	var str_to_search_char_arr_org = str_to_search.split('');
+	const isNotEmpty = (num) => num.length > 0;
+	
+	var total_index = [];
+	strarr_to_find.forEach(async function(str_to_find, index) {
+		
+		var str_to_find_char_arr = str_to_find.split('');
+		// console.log('str_to_find_char_arr: ', str_to_find_char_arr);
+		
+		var sequential_range = str_to_find_char_arr.length;
+		// console.log('sequential_range: ', sequential_range);
+
+		// pad the last sequential_range character on the end of str_to_find_char_arr. Below we search from 0 to the entire [length of the string to find] minus sequential_range, thus we miss the last sequential_range if we do not pad.
+		var pad_arr = str_to_find_char_arr.map((x) => {return '0';});
+		var str_to_search_char_arr = str_to_search_char_arr_org.concat(pad_arr);
+
+		// --------------------------------------------
+		
+		var ind = [...Array(str_to_search_char_arr.length-sequential_range).keys()].map((x) => x);
+		// console.log('ind: ', ind);
+		
+		var first_found_index = ind.map((i) => {
+			if ( [str_to_search_char_arr.slice(i,i+sequential_range).join('')].includes(str_to_find) == true ) {
+				console.log('[simple] sequence found map: ', str_to_search_char_arr.slice(i,i+sequential_range).join(''));
+				return [i, str_to_search_char_arr.slice(i,i+sequential_range).join('')];
+			} else {
+				return '';
+			}
+		});
+		// console.log('first_found_index: ', first_found_index);
+
+		// --------------------------------------------
+		
+		// Remove empty spaces created by the map function
+		total_index = total_index.concat(first_found_index.filter(isNotEmpty));
+	});
+	return total_index;
+}
+	
+// -----------------------------------------------
+	
+</script>
+
+  
+</body>
+</html>
