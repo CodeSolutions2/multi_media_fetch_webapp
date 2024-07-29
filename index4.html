@@ -689,6 +689,8 @@ async function fetch_nonCORS(url, method, data, headers, return_type) {
 		//"Access-Control-Request-Headers": 'content-type,x-pingother',
 		//'Cache-Control': 'max-age=0',
 	};
+
+	headers_final = Object.assign({}, headers_final, headers);
 	
 	var options = { 
 		method : method,
@@ -813,8 +815,7 @@ async function fetch_CORS(url, method, data, headers, return_type) {
 		//'Cache-Control': 'max-age=0',
 	};
 
-	// Need to check if headers are in headers_final
-	// To do - loop over headers and append to headers_final
+	headers_final = Object.assign({}, headers_final, headers);
 	
 	var options = { 
 		method : method,
@@ -974,6 +975,8 @@ async function jQuery_CORS(url, method, data, headers, return_type) {
 		//"Access-Control-Request-Headers": 'content-type,x-pingother',
 		//'Cache-Control': 'max-age=0',
 	};
+
+	headers_final = Object.assign({}, headers_final, headers);
 	
 	var settings = {
 		// url: url,
@@ -1150,30 +1153,37 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	
 	var sourceElement = document.createElement('source');
 	sourceElement.setAttribute("src", url);
+	console.log('sourceElement: ', sourceElement);
+	
 	audioElement.appendChild(sourceElement);
 	document.getElementById('data_display').appendChild(audioElement);
 
-	// Obtain the audio data as a data Array
+	// Goal: get the audio data from the audioElement and NOT the url
+	
+	// Obtain the audio data as a data Array: Way 0
 	// Create an AudioContext
 	var audioContext = new (window.AudioContext || window.webkitAudioContext)();
 	audioContext = new AudioContext();
 	
 	// Create an AnalyserNode
 	const analyser = audioContext.createAnalyser();
-	analyser.fftSize = 2048;
-	
-	// Connect the nodes
-	sourceElement.connect(analyser);
-	analyser.connect(audioContext.destination);
-	
-	// Create a Uint8Array to store the audio data
-	const dataArray = new Uint8Array(analyser.frequencyBinCount);
-	console.log('dataArray: ', dataArray);
-
-	analyser.getByteTimeDomainData(dataArray); // This probably uses a pointer and assigns the output to analyser
 	console.log('analyser: ', analyser);
 	
-	return dataArray;
+	// analyser.fftSize = 2048;
+	// Connect the nodes
+	// sourceElement.connect(analyser);
+	// analyser.connect(audioContext.destination);
+	// Create a Uint8Array to store the audio data
+	// const dataArray = new Uint8Array(analyser.frequencyBinCount);
+	// console.log('dataArray: ', dataArray);
+	// analyser.getByteTimeDomainData(dataArray); // This probably uses a pointer and assigns the output to analyser
+	// console.log('analyser: ', analyser);
+
+	// Way 1: obtain ArrayBuffer
+	
+	
+	
+	return sourceElement;
 }
 	
 // -----------------------------------------------
