@@ -1165,26 +1165,72 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	
 	// Create an AnalyserNode
 	const analyser = audioContext.createAnalyser();
-	console.log('analyser: ', analyser);
+	console.log('analyser before: ', analyser);
+
+	let channels = analyser.channelCount; // 2
+	let time_length = analyser.context.currentTime; // 25.794666666666668
+	
+	let fs = analyser.context.sampleRate; // 48000
+	var time_sample = 1/fs; // every time_sample there is a data point
+	
+	var data_point_length = time_length/time_sample;  // frameCount
+	console.log('data_point_length: ', data_point_length);
 	
 	// Connect the nodes
 	sourceElement.connect(analyser);
 	analyser.connect(audioContext.destination);
 	
-	// Create a Uint8Array to store the audio data
-	const dataArray = new Uint8Array(analyser.frequencyBinCount);
-	console.log('dataArray: ', dataArray);
-	
-	// analyser.getByteTimeDomainData(dataArray); // This probably uses a pointer and assigns the output to analyser
-	// console.log('analyser: ', analyser);
+	const bin_count_using_natural_freq = analyser.frequencyBinCount; // bin count using natural frequency (fs) = 1024
+	const bufferLength = analyser.fftSize; // bin count using Nyquest frequency (2*fs) = 2048
 
-	// Way 1: obtain ArrayBuffer
+	// Create a Uint8Array to store the audio data
+	const dataArray = new Uint8Array(bufferLength);
+	console.log('dataArray: ', dataArray);
+
+	// Fill the dataArray with data
+	// analyser.getByteTimeDomainData(dataArray); // This probably uses a pointer and assigns the output to analyser
+	
+	drawVisual = requestAnimationFrame(draw);
+	console.log('drawVisual: ', drawVisual);
+		
+	analyser.getByteTimeDomainData(dataArray);
+	console.log('analyser: ', analyser);
+
+	const ctx = await create_dynamic_canvasElement(w);
+	ctx.fillStyle = "rgb(200 200 200)";
+	var WIDTH = w;
+	var HEIGHT = w;
+	ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+	ctx.lineWidth = 2;
+	ctx.strokeStyle = "rgb(0 0 0)";
+
+	const sliceWidth = (WIDTH * 1.0) / bufferLength;
+	let x = 0;
+
+	ctx.beginPath();
+	for (let i = 0; i < bufferLength; i++) {
+		const v = dataArray[i] / 128.0;
+		const y = (v * HEIGHT) / 2;
+
+	    if (i === 0) {
+	      ctx.moveTo(x, y);
+	    } else {
+	      ctx.lineTo(x, y);
+	    }
+	    x += sliceWidth;
+	  }
+	
+	  ctx.lineTo(WIDTH, HEIGHT / 2);
+	  ctx.stroke();
 	
 	
 	
-	return sourceElement;
+	return dataArray;
 }
-	
+
+
+
 // -----------------------------------------------
 	
 async function show_pdf_on_page_objectElement(github_url_of_externally_downloaded_data) {
