@@ -1187,7 +1187,9 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	console.log('bufferLength: ', bufferLength);
 	
 	// Create a Uint8Array to store the audio data
-	const dataArray = new Uint8Array(bufferLength);
+	// const dataArray = new Uint8Array(bufferLength);
+	// OR
+	const dataArray = new Float32Array(bufferLength);
 	console.log('dataArray: ', dataArray);
 
 	// drawVisual = requestAnimationFrame(draw);
