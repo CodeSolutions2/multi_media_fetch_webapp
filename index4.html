@@ -349,6 +349,9 @@ async function determine_same_or_different_domain(url, desired_media_type, autom
 			} catch (err) {
 				document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + err;
 			}
+			if (response != undefined) {
+				break;
+			}
 		}
 		
 		// --------------------------------
@@ -1164,13 +1167,14 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	const analyser = audioContext.createAnalyser();
 	console.log('analyser: ', analyser);
 	
-	// analyser.fftSize = 2048;
 	// Connect the nodes
-	// sourceElement.connect(analyser);
-	// analyser.connect(audioContext.destination);
+	sourceElement.connect(analyser);
+	analyser.connect(audioContext.destination);
+	
 	// Create a Uint8Array to store the audio data
-	// const dataArray = new Uint8Array(analyser.frequencyBinCount);
-	// console.log('dataArray: ', dataArray);
+	const dataArray = new Uint8Array(analyser.frequencyBinCount);
+	console.log('dataArray: ', dataArray);
+	
 	// analyser.getByteTimeDomainData(dataArray); // This probably uses a pointer and assigns the output to analyser
 	// console.log('analyser: ', analyser);
 
