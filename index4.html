@@ -1190,13 +1190,14 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	const dataArray = new Uint8Array(bufferLength);
 	console.log('dataArray: ', dataArray);
 
-	// Fill the dataArray with data
-	// analyser.getByteTimeDomainData(dataArray); // This probably uses a pointer and assigns the output to analyser
-	
 	// drawVisual = requestAnimationFrame(draw);
 	//console.log('drawVisual: ', drawVisual);
-		
-	analyser.getByteTimeDomainData(dataArray);
+
+	// https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getByteTimeDomainData
+	// analyser.getByteTimeDomainData(dataArray);
+	// OR
+	analyser.getFloatTimeDomainData(dataArray);
+	
 	console.log('analyser: ', analyser);
 
 	const ctx = await create_dynamic_canvasElement(w);
