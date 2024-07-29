@@ -1199,13 +1199,16 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// analyser.getByteTimeDomainData(dataArray);
 	// OR
 	analyser.getFloatTimeDomainData(dataArray);
-	
 	console.log('analyser: ', analyser);
+
+	const arr = analyser.sort();
+	var max_val = [Math.abs(arr.at(0)), arr.at(analyser.length-1)].sort().pop();
+	console.log('max_val: ', max_val);
 
 	const ctx = await create_dynamic_canvasElement(w);
 	ctx.fillStyle = "rgb(200 200 200)";
 	var WIDTH = w;
-	var HEIGHT = w;
+	var HEIGHT = w;  // height of the canvas
 	ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
 	ctx.lineWidth = 2;
@@ -1216,8 +1219,8 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 
 	ctx.beginPath();
 	for (let i = 0; i < bufferLength; i++) {
-		const v = dataArray[i] / 128.0;
-		const y = (v * HEIGHT) / 2;
+		const normalized = dataArray[i] / max_val; // 0 to 1
+		const y = (normalized * HEIGHT) / 2;
 
 	    if (i === 0) {
 	      ctx.moveTo(x, y);
@@ -1229,8 +1232,6 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	
 	  ctx.lineTo(WIDTH, HEIGHT / 2);
 	  ctx.stroke();
-	
-	
 	
 	return dataArray;
 }
