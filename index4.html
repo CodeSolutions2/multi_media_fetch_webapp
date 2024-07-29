@@ -1190,8 +1190,8 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// Fill the dataArray with data
 	// analyser.getByteTimeDomainData(dataArray); // This probably uses a pointer and assigns the output to analyser
 	
-	drawVisual = requestAnimationFrame(draw);
-	console.log('drawVisual: ', drawVisual);
+	// drawVisual = requestAnimationFrame(draw);
+	//console.log('drawVisual: ', drawVisual);
 		
 	analyser.getByteTimeDomainData(dataArray);
 	console.log('analyser: ', analyser);
