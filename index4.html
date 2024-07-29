@@ -1151,7 +1151,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	
 	var sourceElement = document.createElement('source');
 	sourceElement.setAttribute("src", url);
-	console.log('sourceElement: ', sourceElement);
+	// console.log('sourceElement: ', sourceElement);
 	
 	audioElement.appendChild(sourceElement);
 	document.getElementById('data_display').appendChild(audioElement);
@@ -1160,8 +1160,8 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	
 	// Obtain the audio data as a data Array: Way 0
 	// Create an AudioContext
-	var audioContext = new (window.AudioContext || window.webkitAudioContext)();
-	audioContext = new AudioContext();
+	// var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+	const audioContext = new AudioContext();
 	
 	// Create an AnalyserNode
 	const analyser = audioContext.createAnalyser();
@@ -1177,12 +1177,15 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	console.log('data_point_length: ', data_point_length);
 	
 	// Connect the nodes
-	sourceElement.connect(analyser);
-	analyser.connect(audioContext.destination);
+	// sourceElement.connect(analyser);
+	// analyser.connect(audioContext.destination);
 	
 	const bin_count_using_natural_freq = analyser.frequencyBinCount; // bin count using natural frequency (fs) = 1024
+	console.log('bin_count_using_natural_freq: ', bin_count_using_natural_freq);
+	
 	const bufferLength = analyser.fftSize; // bin count using Nyquest frequency (2*fs) = 2048
-
+	console.log('bufferLength: ', bufferLength);
+	
 	// Create a Uint8Array to store the audio data
 	const dataArray = new Uint8Array(bufferLength);
 	console.log('dataArray: ', dataArray);
