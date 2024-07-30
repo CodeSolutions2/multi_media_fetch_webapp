@@ -1235,43 +1235,51 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	const sliceWidth = (WIDTH * 1.0) / bufferLength;
 	let x = 0;
 
-  const mu = await mean(dataArray);
-  const sigma = await std(dataArray);
+	const mu = await mean(dataArray);
+	console.log('mu: ', mu);
+	
+	const sigma = await std(dataArray);
+	console.log('sigma: ', sigma);
 
 	ctx.beginPath();
 	for (let i = 0; i < bufferLength; i++) {
 		// const normalized = dataArray[i] / 128;
-    const normalized = (dataArray[i] - mu) / sigma; // [-1, 1]
+		const normalized = (dataArray[i] - mu) / sigma; // [-1, 1]
 		const y = (normalized * HEIGHT) / 2;
-
-	    if (i === 0) {
-	      ctx.moveTo(x, y);
-	    } else {
-	      ctx.lineTo(x, y);
-	    }
-	    x += sliceWidth;
-	  }
+		
+		if (i === 0) {
+			ctx.moveTo(x, y);
+		} else {
+			ctx.lineTo(x, y);
+		}
+		x += sliceWidth;
+	}
 	
-	  ctx.lineTo(WIDTH, HEIGHT / 2);
-	  ctx.stroke();
+	ctx.lineTo(WIDTH, HEIGHT / 2);
+	ctx.stroke();
 	
-	return dataArray;
+	return analyser;
 }
+
+// -----------------------------------------------
 
 async function sum(arr) {
   return arr.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
 }
+
+// -----------------------------------------------
   
 async function mean(arr) {
 	return await sum(arr)/arr.length;
 }
+
+// -----------------------------------------------
 
 async function std(arr) {
   const mu =  await mean(arr);
   const summ = await sum(arr - mu)
   return Math.sqrt( Math.pow(summ, 2)/arr.length );
 }
-
 
 // -----------------------------------------------
 	
