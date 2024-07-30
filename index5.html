@@ -1362,7 +1362,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	console.log('dataArray_ts: ', dataArray_ts);
 	
 	// [Step 2] Display the timeseries data
-	await plot_timeseries_audio_data(bufferLength_ts, dataArray_ts);
+	await plot_timeseries_audio_data(dataArray_ts);
 
 	// RESULT: the output data contains all zeros
 	
@@ -1410,7 +1410,13 @@ async function plot_frequency_histogram_audio_data(bufferLength_freq, dataArray_
 		barHeight = dataArray_freq[i];
 		
 		ctx.fillStyle = `rgb(${barHeight + 100} 50 50)`;
-		ctx.fillRect(x, HEIGHT - barHeight / 2, barWidth, barHeight / 2);
+
+		console.log('xcanvas_from_top:', x);
+		console.log('ycanvas_from_top:', HEIGHT - barHeight / 2);
+		console.log('x_from_xcanvas:', barWidth);
+		console.log('y_from_ycanvas:', barHeight/2);
+		
+		ctx.fillRect(x, (HEIGHT-barHeight)/2, barWidth, barHeight/2);
 		
 		x += barWidth + 1;
 	}
@@ -1452,7 +1458,7 @@ async function plot_frequency_spectrogram_audio_data(bufferLength_freq, dataArra
 
 // -----------------------------------------------
 
-async function plot_timeseries_audio_data(bufferLength_ts, dataArray_ts) {
+async function plot_timeseries_audio_data(dataArray_ts) {
 
 	// [Step 0] Verify timeseries signal characteristics
 	const arr_char_ts = await obtain_array_characteristics(dataArray_ts);
@@ -1462,27 +1468,34 @@ async function plot_timeseries_audio_data(bufferLength_ts, dataArray_ts) {
 	const ctx = await create_dynamic_canvasElement(w);
 	
 	ctx.fillStyle = "rgb(200 200 200)"; 	// gray background
-	var WIDTH = w;
-	var HEIGHT = w;  // height of the canvas
+	const WIDTH = w;
+	const HEIGHT = w;  // height of the canvas
 	ctx.fillRect(0, 0, WIDTH, HEIGHT);
 	ctx.lineWidth = 2;
 	ctx.strokeStyle = "rgb(0 0 0)"; 	// black waveform line
-	const sliceWidth = (WIDTH * 1.0) / bufferLength_ts;
-	let x = 0;
+	ctx.fillStyle = 'black';
+	
+	const time_step = WIDTH/dataArray_ts.length;
+	console.log('time_step: ', time_step);
+	
+	let x_scaled = 0;
 	ctx.beginPath();
-	for (let i = 0; i < bufferLength_ts; i++) {
-		const normalized = (dataArray_ts[i] - arr_char_ts.mu) / arr_char_ts.sigma; // [-1, 1]
-		const y = (normalized * HEIGHT) / 2;
+	for (let i = 0; i < dataArray_ts.length; i++) {
+		var normalized = (dataArray_ts[i] - arr_char_ts.mu) / arr_char_ts.sigma; // [-1, 1]
+		console.log('normalized:', normalized);
+		
+		var y_scaled = y_normalized*HEIGHT;
+		console.log('y_scaled:', y_scaled);
+		
+		console.log('x_scaled:', x_scaled);
 		
 		if (i === 0) {
-			ctx.moveTo(x, y);
+			ctx.moveTo(x_scaled, y_scaled);
 		} else {
-			ctx.lineTo(x, y);
+			ctx.lineTo(x_scaled, y_scaled);
 		}
-		x += sliceWidth;
+		x_scaled = x_scaled + time_step;
 	}
-	
-	ctx.lineTo(WIDTH, HEIGHT / 2);
 	ctx.stroke();
 	
 }
