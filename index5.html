@@ -1108,59 +1108,59 @@ async function Video_CORS(url, method, data, headers, return_type) {
 	document.getElementById('data_display').appendChild(videoElement);
 
 	// -----------------------------------------------
-  
-  // Way 0
+	
+	// Way 0
 	// Save two video frames to file
 	// const videoLength = videoElement.duration;
 	// console.log('videoLength: ', videoLength);
 	
-	var threeD_array = [];
+	// var threeD_array = [];
 	
-	const ctx = await create_dynamic_canvasElement(w);
+	// const ctx = await create_dynamic_canvasElement(w);
 
 	// A snapshot of the video at t=0secs
-	ctx.drawImage(videoElement, 0, 0, w, w);
-	var imageData = ctx.getImageData(0, 0, w, w);
-  console.log('imageData: ', imageData);
+	// ctx.drawImage(videoElement, 0, 0, w, w);
+	// var imageData = ctx.getImageData(0, 0, w, w);
+	// console.log('imageData: ', imageData);
   
-	var oneD_array = imageData.data; // data is a 1D array
-  console.log('oneD_array: ', oneD_array);
+	// var oneD_array = imageData.data; // data is a 1D array
+	// console.log('oneD_array: ', oneD_array);
   
-	var twoD_array = Array.from(oneD_array);
-  console.log('twoD_array: ', twoD_array);
+	// var twoD_array = Array.from(oneD_array);
+	// console.log('twoD_array: ', twoD_array);
   
-	threeD_array.push(twoD_array);
+	// threeD_array.push(twoD_array);
 
-	videoElement.removeChild(sourceElement);
+	// videoElement.removeChild(sourceElement);
 
 	// A snapshot of the video at t=1secs
-	sourceElement.start(1); // start the video at t=1secs
-	videoElement.appendChild(sourceElement);
-	ctx.drawImage(videoElement, 0, 0, w, w);
-	imageData = ctx.getImageData(0, 0, w, w);
-	oneD_array = imageData.data; // data is a 1D array
-	twoD_array = Array.from(oneD_array);
-	threeD_array.push(twoD_array);
+	// sourceElement.start(1); // start the video at t=1secs
+	// videoElement.appendChild(sourceElement);
+	// ctx.drawImage(videoElement, 0, 0, w, w);
+	// imageData = ctx.getImageData(0, 0, w, w);
+	// oneD_array = imageData.data; // data is a 1D array
+	// twoD_array = Array.from(oneD_array);
+	// threeD_array.push(twoD_array);
 
-	console.log('threeD_array: ', threeD_array);
+	// console.log('threeD_array: ', threeD_array);
+	
+	// -----------------------------------------------
+	
+	// Way 1
+	// Obtain a video frame
+	await videoElement.play();
+	const [track] = videoElement.captureStream().getVideoTracks();
+	console.log('track: ', track);
+  
+	videoElement.onended = (evt) => track.stop();
+	
+	const processor = new MediaStreamTrackProcessor(track);
+	console.log('processor: ', processor);
+  
+	const reader = processor.readable.getReader();
+	console.log('reader: ', reader);
 
-  // -----------------------------------------------
-
-  // Way 1
-  // Obtain a video frame
-  await videoElement.play();
-  const [track] = videoElement.captureStream().getVideoTracks();
-  console.log('track: ', track);
-  
-  videoElement.onended = (evt) => track.stop();
-  
-  const processor = new MediaStreamTrackProcessor(track);
-  console.log('processor: ', processor);
-  
-  const reader = processor.readable.getReader();
-  console.log('reader: ', reader);
-
-  
+	// -----------------------------------------------
   
 	return videoElement;
 }
