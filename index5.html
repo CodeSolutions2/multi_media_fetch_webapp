@@ -1276,9 +1276,16 @@ async function mean(arr) {
 // -----------------------------------------------
 
 async function std(arr) {
-  const mu =  await mean(arr);
-  const summ = await sum(arr - mu)
-  return Math.sqrt( Math.pow(summ, 2)/arr.length );
+	const mu =  await mean(arr);
+	console.log('mu: ', mu);
+	
+	const summ = await sum(arr - mu);
+	console.log('summ: ', summ);
+
+	const out = Math.sqrt( Math.pow(summ, 2)/arr.length );
+	console.log('out: ', out);
+	
+	return out;
 }
 
 // -----------------------------------------------
