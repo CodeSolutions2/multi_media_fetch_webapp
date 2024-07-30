@@ -1214,32 +1214,23 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// -----------------------------------------------
 	
 	// Create a Uint8Array to store the audio data
-	// const dataArray = new Uint8Array(bufferLength);
+	const dataArray = new Uint8Array(bufferLength);
 	// OR
-	const dataArray = new Float32Array(bufferLength);
+	// const dataArray = new Float32Array(bufferLength);
 	console.log('dataArray: ', dataArray);
 
 	// -----------------------------------------------
-	
+
+	// Fill the dataArray with timeseries data
 	// https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getByteTimeDomainData
-	// analyser.getByteTimeDomainData(dataArray);
+	analyser.getByteTimeDomainData(dataArray);
 	// OR
-	analyser.getFloatTimeDomainData(dataArray);
+	// analyser.getFloatTimeDomainData(dataArray);
 	console.log('analyser: ', analyser);
 
 	// -----------------------------------------------
-	
-	const ctx = await create_dynamic_canvasElement(w);
-	ctx.fillStyle = "rgb(200 200 200)";
-	var WIDTH = w;
-	var HEIGHT = w;  // height of the canvas
-	ctx.fillRect(0, 0, WIDTH, HEIGHT);
-	ctx.lineWidth = 2;
-	ctx.strokeStyle = "rgb(0 0 0)";
 
-	const sliceWidth = (WIDTH * 1.0) / bufferLength;
-	let x = 0;
-
+	// Verify the contents of the timeseries data
 	const mu = await mean(dataArray);
 	console.log('mu: ', mu);
 	
@@ -1253,12 +1244,21 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 
 	const min_val = arr_sort.at(0);
 	console.log('min_val: ', min_val);
-
-	// -----------------------------------------------
 	
+	// -----------------------------------------------
+
+	// Display the timeseries data
+	const ctx = await create_dynamic_canvasElement(w);
+	ctx.fillStyle = "rgb(200 200 200)";
+	var WIDTH = w;
+	var HEIGHT = w;  // height of the canvas
+	ctx.fillRect(0, 0, WIDTH, HEIGHT);
+	ctx.lineWidth = 2;
+	ctx.strokeStyle = "rgb(0 0 0)";
+	const sliceWidth = (WIDTH * 1.0) / bufferLength;
+	let x = 0;
 	ctx.beginPath();
 	for (let i = 0; i < bufferLength; i++) {
-		// const normalized = dataArray[i] / 128;
 		const normalized = (dataArray[i] - mu) / sigma; // [-1, 1]
 		const y = (normalized * HEIGHT) / 2;
 		
@@ -1272,6 +1272,8 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	
 	ctx.lineTo(WIDTH, HEIGHT / 2);
 	ctx.stroke();
+
+	// -----------------------------------------------
 	
 	return dataArray;
 }
