@@ -1402,9 +1402,11 @@ async function plot_frequency_histogram_audio_data(dataArray_freq) {
 	ctx.fillStyle = "rgb(200 200 200)"; 	// gray background
 	ctx.fillRect(0, 0, WIDTH, HEIGHT);
 	
-	const barWidth = (WIDTH / dataArray_freq.length) * 2.5;
-	let barHeight;
-	let x = 0;
+	var barWidth = (WIDTH / dataArray_freq.length) * 2.5;
+	console.log('barWidth: ', barWidth);
+	
+	var barHeight;
+	var x = 0;
 	
 	for (let i = 0; i < dataArray_freq.length; i++) {
 		barHeight = dataArray_ts.at(i);
@@ -1418,7 +1420,7 @@ async function plot_frequency_histogram_audio_data(dataArray_freq) {
 		
 		ctx.fillRect(x, (HEIGHT-barHeight)/2, barWidth, barHeight/2);
 		
-		x += barWidth + 1;
+		x = x + (barWidth + 1);
 	}
 	
 }
@@ -1478,18 +1480,21 @@ async function plot_timeseries_audio_data(dataArray_ts) {
 	const time_step = WIDTH/dataArray_ts.length;
 	console.log('time_step: ', time_step);
 	
-	let x_scaled = 0;
+	var x_scaled = 0;
+	var normalized = 0;
+	var y_scaled = 0;
+	
 	ctx.beginPath();
 	for (let i = 0; i < dataArray_ts.length; i++) {
 
 		if ( arr_char_ts.sigma == 0) {
-			var normalized = 0;
+			normalized = 0;
 		} else {
-			var normalized = (dataArray_ts.at(i) - arr_char_ts.mu) / arr_char_ts.sigma; // [-1, 1]
+			normalized = (dataArray_ts.at(i) - arr_char_ts.mu) / arr_char_ts.sigma; // [-1, 1]
 		}
 		console.log('normalized:', normalized);
 		
-		var y_scaled = y_normalized*HEIGHT;
+		y_scaled = y_normalized*HEIGHT;
 		console.log('y_scaled:', y_scaled);
 		
 		console.log('x_scaled:', x_scaled);
