@@ -1492,7 +1492,7 @@ async function plot_timeseries_audio_data(dataArray_ts) {
 		}
 		console.log('y_normalized:', y_normalized);
 		
-		y_scaled = y_normalized*HEIGHT;
+		y_scaled = y_normalized*(HEIGHT/2); // To make the line centered
 		console.log('y_scaled:', y_scaled);
 		
 		console.log('x_scaled:', x_scaled);
