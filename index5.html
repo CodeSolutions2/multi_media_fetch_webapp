@@ -1256,10 +1256,10 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 
 	// -----------------------------------------------
 
-	var svgElement0 = document.createElement('svg');
+	const svgElement0 = document.createElement('svg');
 	
 	// Verify the contents of the frequency data
-	var svg = d3.select("body").append(svgElement0).attr("width", 400).attr("height", 200);
+	const svg0 = d3.select("body").append(svgElement0).attr("width", 400).attr("height", 200);
 	
 	// Create a histogram generator
 	var histogram = d3.histogram()
@@ -1270,7 +1270,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	var bins = histogram(dataArray_freq);
 	
 	// Create the bars for the histogram
-	svg.selectAll("rect")
+	svg0.selectAll("rect")
 	    .data(bins)
 	    .enter()
 	    .append("rect")
@@ -1331,10 +1331,10 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 
 	var svgElement1 = document.createElement('svg');
 	const scale = d3.scaleLinear().domain([0, d3.max(dataArray_ts)]).range([-1.2, 1.2]);
-	const svg = d3.select('body').append(svgElement1).attr('width', 400).attr('height', 150);
+	const svg1 = d3.select('body').append(svgElement1).attr('width', 400).attr('height', 150);
 	
 	// Plot data on chart, Add bars to the chart
-	svg.selectAll('rect')
+	svg1.selectAll('rect')
 		.data(dataArray_ts)
 		.enter()
 		.append('rect').attr('width', d => scale(d)).attr('height', 20).attr('y', (d,i) => d).attr('x', (d,i) => i);
