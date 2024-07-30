@@ -1203,7 +1203,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	
 	// Create an AnalyserNode
 	const analyser = audioContext.createAnalyser();
-	console.log('analyser before: ', analyser);
+	console.log('analyser: ', analyser);
 
 	let channels = analyser.channelCount; // 2
 	let time_length = analyser.context.currentTime; // 354.976
@@ -1212,7 +1212,8 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	
 	var time_sample = 1/fs; // every time_sample there is a data point, 0.000020833333333333333
 	console.log('time_sample: ', time_sample);
-	
+
+	// not a correct value
 	const data_point_length = time_length/time_sample;  // frameCount, 16992000
 	console.log('data_point_length: ', data_point_length);
 	
@@ -1222,6 +1223,60 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 
 	// -----------------------------------------------
 
+	// Process frequency data: histogram of frequency Uinit8Array data
+
+	console.log('analyser.minDecibels: ', analyser.minDecibels);
+
+	console.log('analyser.maxDecibels: ', analyser.maxDecibels);
+
+	console.log('analyser.smoothingTimeConstant: ', analyser.smoothingTimeConstant);
+	
+	const bufferLength_freq = analyser.frequencyBinCount;
+	console.log('bufferLength_freq: ', bufferLength_freq);
+
+	
+	// [Step 0] Create a Uint8Array to store the frequency data
+	const dataArray_freq = new Uint8Array(bufferLength_freq);
+
+	
+	// [Step 1] Fill the frequency dataArray with converted data
+	analyser.getByteFrequencyData(dataArray_freq);
+	console.log('dataArray_freq: ', dataArray_freq);
+
+	
+	// [Step 2] Verify frequency signal characteristics
+	const arr_char_freq = await obtain_array_characteristics(dataArray_freq);
+	console.log('arr_char_freq: ', arr_char_freq);
+
+	
+	// [Step 3] Display the frequency data
+	const ctx_freq = await create_dynamic_canvasElement(w);
+	ctx_freq.clearRect(0, 0, WIDTH, HEIGHT);
+	
+	ctx_freq.fillStyle = "rgb(0 0 0)";
+	ctx_freq.fillRect(0, 0, WIDTH, HEIGHT);
+	
+	const barWidth = (WIDTH / bufferLength_freq) * 2.5;
+	let barHeight;
+	let x = 0;
+	
+	for (let i = 0; i < bufferLength; i++) {
+		barHeight = dataArray_freq[i];
+		
+		ctx_freq.fillStyle = `rgb(${barHeight + 100} 50 50)`;
+		ctx_freq.fillRect(x, HEIGHT - barHeight / 2, barWidth, barHeight / 2);
+		
+		x += barWidth + 1;
+	}
+	
+	// -----------------------------------------------
+
+	// const dataArray_freq = new Float32Array(bufferLength_freq);
+
+	// -----------------------------------------------
+	
+	// Process timeseries data
+	
 	// Select sampling frequency for Inverse Discrete Fourier Transform
 	const bin_count_using_natural_freq = analyser.frequencyBinCount; // bin count using natural frequency (fs) = 1024
 	console.log('bin_count_using_natural_freq: ', bin_count_using_natural_freq);
@@ -1231,77 +1286,27 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	
 	const bufferLength = bin_count_using_nyquist_freq;
 	console.log('bufferLength: ', bufferLength);
-
-	// -----------------------------------------------
 	
-	// Create a Uint8Array to store the timeseries and frequency data
-	// const dataArray = new Uint8Array(bufferLength);
+	// [Step 0] Create a Uint8Array to store the timeseries data
+	// const dataArray_ts = new Uint8Array(bufferLength);
 	// OR
 	const dataArray_ts = new Float32Array(bufferLength);
+
 	
-	const dataArray_freq = new Uint8Array(bufferLength);
-
-	// -----------------------------------------------
-
-	// Fill the timeseries and frequency dataArray
+	// [Step 1] Fill the timeseries dataArray with converted data
 	// https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getByteTimeDomainData
 	// analyser.getByteTimeDomainData(dataArray_ts);
 	// OR
 	analyser.getFloatTimeDomainData(dataArray_ts);
-	// console.log('analyser: ', analyser);
 	console.log('dataArray_ts: ', dataArray_ts);
 
-	analyser.getByteFrequencyData(dataArray_freq);
-	console.log('dataArray_freq: ', dataArray_freq);
-
-	// -----------------------------------------------
-
-	const svgElement0 = document.createElement('svg');
 	
-	// Verify the contents of the frequency data
-	const svg0 = d3.select("body").append(svgElement0).attr("width", 400).attr("height", 200);
-	
-	// Create a histogram generator
-	var histogram = d3.histogram()
-		.domain([0, analyser.frequencyBinCount])
-		.thresholds(d3.range(0, analyser.maxDecibels, analyser.minDecibels));
+	// [Step 2] Verify timeseries signal characteristics
+	const arr_char_ts = await obtain_array_characteristics(dataArray_ts);
+	console.log('arr_char_ts: ', arr_char_ts);
 
-	// Generate the histogram bins
-	var bins = histogram(dataArray_freq);
 	
-	// Create the bars for the histogram
-	svg0.selectAll("rect")
-	    .data(bins)
-	    .enter()
-	    .append("rect")
-	    .attr("x", function(d,i) { console('d.x0: ', d.x0); return i; })
-	    .attr("y", function(d) { return d; })
-	    .attr("width", function(d) { return d.x1 - d.x0 - 1; })
-	    .attr("height", function(d) { return d.length * 5; })
-	    .attr("fill", "steelblue");
-
-	document.getElementById('data_display').appendChild(svgElement0);
-	
-	// -----------------------------------------------
-
-	// Verify the contents of the timeseries data
-	const mu = await mean(dataArray_ts);
-	console.log('mu: ', mu);
-	
-	const sigma = await std(dataArray_ts);
-	console.log('sigma: ', sigma);
-
-	const arr_sort = dataArray_ts.sort();
-	
-	const max_val = arr_sort.at(dataArray_ts.length-1);
-	console.log('max_val: ', max_val);
-
-	const min_val = arr_sort.at(0);
-	console.log('min_val: ', min_val);
-	
-	// -----------------------------------------------
-
-	// Display the timeseries data
+	// [Step 3] Display the timeseries data
 	const ctx = await create_dynamic_canvasElement(w);
 	ctx.fillStyle = "rgb(200 200 200)";
 	var WIDTH = w;
@@ -1313,7 +1318,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	let x = 0;
 	ctx.beginPath();
 	for (let i = 0; i < bufferLength; i++) {
-		const normalized = (dataArray_ts[i] - mu) / sigma; // [-1, 1]
+		const normalized = (dataArray_ts[i] - arr_char_ts.mu) / arr_char_ts.sigma; // [-1, 1]
 		const y = (normalized * HEIGHT) / 2;
 		
 		if (i === 0) {
@@ -1326,26 +1331,28 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	
 	ctx.lineTo(WIDTH, HEIGHT / 2);
 	ctx.stroke();
-
-	// OR
-
-	var svgElement1 = document.createElement('svg');
-	const scale = d3.scaleLinear().domain([0, d3.max(dataArray_ts)]).range([-1.2, 1.2]);
-	const svg1 = d3.select('body').append(svgElement1).attr('width', 400).attr('height', 150);
-	
-	// Plot data on chart, Add bars to the chart
-	svg1.selectAll('rect')
-		.data(dataArray_ts)
-		.enter()
-		.append('rect').attr('width', d => scale(d)).attr('height', 20).attr('y', (d,i) => d).attr('x', (d,i) => i);
-	
-	document.getElementById('data_display').appendChild(svgElement1);
 	
 	// -----------------------------------------------
 	
 	return dataArray_ts;
 }
 
+// -----------------------------------------------
+
+async function obtain_array_characteristics(arr) {
+
+	var arr_char = {};
+	
+	arr_char.mu = await mean(arr);
+	arr_char.sigma = await std(arr);
+
+	const arr_sort = arr.sort();
+	arr_char.max_val = arr_sort.at(arr.length-1);
+	arr_char.min_val = arr_sort.at(0);
+	
+	return arr_char;
+}
+	
 // -----------------------------------------------
 
 async function sum(arr) {
