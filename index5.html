@@ -1405,17 +1405,28 @@ async function plot_frequency_histogram_audio_data(dataArray_freq) {
 	var barWidth = (WIDTH / dataArray_freq.length) * 2.5;
 	console.log('barWidth: ', barWidth);
 	
-	var barHeight;
+	var y_normalized;
+	var y_scaled;
 	var x = 0;
 
 	console.log('dataArray_freq.length: ', dataArray_freq.length);
 	
 	for (let i = 0; i < dataArray_freq.length; i++) {
-		barHeight = dataArray_freq.at(i);
-		console.log('barHeight: ', barHeight);
 
+		if (arr_char_freq.sigma == 0) {
+			y_normalized = 0;
+		} else {
+			y_normalized = (dataArray_ts.at(i) - arr_char_ts.mu) / arr_char_ts.sigma; // [-1, 1]
+		}
+		console.log('y_normalized:', y_normalized);
+		
+		y_scaled = y_normalized * (HEIGHT/2); // To make the line centered
+		console.log('y_scaled:', y_scaled);
+		
 		//https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/fillRect
-		ctx.fillRect(x, HEIGHT, barWidth, -barHeight);
+		// barWidth: Positive values are to the right, and negative to the left.
+		// it is -y_scaled because Positive values are down, and negative are up.
+		ctx.fillRect(x, HEIGHT, barWidth, -y_scaled);  
 		ctx.fillStyle = "rgb(0 0 200 / 50%)";
 		
 		x = x + barWidth;
@@ -1444,6 +1455,7 @@ async function plot_frequency_spectrogram_audio_data(bufferLength_freq, dataArra
 	let posX = 0;
 	for (let i = 0; i < bufferLength_freq; i++) {
 		const barHeight = (dataArray_ts.at(i) + 140) * 2;
+		
 		ctx.fillStyle = `rgb(${Math.floor(barHeight + 100)} 50 50)`;
 		ctx.fillRect(
 			posX,
@@ -1485,7 +1497,7 @@ async function plot_timeseries_audio_data(dataArray_ts) {
 	ctx.beginPath();
 	for (let i = 0; i < dataArray_ts.length; i++) {
 
-		if ( arr_char_ts.sigma == 0) {
+		if (arr_char_ts.sigma == 0) {
 			y_normalized = 0;
 		} else {
 			y_normalized = (dataArray_ts.at(i) - arr_char_ts.mu) / arr_char_ts.sigma; // [-1, 1]
