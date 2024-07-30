@@ -1183,14 +1183,14 @@ async function Video_CORS(url, method, data, headers, return_type) {
 	// -----------------------------------------------
 
 	// Way 2
-	// let imageCapture;
-	// const track = navigator.mediaDevices.getUserMedia({ video: true }).then((mediaStream) => {
-	// 	document.querySelector("video").srcObject = mediaStream;
-	//	return mediaStream.getVideoTracks()[0]; });
-	// console.log('track: ', track);
+	const track = navigator.mediaDevices.getUserMedia({ video: true }).then((mediaStream) => {
+	 	document.querySelector("video").srcObject = mediaStream;
+		return mediaStream.getVideoTracks()[0]; });
+	console.log('track: ', track);
 	
-	// imageCapture = new ImageCapture(track);
+	// const imageCapture = new ImageCapture(track);
 	// imageCapture.getPhotoCapabilities();
+	
 
 	// -----------------------------------------------
 	
@@ -1256,18 +1256,12 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 
 	// Set up audio node network
 	sourceElement.connect(analyserNode);
-	analyserNode.connect(audioContext.destination);
+	// analyserNode.connect(audioContext.destination);
 
 	// -----------------------------------------------
 	
 	// -----------------------------------------------
 	// Goal: get the audio data from the audioElement and NOT the url
-	// -----------------------------------------------
-	
-	
-	
-	
-
 	// -----------------------------------------------
 
 	// [A] Process frequency data: histogram of frequency Uinit8Array data
