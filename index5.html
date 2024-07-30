@@ -1481,7 +1481,8 @@ async function plot_timeseries_audio_data(dataArray_ts) {
 	let x_scaled = 0;
 	ctx.beginPath();
 	for (let i = 0; i < dataArray_ts.length; i++) {
-		var normalized = (dataArray_ts[i] - arr_char_ts.mu) / arr_char_ts.sigma; // [-1, 1]
+		
+		var normalized = (dataArray_ts.at(i) - arr_char_ts.mu) / arr_char_ts.sigma; // [-1, 1]
 		console.log('normalized:', normalized);
 		
 		var y_scaled = y_normalized*HEIGHT;
