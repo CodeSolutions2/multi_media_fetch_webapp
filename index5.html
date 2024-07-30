@@ -1407,7 +1407,7 @@ async function plot_frequency_histogram_audio_data(bufferLength_freq, dataArray_
 	let x = 0;
 	
 	for (let i = 0; i < bufferLength_freq; i++) {
-		barHeight = dataArray_freq[i];
+		barHeight = dataArray_ts.at(i);
 		
 		ctx.fillStyle = `rgb(${barHeight + 100} 50 50)`;
 
@@ -1443,7 +1443,7 @@ async function plot_frequency_spectrogram_audio_data(bufferLength_freq, dataArra
 	const barWidth = (WIDTH / bufferLength_freq) * 2.5;
 	let posX = 0;
 	for (let i = 0; i < bufferLength_freq; i++) {
-		const barHeight = (dataArray[i] + 140) * 2;
+		const barHeight = (dataArray_ts.at(i) + 140) * 2;
 		ctx.fillStyle = `rgb(${Math.floor(barHeight + 100)} 50 50)`;
 		ctx.fillRect(
 			posX,
