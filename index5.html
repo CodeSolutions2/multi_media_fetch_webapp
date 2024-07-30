@@ -1207,9 +1207,9 @@ async function Video_CORS(url, method, data, headers, return_type) {
 async function Audio_CORS(url, method, data, headers, return_type) {
 
 	// Create an AudioElement
-	const audioElement = document.createElement('audio');
+	// const audioElement = document.createElement('audio');
 	// OR
-	// const audioElement = new Audio();
+	const audioElement = new Audio();
 	
 	audioElement.setAttribute("controls", true);
 	audioElement.setAttribute('crossOrigin', "anonymous"); // OR "anonymous"
@@ -1266,8 +1266,13 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// analyserNode.connect(audioContext.destination);
 
 	// -----------------------------------------------
-	
-	sourceElement.connect(audioContext.destination);
+
+	// *** returns an error ***
+	// sourceElement.connect(audioContext.destination);
+
+	// -----------------------------------------------
+		
+	audioElement.connect(audioContext.destination);
 
 	// -----------------------------------------------
 	
