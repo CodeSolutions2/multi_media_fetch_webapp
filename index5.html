@@ -1118,7 +1118,10 @@ async function Video_CORS(url, method, data, headers, return_type) {
 
 	// -----------------------------------------------
 	
-	const ts = videoElement.duration;
+	const ts0 = videoElement.duration;
+	console.log('ts0: ', ts0);
+
+	const ts = videoElement.mozFragmentEnd;
 	console.log('ts: ', ts);
 
 	const videoHeight = videoElement.videoHeight;
@@ -1215,6 +1218,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	audioElement.setAttribute('crossOrigin', "anonymous"); // OR "anonymous"
 	audioElement.setAttribute('autoplay', true);
 	audioElement.setAttribute('preload', "auto");
+	// audioElement.setAttribute('loop', true);
 	// OR
 	audioElement.setAttribute('src', url);
 
@@ -1234,7 +1238,9 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	var sourceElement = audioContext.createMediaElementSource(audioElement);
 	
 	sourceElement.setAttribute("src", url);
-	// console.log('sourceElement: ', sourceElement);
+	console.log('sourceElement: ', sourceElement);
+
+	// -----------------------------------------------
 	
 	audioElement.appendChild(sourceElement);
 	
@@ -1263,12 +1269,12 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 
 	// Set up audio node network
 	// sourceElement.connect(analyserNode);  // *** returns an error ***
-	// analyserNode.connect(audioContext.destination);
+	// analyserNode.connect(audioContext.destination);	// *** returns an error ***
 
 	// -----------------------------------------------
 
 	// *** returns an error ***
-	sourceElement.connect(audioContext.destination);
+	// sourceElement.connect(audioContext.destination);
 
 	// -----------------------------------------------
 
