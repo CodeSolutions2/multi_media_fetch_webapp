@@ -1117,13 +1117,15 @@ async function Video_CORS(url, method, data, headers, return_type) {
 	document.getElementById('data_display').appendChild(videoElement);
 
 	// -----------------------------------------------
+	
+	const ts = videoElement.duration;
+	console.log('ts: ', ts);
 
-	// Obtain information about the videoElement and sourceElement
-	
-	
-	
-	// const videoLength = videoElement.durationchange;
-	// console.log('videoLength: ', videoLength);
+	const videoHeight = videoElement.videoHeight;
+	console.log('videoHeight: ', videoHeight);
+
+	const videoWidth = videoElement.videoWidth;
+	console.log('videoWidth: ', videoWidth);
 
 	// -----------------------------------------------
 
@@ -1183,8 +1185,8 @@ async function Video_CORS(url, method, data, headers, return_type) {
 	// -----------------------------------------------
 
 	// Way 2
-	const track = videoElement.captureStream();
-	console.log('track: ', track);
+	// const track = videoElement.captureStream();
+	// console.log('track: ', track);
 
 	// Obtain a snapshot from PC camera
 	// const track = navigator.mediaDevices.getUserMedia({ video: true }).then((mediaStream) => {
@@ -1235,6 +1237,8 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// console.log('sourceElement: ', sourceElement);
 	
 	audioElement.appendChild(sourceElement);
+	
+	
 	document.getElementById('data_display').appendChild(audioElement);
 
 	// -----------------------------------------------
@@ -1254,12 +1258,16 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// **** not a correct value = 0
 	const data_point_length = time_length // time_sample;  // frameCount, 16992000
 	console.log('data_point_length: ', data_point_length);
-
+	
 	// -----------------------------------------------
 
 	// Set up audio node network
-	// sourceElement.connect(analyserNode);  // returns an error
+	// sourceElement.connect(analyserNode);  // *** returns an error ***
 	// analyserNode.connect(audioContext.destination);
+
+	// -----------------------------------------------
+	
+	sourceElement.connect(audioContext.destination);
 
 	// -----------------------------------------------
 	
@@ -1287,6 +1295,8 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 
 	// [Step 2] Display frequency histogram data
 	await plot_frequency_histogram_audio_data(bufferLength_freq, dataArray_freq);
+
+	// RESULT: the output data contains all zeros
 	
 	// -----------------------------------------------
 
@@ -1308,7 +1318,9 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// console.log('dataArray_freq1: ', dataArray_freq1);
 
 	// [Step 2] Display frequency histogram data
-	// await plot_frequency_spectrogram_audio_data(bufferLength_freq1, dataArray_freq1); // returned error
+	// await plot_frequency_spectrogram_audio_data(bufferLength_freq1, dataArray_freq1); 
+	
+	// RESULT: returned an error
 
 	// -----------------------------------------------
 	
@@ -1339,6 +1351,19 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	
 	// [Step 2] Display the timeseries data
 	await plot_timeseries_audio_data(bufferLength_ts, dataArray_ts);
+
+	// RESULT: the output data contains all zeros
+	
+	// -----------------------------------------------
+
+	// Way 0: since the data values are zero, try to get the d
+	// const desired_audio_data = audioContext.createBuffer(channels, frameCount, sampleRate);
+
+	
+	// var source = audioContext.createBufferSource(audioElement);
+	// source.buffer = desired_audio_data;  // desired audio data
+	
+	// var scp = audioContext.createScriptProcessor(256, 0, 1);
 	
 	// -----------------------------------------------
 	
@@ -1362,7 +1387,7 @@ async function plot_frequency_histogram_audio_data(bufferLength_freq, dataArray_
 	
 	ctx.clearRect(0, 0, WIDTH, HEIGHT);
 	
-	ctx.fillStyle = "rgb(0 0 0)";
+	ctx.fillStyle = "rgb(200 200 200)"; 	// gray background
 	ctx.fillRect(0, 0, WIDTH, HEIGHT);
 	
 	const barWidth = (WIDTH / bufferLength_freq) * 2.5;
@@ -1391,8 +1416,7 @@ async function plot_frequency_spectrogram_audio_data(bufferLength_freq, dataArra
 	// [Step 1] Create a canvas to plot timeseries data on
 	const ctx = await create_dynamic_canvasElement(w);
 	
-	// Draw black background
-	ctx.fillStyle = "rgb(0 0 0)";
+	ctx.fillStyle = "rgb(200 200 200)"; 	// gray background
 	var WIDTH = w;
 	var HEIGHT = w;  // height of the canvas
 	ctx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -1425,12 +1449,12 @@ async function plot_timeseries_audio_data(bufferLength_ts, dataArray_ts) {
 	// [Step 1] Create a canvas to plot timeseries data on
 	const ctx = await create_dynamic_canvasElement(w);
 	
-	ctx.fillStyle = "rgb(200 200 200)";
+	ctx.fillStyle = "rgb(200 200 200)"; 	// gray background
 	var WIDTH = w;
 	var HEIGHT = w;  // height of the canvas
 	ctx.fillRect(0, 0, WIDTH, HEIGHT);
 	ctx.lineWidth = 2;
-	ctx.strokeStyle = "rgb(0 0 0)";
+	ctx.strokeStyle = "rgb(0 0 0)"; 	// black waveform line
 	const sliceWidth = (WIDTH * 1.0) / bufferLength_ts;
 	let x = 0;
 	ctx.beginPath();
