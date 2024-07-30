@@ -1407,6 +1407,8 @@ async function plot_frequency_histogram_audio_data(dataArray_freq) {
 	
 	var barHeight;
 	var x = 0;
+
+	console.log('dataArray_freq.length: ', dataArray_freq.length);
 	
 	for (let i = 0; i < dataArray_freq.length; i++) {
 		barHeight = dataArray_freq.at(i);
@@ -1477,18 +1479,18 @@ async function plot_timeseries_audio_data(dataArray_ts) {
 	console.log('time_step: ', time_step);
 	
 	var x_scaled = 0;
-	var normalized = 0;
+	var y_normalized = 0;
 	var y_scaled = 0;
 	
 	ctx.beginPath();
 	for (let i = 0; i < dataArray_ts.length; i++) {
 
 		if ( arr_char_ts.sigma == 0) {
-			normalized = 0;
+			y_normalized = 0;
 		} else {
-			normalized = (dataArray_ts.at(i) - arr_char_ts.mu) / arr_char_ts.sigma; // [-1, 1]
+			y_normalized = (dataArray_ts.at(i) - arr_char_ts.mu) / arr_char_ts.sigma; // [-1, 1]
 		}
-		console.log('normalized:', normalized);
+		console.log('y_normalized:', y_normalized);
 		
 		y_scaled = y_normalized*HEIGHT;
 		console.log('y_scaled:', y_scaled);
