@@ -1306,7 +1306,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	console.log('dataArray_freq: ', dataArray_freq);
 
 	// [Step 2] Display frequency histogram data
-	await plot_frequency_histogram_audio_data(bufferLength_freq, dataArray_freq);
+	await plot_frequency_histogram_audio_data(dataArray_freq);
 
 	// RESULT: the output data contains all zeros
 	
@@ -1384,7 +1384,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 
 // -----------------------------------------------
 
-async function plot_frequency_histogram_audio_data(bufferLength_freq, dataArray_freq) {
+async function plot_frequency_histogram_audio_data(dataArray_freq) {
 
 	// [Step 0] Verify frequency signal characteristics
 	const arr_char_freq = await obtain_array_characteristics(dataArray_freq);
@@ -1402,11 +1402,11 @@ async function plot_frequency_histogram_audio_data(bufferLength_freq, dataArray_
 	ctx.fillStyle = "rgb(200 200 200)"; 	// gray background
 	ctx.fillRect(0, 0, WIDTH, HEIGHT);
 	
-	const barWidth = (WIDTH / bufferLength_freq) * 2.5;
+	const barWidth = (WIDTH / dataArray_freq.length) * 2.5;
 	let barHeight;
 	let x = 0;
 	
-	for (let i = 0; i < bufferLength_freq; i++) {
+	for (let i = 0; i < dataArray_freq.length; i++) {
 		barHeight = dataArray_ts.at(i);
 		
 		ctx.fillStyle = `rgb(${barHeight + 100} 50 50)`;
@@ -1481,8 +1481,12 @@ async function plot_timeseries_audio_data(dataArray_ts) {
 	let x_scaled = 0;
 	ctx.beginPath();
 	for (let i = 0; i < dataArray_ts.length; i++) {
-		
-		var normalized = (dataArray_ts.at(i) - arr_char_ts.mu) / arr_char_ts.sigma; // [-1, 1]
+
+		if ( arr_char_ts.sigma == 0) {
+			var normalized = 0;
+		} else {
+			var normalized = (dataArray_ts.at(i) - arr_char_ts.mu) / arr_char_ts.sigma; // [-1, 1]
+		}
 		console.log('normalized:', normalized);
 		
 		var y_scaled = y_normalized*HEIGHT;
