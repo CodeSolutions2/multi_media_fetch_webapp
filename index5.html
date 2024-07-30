@@ -1122,7 +1122,7 @@ async function Video_CORS(url, method, data, headers, return_type) {
 	
 	
 	
-	// const videoLength = videoElement.duration;
+	// const videoLength = videoElement.durationchange;
 	// console.log('videoLength: ', videoLength);
 
 	// -----------------------------------------------
@@ -1183,11 +1183,14 @@ async function Video_CORS(url, method, data, headers, return_type) {
 	// -----------------------------------------------
 
 	// Way 2
-	const track = navigator.mediaDevices.getUserMedia({ video: true }).then((mediaStream) => {
-	 	document.querySelector("video").srcObject = mediaStream;
-		return mediaStream.getVideoTracks()[0]; });
+	// const track = videoElement.captureStream();
 	console.log('track: ', track);
-	
+
+	// Obtain a snapshot from PC camera
+	// const track = navigator.mediaDevices.getUserMedia({ video: true }).then((mediaStream) => {
+	//  	document.querySelector("video").srcObject = mediaStream;
+	// 	return mediaStream.getVideoTracks()[0]; });
+	// console.log('track: ', track);
 	// const imageCapture = new ImageCapture(track);
 	// imageCapture.getPhotoCapabilities();
 	
@@ -1255,7 +1258,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// -----------------------------------------------
 
 	// Set up audio node network
-	sourceElement.connect(analyserNode);
+	// sourceElement.connect(analyserNode);  // returns an error
 	// analyserNode.connect(audioContext.destination);
 
 	// -----------------------------------------------
