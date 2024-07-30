@@ -76,7 +76,9 @@ iframe#pdf_iframe_element {position: absolute; vertical-align: top; top: 200; z-
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
+<script src='https://d3js.org/d3.v7.min.js'></script>
 
+	
 <script>
 	
 // -----------------------------------------------
@@ -1108,11 +1110,22 @@ async function Video_CORS(url, method, data, headers, return_type) {
 	document.getElementById('data_display').appendChild(videoElement);
 
 	// -----------------------------------------------
+
+	// Obtain information about the videoElement and sourceElement
+	console.log('videoElement: ', videoElement);
+	console.log('sourceElement: ', sourceElement);
 	
-	// Way 0
-	// Save two video frames to file
 	// const videoLength = videoElement.duration;
 	// console.log('videoLength: ', videoLength);
+
+	// -----------------------------------------------
+
+	// -----------------------------------------------
+	// Goal: get the video data from the videoElement and NOT the url
+	// -----------------------------------------------
+	
+	// Way 0 - Stop the video at desired locations and obtain the video frame as an image
+	// Save two video frames to file
 	
 	// var threeD_array = [];
 	
@@ -1148,26 +1161,25 @@ async function Video_CORS(url, method, data, headers, return_type) {
 	
 	// Way 1
 	// Obtain a video frame
-	await videoElement.play();
+	// await videoElement.play();
 	const [track] = videoElement.captureStream().getVideoTracks();
 	console.log('track: ', track);
   
-	videoElement.onended = (evt) => track.stop();
+	// videoElement.onended = (evt) => track.stop();
 	
-	const processor = new MediaStreamTrackProcessor(track);
-	console.log('processor: ', processor);
+	// const processor = new MediaStreamTrackProcessor(track);
+	// console.log('processor: ', processor);
   
-	const reader = processor.readable.getReader();
-	console.log('reader: ', reader);
+	// const reader = processor.readable.getReader();
+	// console.log('reader: ', reader);
 
 	// -----------------------------------------------
   
-	return videoElement;
+	return 'threeD_array';
 }
 
-
 // -----------------------------------------------
-
+	
 async function Audio_CORS(url, method, data, headers, return_type) {
 	
 	const audioElement = document.createElement('audio');
@@ -1181,9 +1193,10 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	audioElement.appendChild(sourceElement);
 	document.getElementById('data_display').appendChild(audioElement);
 
+	// -----------------------------------------------
 	// Goal: get the audio data from the audioElement and NOT the url
+	// -----------------------------------------------
 	
-	// Obtain the audio data as a data Array: Way 0
 	// Create an AudioContext
 	// var audioContext = new (window.AudioContext || window.webkitAudioContext)();
 	const audioContext = new AudioContext();
@@ -1193,53 +1206,94 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	console.log('analyser before: ', analyser);
 
 	let channels = analyser.channelCount; // 2
-	let time_length = analyser.context.currentTime; // 25.794666666666668
+	let time_length = analyser.context.currentTime; // 354.976
 	
 	let fs = analyser.context.sampleRate; // 48000
-	var time_sample = 1/fs; // every time_sample there is a data point
 	
-	var data_point_length = time_length/time_sample;  // frameCount
+	var time_sample = 1/fs; // every time_sample there is a data point, 0.000020833333333333333
+	console.log('time_sample: ', time_sample);
+	
+	const data_point_length = time_length/time_sample;  // frameCount, 16992000
 	console.log('data_point_length: ', data_point_length);
 	
 	// Connect the nodes
 	// sourceElement.connect(analyser);
 	// analyser.connect(audioContext.destination);
-	
+
+	// -----------------------------------------------
+
+	// Select sampling frequency for Inverse Discrete Fourier Transform
 	const bin_count_using_natural_freq = analyser.frequencyBinCount; // bin count using natural frequency (fs) = 1024
 	console.log('bin_count_using_natural_freq: ', bin_count_using_natural_freq);
 	
-	const bufferLength = analyser.fftSize; // bin count using Nyquest frequency (2*fs) = 2048
+	const bin_count_using_nyquist_freq = analyser.fftSize; // bin count using Nyquist frequency (2*fs) = 2048
+	console.log('bin_count_using_nyquist_freq: ', bin_count_using_nyquist_freq);
+	
+	const bufferLength = bin_count_using_nyquist_freq;
 	console.log('bufferLength: ', bufferLength);
 
 	// -----------------------------------------------
 	
-	// Create a Uint8Array to store the audio data
-	const dataArray = new Uint8Array(bufferLength);
+	// Create a Uint8Array to store the timeseries and frequency data
+	// const dataArray = new Uint8Array(bufferLength);
 	// OR
-	// const dataArray = new Float32Array(bufferLength);
-	console.log('dataArray: ', dataArray);
+	const dataArray_ts = new Float32Array(bufferLength);
+	
+	const dataArray_freq = new Uint8Array(bufferLength);
 
 	// -----------------------------------------------
 
-	// Fill the dataArray with timeseries data
+	// Fill the timeseries and frequency dataArray
 	// https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getByteTimeDomainData
-	analyser.getByteTimeDomainData(dataArray);
+	// analyser.getByteTimeDomainData(dataArray_ts);
 	// OR
-	// analyser.getFloatTimeDomainData(dataArray);
-	console.log('analyser: ', analyser);
+	analyser.getFloatTimeDomainData(dataArray_ts);
+	// console.log('analyser: ', analyser);
+	console.log('dataArray_ts: ', dataArray_ts);
 
+	analyser.getByteFrequencyData(dataArray_freq);
+	console.log('dataArray_freq: ', dataArray_freq);
+
+	// -----------------------------------------------
+
+	var svgElement0 = document.createElement('svg');
+	
+	// Verify the contents of the frequency data
+	var svg = d3.select("body").append(svgElement0).attr("width", 400).attr("height", 200);
+	
+	// Create a histogram generator
+	var histogram = d3.histogram()
+		.domain([0, analyser.frequencyBinCount])
+		.thresholds(d3.range(0, analyser.maxDecibels, analyser.minDecibels));
+
+	// Generate the histogram bins
+	var bins = histogram(dataArray_freq);
+	
+	// Create the bars for the histogram
+	svg.selectAll("rect")
+	    .data(bins)
+	    .enter()
+	    .append("rect")
+	    .attr("x", function(d,i) { console('d.x0: ', d.x0); return i; })
+	    .attr("y", function(d) { return d; })
+	    .attr("width", function(d) { return d.x1 - d.x0 - 1; })
+	    .attr("height", function(d) { return d.length * 5; })
+	    .attr("fill", "steelblue");
+
+	document.getElementById('data_display').appendChild(svgElement0);
+	
 	// -----------------------------------------------
 
 	// Verify the contents of the timeseries data
-	const mu = await mean(dataArray);
+	const mu = await mean(dataArray_ts);
 	console.log('mu: ', mu);
 	
-	const sigma = await std(dataArray);
+	const sigma = await std(dataArray_ts);
 	console.log('sigma: ', sigma);
 
-	const arr_sort = dataArray.sort();
+	const arr_sort = dataArray_ts.sort();
 	
-	const max_val = arr_sort.at(dataArray.length-1);
+	const max_val = arr_sort.at(dataArray_ts.length-1);
 	console.log('max_val: ', max_val);
 
 	const min_val = arr_sort.at(0);
@@ -1259,7 +1313,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	let x = 0;
 	ctx.beginPath();
 	for (let i = 0; i < bufferLength; i++) {
-		const normalized = (dataArray[i] - mu) / sigma; // [-1, 1]
+		const normalized = (dataArray_ts[i] - mu) / sigma; // [-1, 1]
 		const y = (normalized * HEIGHT) / 2;
 		
 		if (i === 0) {
@@ -1273,9 +1327,23 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	ctx.lineTo(WIDTH, HEIGHT / 2);
 	ctx.stroke();
 
+	// OR
+
+	var svgElement1 = document.createElement('svg');
+	const scale = d3.scaleLinear().domain([0, d3.max(dataArray_ts)]).range([-1.2, 1.2]);
+	const svg = d3.select('body').append(svgElement1).attr('width', 400).attr('height', 150);
+	
+	// Plot data on chart, Add bars to the chart
+	svg.selectAll('rect')
+		.data(dataArray_ts)
+		.enter()
+		.append('rect').attr('width', d => scale(d)).attr('height', 20).attr('y', (d,i) => d).attr('x', (d,i) => i);
+	
+	document.getElementById('data_display').appendChild(svgElement1);
+	
 	// -----------------------------------------------
 	
-	return dataArray;
+	return dataArray_ts;
 }
 
 // -----------------------------------------------
