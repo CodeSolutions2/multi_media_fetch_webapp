@@ -1183,7 +1183,7 @@ async function Video_CORS(url, method, data, headers, return_type) {
 	// -----------------------------------------------
 
 	// Way 2
-	// const track = videoElement.captureStream();
+	const track = videoElement.captureStream();
 	console.log('track: ', track);
 
 	// Obtain a snapshot from PC camera
@@ -1268,6 +1268,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// -----------------------------------------------
 
 	// [A] Process frequency data: histogram of frequency Uinit8Array data
+	console.log('[A] Process frequency data: histogram of frequency Uinit8Array data');
 
 	console.log('analyserNode.minDecibels: ', analyserNode.minDecibels);
 	console.log('analyserNode.maxDecibels: ', analyserNode.maxDecibels);
@@ -1292,26 +1293,27 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// [B] Process frequency data: spectrogram of frequency Float32Array data
 	// https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getFloatFrequencyData
 	
-	console.log('analyserNode.minDecibels: ', analyserNode.minDecibels);
-	console.log('analyserNode.maxDecibels: ', analyserNode.maxDecibels);
-	console.log('analyserNode.smoothingTimeConstant: ', analyserNode.smoothingTimeConstant);
+	// console.log('analyserNode.minDecibels: ', analyserNode.minDecibels);
+	// console.log('analyserNode.maxDecibels: ', analyserNode.maxDecibels);
+	// console.log('analyserNode.smoothingTimeConstant: ', analyserNode.smoothingTimeConstant);
 	
-	const bufferLength_freq1 = analyserNode.frequencyBinCount;
-	console.log('bufferLength_freq1: ', bufferLength_freq1);
+	// const bufferLength_freq1 = analyserNode.frequencyBinCount;
+	// console.log('bufferLength_freq1: ', bufferLength_freq1);
 
 	// [Step 0] Create a Float32Array to store the frequency data
-	const dataArray_freq1 = new Float32Array(bufferLength_freq1);
+	// const dataArray_freq1 = new Float32Array(bufferLength_freq1);
 
 	// [Step 1] Fill the frequency dataArray with converted data
-	analyserNode.getByteFrequencyData(dataArray_freq1);
-	console.log('dataArray_freq1: ', dataArray_freq1);
+	// analyserNode.getByteFrequencyData(dataArray_freq1);
+	// console.log('dataArray_freq1: ', dataArray_freq1);
 
 	// [Step 2] Display frequency histogram data
-	await plot_frequency_spectrogram_audio_data(bufferLength_freq1, dataArray_freq1);
+	// await plot_frequency_spectrogram_audio_data(bufferLength_freq1, dataArray_freq1); // returned error
 
 	// -----------------------------------------------
 	
 	// [C] Process timeseries data
+	console.log('[C] Process timeseries data');
 	
 	// Select sampling frequency for Inverse Discrete Fourier Transform
 	const bin_count_using_natural_freq = analyserNode.frequencyBinCount; // bin count using natural frequency (fs) = 1024
