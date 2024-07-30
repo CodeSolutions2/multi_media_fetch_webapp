@@ -1409,9 +1409,10 @@ async function plot_frequency_histogram_audio_data(dataArray_freq) {
 	var x = 0;
 	
 	for (let i = 0; i < dataArray_freq.length; i++) {
-		barHeight = dataArray_ts.at(i);
-		// console.log('barHeight: ', barHeight);
-		
+		barHeight = dataArray_freq.at(i);
+		console.log('barHeight: ', barHeight);
+
+		//https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/fillRect
 		ctx.fillRect(x, HEIGHT, barWidth, -barHeight);
 		ctx.fillStyle = "rgb(0 0 200 / 50%)";
 		
