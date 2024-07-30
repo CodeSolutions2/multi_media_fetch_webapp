@@ -1210,12 +1210,14 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 
 	// Create an AudioContext
 	// var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+	// audioContext = new AudioContext();
+	// OR
 	const audioContext = new AudioContext();
 
 	// -----------------------------------------------
 
 	// Create an SourceElement (audioSourceNode)
-	var sourceElement = document.createElement('source');
+	// var sourceElement = document.createElement('source');
 	// OR
 	const sourceElement = audioContext.createMediaElementSource(audioElement);
 	
