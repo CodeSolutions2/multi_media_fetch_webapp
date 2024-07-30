@@ -1160,7 +1160,7 @@ async function Video_CORS(url, method, data, headers, return_type) {
   const reader = processor.readable.getReader();
   console.log('reader: ', reader);
 
-  // -----------------------------------------------
+  
   
 	return videoElement;
 }
@@ -1210,6 +1210,8 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	
 	const bufferLength = analyser.fftSize; // bin count using Nyquest frequency (2*fs) = 2048
 	console.log('bufferLength: ', bufferLength);
+
+	// -----------------------------------------------
 	
 	// Create a Uint8Array to store the audio data
 	// const dataArray = new Uint8Array(bufferLength);
@@ -1217,18 +1219,21 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	const dataArray = new Float32Array(bufferLength);
 	console.log('dataArray: ', dataArray);
 
+	// -----------------------------------------------
+	
 	// https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getByteTimeDomainData
 	// analyser.getByteTimeDomainData(dataArray);
 	// OR
 	analyser.getFloatTimeDomainData(dataArray);
 	console.log('analyser: ', analyser);
 
+	// -----------------------------------------------
+	
 	const ctx = await create_dynamic_canvasElement(w);
 	ctx.fillStyle = "rgb(200 200 200)";
 	var WIDTH = w;
 	var HEIGHT = w;  // height of the canvas
 	ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
 	ctx.lineWidth = 2;
 	ctx.strokeStyle = "rgb(0 0 0)";
 
@@ -1241,6 +1246,16 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	const sigma = await std(dataArray);
 	console.log('sigma: ', sigma);
 
+	const arr_sort = dataArray.sort();
+	
+	const max_val = arr_sort.at(dataArray.length-1);
+	console.log('max_val: ', max_val);
+
+	const min_val = arr_sort.at(0);
+	console.log('min_val: ', min_val);
+
+	// -----------------------------------------------
+	
 	ctx.beginPath();
 	for (let i = 0; i < bufferLength; i++) {
 		// const normalized = dataArray[i] / 128;
@@ -1258,13 +1273,13 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	ctx.lineTo(WIDTH, HEIGHT / 2);
 	ctx.stroke();
 	
-	return analyser;
+	return dataArray;
 }
 
 // -----------------------------------------------
 
 async function sum(arr) {
-  return arr.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+	return arr.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
 }
 
 // -----------------------------------------------
