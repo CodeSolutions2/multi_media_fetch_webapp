@@ -1233,9 +1233,9 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// -----------------------------------------------
 
 	// Create an SourceElement (audioSourceNode)
-	// var sourceElement = document.createElement('source');
+	var sourceElement = document.createElement('source');
 	// OR
-	var sourceElement = audioContext.createMediaElementSource(audioElement);
+	// var sourceElement = audioContext.createMediaElementSource(audioElement); // *** returns an error ***
 	
 	sourceElement.setAttribute("src", url);
 	console.log('sourceElement: ', sourceElement);
@@ -1274,7 +1274,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// -----------------------------------------------
 
 	// *** returns an error ***
-	// sourceElement.connect(audioContext.destination);
+	sourceElement.connect(audioContext.destination);
 
 	// -----------------------------------------------
 
