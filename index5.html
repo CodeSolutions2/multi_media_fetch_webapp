@@ -1100,10 +1100,17 @@ async function Video_CORS(url, method, data, headers, return_type) {
 	var videoElement = document.createElement('video');
 	videoElement.setAttribute("controls", true);
 	videoElement.setAttribute('crossOrigin', "anonymous"); // OR "anonymous"
+	console.log('videoElement: ', videoElement);
+
+	// -----------------------------------------------
 	
 	var sourceElement = document.createElement('source');
 	sourceElement.setAttribute("src", url);
-	sourceElement.start(0); // start the video at t=0secs
+	// sourceElement.start(0); // start the video at t=0secs
+	console.log('sourceElement: ', sourceElement);
+
+	// -----------------------------------------------
+	
 	videoElement.appendChild(sourceElement);
 
 	// View video on page
@@ -1112,8 +1119,8 @@ async function Video_CORS(url, method, data, headers, return_type) {
 	// -----------------------------------------------
 
 	// Obtain information about the videoElement and sourceElement
-	console.log('videoElement: ', videoElement);
-	console.log('sourceElement: ', sourceElement);
+	
+	
 	
 	// const videoLength = videoElement.duration;
 	// console.log('videoLength: ', videoLength);
@@ -1176,18 +1183,18 @@ async function Video_CORS(url, method, data, headers, return_type) {
 	// -----------------------------------------------
 
 	// Way 2
-	let imageCapture;
-	const track = navigator.mediaDevices.getUserMedia({ video: true }).then((mediaStream) => {
-		document.querySelector("video").srcObject = mediaStream;
-		return mediaStream.getVideoTracks()[0]; });
-	console.log('track: ', track);
+	// let imageCapture;
+	// const track = navigator.mediaDevices.getUserMedia({ video: true }).then((mediaStream) => {
+	// 	document.querySelector("video").srcObject = mediaStream;
+	//	return mediaStream.getVideoTracks()[0]; });
+	// console.log('track: ', track);
 	
 	// imageCapture = new ImageCapture(track);
 	// imageCapture.getPhotoCapabilities();
 
 	// -----------------------------------------------
 	
-	return 'threeD_array';
+	return videoElement;
 }
 
 // -----------------------------------------------
@@ -1217,9 +1224,9 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// -----------------------------------------------
 
 	// Create an SourceElement (audioSourceNode)
-	// var sourceElement = document.createElement('source');
+	var sourceElement = document.createElement('source');
 	// OR
-	const sourceElement = audioContext.createMediaElementSource(audioElement);
+	// var sourceElement = audioContext.createMediaElementSource(audioElement);
 	
 	sourceElement.setAttribute("src", url);
 	// console.log('sourceElement: ', sourceElement);
