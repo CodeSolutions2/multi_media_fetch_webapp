@@ -1504,7 +1504,8 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 
 	// Way 1: return the callback with error output
 	try {
-		var decoded_audiobuffer = audioContext.decodeAudioData(await response.arrayBuffer());
+		var decoded_audiobuffer = audioContext.decodeAudioData(await output_response(response).then(response => response.arrayBuffer()).then(function(arraybuffer) {return arraybuffer;}));
+		// response.arrayBuffer is not a function
 	} catch (error) {
 		console.log('error: ', error);
 	}
@@ -1568,7 +1569,11 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	return dataArray_ts;
 }
 
+async functon output_response(response) {
+	return response;
+}
 
+	
 async function decode_audio(audioContext, arrayBuffer_object) {
 	return audioContext.decodeAudioData(arrayBuffer_object);
 }
