@@ -1381,10 +1381,13 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	return_type = 'arrayBuffer';  // return_type: json, blob, arrayBuffer, text, html
   
 	// for responseType: arrayBuffer, dataType = binary 
-	var arrayBuffer = await jQuery_CORS(url, method, data, headers, return_type)
+	var response = await jQuery_CORS(url, method, data, headers, return_type)
 		.then(res => res)
 		.then(async function(binaryString) {
-			
+
+			// -----------------------------------------------
+			// Decode the binaryString response
+			// -----------------------------------------------
 			var character_array = binaryString.split('');
 			console.log("character_array: ", character_array);
 			// Array(38190) [ "�", "�", "�", "d", "\u0000", "\u0000", "\u0000", "\u0000", "\u0000", "\u0000", … ]
@@ -1404,10 +1407,11 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 			// Convert UTF-8 array [non-fixed length array] to a binary arrayBuffer [fixed-length array]
 			const arrayBuffer = uint8Array.buffer;
 			console.log('arrayBuffer: ', arrayBuffer);
+			// -----------------------------------------------
 			
-			return arrayBuffer;
+			return binaryString;
 		});
-	console.log('arrayBuffer: ', arrayBuffer);
+	console.log('response: ', response);
 	
 
 
@@ -1467,8 +1471,9 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	
 	// [Step 1] Decode the arraybuffer
 	// Way 0: call the function with output_uint8Array.buffer
-	var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer);
-	console.log('decoded_audiobuffer: ', decoded_audiobuffer); 
+	// var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer);
+	// console.log('decoded_audiobuffer: ', decoded_audiobuffer); 
+	//  DOMException: The buffer passed to decodeAudioData contains an unknown content type.
 
 	// Way 1: return the callback 
 	// var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer_object0, buffer => { return buffer; }, error => { console.error('Error decoding audio file:', error); });
@@ -1491,6 +1496,10 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// console.log('decoded_audiobuffer2: ', decoded_audiobuffer2);
 	// DOMException: The buffer passed to decodeAudioData contains an unknown content type.
 	// So, the AudioContext has nothing to do with the error
+
+	// Way 0: call the function with output_uint8Array.buffer
+	var decoded_audiobuffer = audioContext.decodeAudioData(await response.arrayBuffer());
+	console.log('decoded_audiobuffer: ', decoded_audiobuffer);
 	
 	
 	// [Step 2] Make an [empty array] that is the size of the channel data
