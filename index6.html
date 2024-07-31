@@ -1436,16 +1436,21 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// DOMException: The buffer passed to decodeAudioData contains an unknown content type.
 
 	// Way 2: return the promise  
-	var decoded_audiobuffer1 = await decode_audio(audioContext, arrayBuffer_object0)
-		.then(res => res)
-		.then(async function(decoded_audiobuffer) { return decoded_audiobuffer; })
-	console.log('decoded_audiobuffer1: ', decoded_audiobuffer1);
+	// var decoded_audiobuffer1 = await decode_audio(audioContext, arrayBuffer_object0)
+	// 	.then(res => res)
+	// 	.then(async function(decoded_audiobuffer) { return decoded_audiobuffer; })
+	// console.log('decoded_audiobuffer1: ', decoded_audiobuffer1);
+	// Returned no error and no response
 	
 	// Way 3: use a different audioContext and return the promise
 	var audioContext1 = new AudioContext();
-	var decoded_audiobuffer2 = await decode_audio(audioContext1, arrayBuffer_object0)
-		.then(res => res)
-		.then(async function(decoded_audiobuffer) { return decoded_audiobuffer; })
+	var decoded_audiobuffer2 = audioContext1.decodeAudioData(arrayBuffer_object0, 
+						buffer => { return buffer; }, 
+						error => { console.error('Error decoding audio file:', error); });
+	
+	// var decoded_audiobuffer2 = await decode_audio(audioContext1, arrayBuffer_object0)
+	// 	.then(res => res)
+	// 	.then(async function(decoded_audiobuffer) { return decoded_audiobuffer; })
 	console.log('decoded_audiobuffer2: ', decoded_audiobuffer2);
 	
 	
@@ -1485,15 +1490,11 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// const desired_audio_data = decoded_audiobuffer.getChannelData(channels_from_audioContext);
 	// console.log('desired_audio_data: ', desired_audio_data);
 
-	const desired_audio_data1 = decoded_audiobuffer1.getChannelData(channels_from_audioContext);
-	console.log('desired_audio_data1: ', desired_audio_data1);
+	//const desired_audio_data1 = decoded_audiobuffer1.getChannelData(channels_from_audioContext);
+	//console.log('desired_audio_data1: ', desired_audio_data1);
 
 	const desired_audio_data2 = decoded_audiobuffer2.getChannelData(channels_from_audioContext);
 	console.log('desired_audio_data2: ', desired_audio_data2);
-	
-	// ------------------------------------------
-  
-	// Way 1: fetch on URL -> output a base64string -> blob -> Array?
 
 	// ------------------------------------------
 
@@ -1551,10 +1552,10 @@ async function plot_frequency_histogram_audio_data(dataArray_freq) {
 		} else {
 			y_normalized = (dataArray_ts.at(i) - arr_char_ts.mu) / arr_char_ts.sigma; // [-1, 1]
 		}
-		console.log('y_normalized:', y_normalized);
+		// console.log('y_normalized:', y_normalized);
 		
 		y_scaled = y_normalized * (HEIGHT/2); // To make the line centered
-		console.log('y_scaled:', y_scaled);
+		// console.log('y_scaled:', y_scaled);
 		
 		//https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/fillRect
 		// barWidth: Positive values are to the right, and negative to the left.
@@ -1590,12 +1591,7 @@ async function plot_frequency_spectrogram_audio_data(bufferLength_freq, dataArra
 		const barHeight = (dataArray_ts.at(i) + 140) * 2;
 		
 		ctx.fillStyle = `rgb(${Math.floor(barHeight + 100)} 50 50)`;
-		ctx.fillRect(
-			posX,
-			HEIGHT - barHeight / 2,
-			barWidth,
-			barHeight / 2,
-		);
+		ctx.fillRect(posX, HEIGHT-barHeight/2, barWidth, barHeight/2);
 		posX += barWidth + 1;
 	}
 
@@ -1635,12 +1631,11 @@ async function plot_timeseries_audio_data(dataArray_ts) {
 		} else {
 			y_normalized = (dataArray_ts.at(i) - arr_char_ts.mu) / arr_char_ts.sigma; // [-1, 1]
 		}
-		console.log('y_normalized:', y_normalized);
+		// console.log('y_normalized:', y_normalized);
 		
 		y_scaled = y_normalized*(HEIGHT/2); // To make the line centered
-		console.log('y_scaled:', y_scaled);
-		
-		console.log('x_scaled:', x_scaled);
+		// console.log('y_scaled:', y_scaled);
+		// console.log('x_scaled:', x_scaled);
 		
 		if (i === 0) {
 			ctx.moveTo(x_scaled, y_scaled);
