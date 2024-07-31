@@ -1503,7 +1503,11 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// No error message
 
 	// Way 1: return the callback with error output
-	var decoded_audiobuffer = audioContext.decodeAudioData(await response.arrayBuffer(), buffer => { return buffer; }, error => { console.error('Error decoding audio file:', error); });
+	try {
+		var decoded_audiobuffer = audioContext.decodeAudioData(await response.arrayBuffer());
+	} catch (error) {
+		console.log('error: ', error);
+	}
 	console.log('decoded_audiobuffer: ', decoded_audiobuffer);
 	
 	
