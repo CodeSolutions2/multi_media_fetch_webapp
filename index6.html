@@ -1381,7 +1381,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	return_type = 'arrayBuffer';  // return_type: json, blob, arrayBuffer, text, html
   
 	// for responseType: arrayBuffer, dataType = binary 
-	var response = await jQuery_CORS(url, method, data, headers, return_type)
+	var binaryString = await jQuery_CORS(url, method, data, headers, return_type)
 		.then(res => res)
 		.then(async function(binaryString) {
 
@@ -1411,23 +1411,23 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 			
 			return binaryString;
 		});
-	console.log('response: ', response);
+	console.log('binaryString: ', binaryString);
 	
 
 
 	
 	// Way 0: Need to try binary output into object
-	// const filename = url.split('/').pop(); // text.mp3
-	// console.log('filename: ', filename);
+	const filename = url.split('/').pop(); // text.mp3
+	console.log('filename: ', filename);
 	
-	// const file_extention_type = filename.split('.').pop();  // mp3
-	// console.log('file_extention_type: ', file_extention_type);
+	const file_extention_type = filename.split('.').pop();  // mp3
+	console.log('file_extention_type: ', file_extention_type);
 	
-	// const decoded_arraybuffer_blob = new Blob([arrayBuffer], { type: `audio/${file_extention_type}` });
-	// console.log('decoded_arraybuffer_blob: ', decoded_arraybuffer_blob);
+	const jQuery_output_blob = new Blob([binaryString], { type: `audio/${file_extention_type}` });
+	console.log('jQuery_output_blob: ', jQuery_output_blob);
 	
-	// const decoded_arraybuffer_blob_url = URL.createObjectURL(decoded_arraybuffer_blob); // Create a url for the data object
-	// console.log('decoded_arraybuffer_blob_url: ', decoded_arraybuffer_blob_url);
+	const jQuery_output_blob_url = URL.createObjectURL(jQuery_output_blob); // Create a url for the data object
+	console.log('jQuery_output_blob_url: ', jQuery_output_blob_url);
 	
 	// const arrayBuffer_object0 = await fetch(decoded_arraybuffer_blob_url)
 	// 	.then(response => response.arrayBuffer())
@@ -1504,7 +1504,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 
 	// Way 1: return the callback with error output
 	try {
-		var decoded_audiobuffer = audioContext.decodeAudioData(await output_response(response).then(response => response.arrayBuffer()).then(function(arraybuffer) {return arraybuffer;}));
+		var decoded_audiobuffer = audioContext.decodeAudioData(await fetch(jQuery_output_blob_url).then(response => response.arrayBuffer()).then(async function(arrayBuffer_object) { return arrayBuffer_object; }));
 		// response.arrayBuffer is not a function
 	} catch (error) {
 		console.log('error: ', error);
@@ -1567,12 +1567,6 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// -----------------------------------------------
 	
 	return dataArray_ts;
-}
-
-// -----------------------------------------------
-	
-async function output_response(response) {
-	return response;
 }
 
 // -----------------------------------------------
