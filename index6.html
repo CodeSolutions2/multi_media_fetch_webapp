@@ -1404,19 +1404,14 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	const decoded_arraybuffer_blob_url = URL.createObjectURL(decoded_arraybuffer_blob); // Create a url for the data object
 	console.log('decoded_arraybuffer_blob_url: ', decoded_arraybuffer_blob_url);
 	
-	await fetch(decoded_arraybuffer_blob_url)
+	const arrayBuffer_object0 = await fetch(decoded_arraybuffer_blob_url)
 		.then(response => response.arrayBuffer())
-	 		.then(async function(arraybuffer) {
-	 			    // Print arraybuffer
-	 			    console.log("arraybuffer:", arraybuffer);
-	 			    // arraybuffer: ArrayBuffer { byteLength: 314308 }
-	 			
-	 			    // Decode the arraybuffer
-	 			    return audioContext.decodeAudioData(arraybuffer);
+	 		.then(async function(arrayBuffer_object) {
+	 			    // Print arrayBuffer_object
+	 			    console.log("arrayBuffer_object:", arrayBuffer_object);
+	 			    // arrayBuffer_object: ArrayBuffer { byteLength: 314308 }
+	 			    return arrayBuffer_object;
 	 		    })
-	 		.then(async function(decoded_audiobuffer) { 
-				console.log('decoded_audiobuffer Way 0: ', decoded_audiobuffer)
-	 		});
 	
 	// Way 1: 
 	const arrayBuffer_object = new ArrayBuffer(arrayBuffer_array);
@@ -1439,41 +1434,36 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	console.log('frameCount_from_decoded_audbuf: ', frameCount_from_decoded_audbuf);
 	// OR
 	const frameCount_from_timeseries_data = dataArray_ts.length / time_period;
-  console.log('frameCount_from_timeseries_data: ', frameCount_from_timeseries_data);
-  // OR
-  const frameCount_from_audioContext = audioContext.sampleRate * 2.0;
-  console.log('frameCount_from_audioContext: ', frameCount_from_audioContext);
+	console.log('frameCount_from_timeseries_data: ', frameCount_from_timeseries_data);
+	// OR
+	const frameCount_from_audioContext = audioContext.sampleRate * 2.0;
+	console.log('frameCount_from_audioContext: ', frameCount_from_audioContext);
 
   
-  const sampleRate_from_decoded_audbuf = decoded_audiobuffer.sampleRate; // sample_rate
-  console.log('sampleRate_from_decoded_audbuf: ', sampleRate_from_decoded_audbuf);
-  // OR
-  const sampleRate_from_audioContext = audioContext.sampleRate; // 48000
-  console.log('sampleRate_from_audioContext: ', sampleRate_from_audioContext);
+	const sampleRate_from_decoded_audbuf = decoded_audiobuffer.sampleRate; // sample_rate
+	console.log('sampleRate_from_decoded_audbuf: ', sampleRate_from_decoded_audbuf);
+	// OR
+	const sampleRate_from_audioContext = audioContext.sampleRate; // 48000
+	console.log('sampleRate_from_audioContext: ', sampleRate_from_audioContext);
 
 
-  // [Step 3] Select channel data
-  const desired_audio_data = decoded_audiobuffer.getChannelData(channels_from_decoded_audbuf);
-  console.log('desired_audio_data: ', desired_audio_data);
+	// [Step 3] Select channel data
+	const desired_audio_data = decoded_audiobuffer.getChannelData(channels_from_decoded_audbuf);
+	console.log('desired_audio_data: ', desired_audio_data);
+
+	// ------------------------------------------
   
-  // maybe done
+	// Way 1: fetch on URL -> output a base64string -> blob -> Array?
 
-  // ------------------------------------------
-  
-  // Way 1: fetch on URL -> output a base64string -> blob -> Array?
+	// ------------------------------------------
 
-  // ------------------------------------------
-
-  // If one wants to play this data on the [audio interface], one needs to assign the data to the audioContext
-  // How to play the desired_audio_data on the [audio interface]
+	// If one wants to play this data on the [audio interface], one needs to assign the data to the audioContext
+	// How to play the desired_audio_data on the [audio interface]
 	// var source = audioContext.createBufferSource(audioElement);
 	// source.buffer = desired_audio_data;
-  
-  
-  
-  // source.type = file_extention_type;
-  // source.connect(audioContext.destination);
-  // source.start(0);
+	// source.type = file_extention_type;
+	// source.connect(audioContext.destination);
+	// source.start(0);
 	
 	// -----------------------------------------------
 	
