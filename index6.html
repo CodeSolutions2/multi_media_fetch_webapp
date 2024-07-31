@@ -1425,22 +1425,28 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// console.log('arrayBuffer_object1: ', arrayBuffer_object1); 
 	
 	// [Step 1] Decode the arraybuffer
+	// Way 0: call the function
 	// var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer_object0);
 	// console.log('decoded_audiobuffer: ', decoded_audiobuffer); 
 	// DOMException: The buffer passed to decodeAudioData contains an unknown content type.
 
-	// Way 0: return the callback 
-	var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer_object0, buffer => {
-		return buffer;
-	}, error => {
-		console.error('Error decoding audio file:', error);
-	});
-	console.log('decoded_audiobuffer: ', decoded_audiobuffer);
+	// Way 1: return the callback 
+	// var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer_object0, buffer => { return buffer; }, error => { console.error('Error decoding audio file:', error); });
+	// console.log('decoded_audiobuffer: ', decoded_audiobuffer);
+	// DOMException: The buffer passed to decodeAudioData contains an unknown content type.
 
-	// Way 1: use a different audioContext
+	// Way 2: return the promise  
 	var decoded_audiobuffer1 = await decode_audio(audioContext, arrayBuffer_object0)
+		.then(res => res)
 		.then(async function(decoded_audiobuffer) { return decoded_audiobuffer; })
 	console.log('decoded_audiobuffer1: ', decoded_audiobuffer1);
+	
+	// Way 3: use a different audioContext and return the promise
+	var audioContext1 = new AudioContext();
+	var decoded_audiobuffer2 = await decode_audio(audioContext1, arrayBuffer_object0)
+		.then(res => res)
+		.then(async function(decoded_audiobuffer) { return decoded_audiobuffer; })
+	console.log('decoded_audiobuffer2: ', decoded_audiobuffer2);
 	
 	
 	// [Step 2] Make an [empty array] that is the size of the channel data
@@ -1476,11 +1482,14 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 
 
 	// [Step 3] Select channel data
-	const desired_audio_data = decoded_audiobuffer.getChannelData(channels_from_audioContext);
-	console.log('desired_audio_data: ', desired_audio_data);
+	// const desired_audio_data = decoded_audiobuffer.getChannelData(channels_from_audioContext);
+	// console.log('desired_audio_data: ', desired_audio_data);
 
 	const desired_audio_data1 = decoded_audiobuffer1.getChannelData(channels_from_audioContext);
 	console.log('desired_audio_data1: ', desired_audio_data1);
+
+	const desired_audio_data2 = decoded_audiobuffer2.getChannelData(channels_from_audioContext);
+	console.log('desired_audio_data2: ', desired_audio_data2);
 	
 	// ------------------------------------------
   
