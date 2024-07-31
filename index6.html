@@ -1383,51 +1383,24 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// for responseType: arrayBuffer, dataType = binary 
 	var binaryString = await jQuery_CORS(url, method, data, headers, return_type)
 		.then(res => res)
-		.then(async function(binaryString) {
-
-			// -----------------------------------------------
-			// Decode the binaryString response
-			// -----------------------------------------------
-			var character_array = binaryString.split('');
-			console.log("character_array: ", character_array);
-			// Array(38190) [ "�", "�", "�", "d", "\u0000", "\u0000", "\u0000", "\u0000", "\u0000", "\u0000", … ]
-					
-			// Map each [binary string character; a subset of binary string characters is UTF-8] as an [ASCII number; a number from 0 to number_of_characters]
-			var byteArray = character_array.map((character) => { return character.charCodeAt(0); });
-			console.log("byteArray: ", byteArray);
-			// byteArray:  Array(38190) [ 65533, 65533, 65533, 100, 0, 0, 0, 0, 0, 0, … ]
-
-			// The importance of this mapping is to limit the array values from 0 to 255.
-			var uint8Array = new Uint8Array(byteArray);
-			console.log('uint8Array: ', uint8Array);
-			// uint8Array:  Uint8Array(38190) [ 253, 253, 253, 100, 0, 0, 0, 0, 0, 0, … ]
-
-			// In some ways a uint8Array is an arrayBuffer because the size is "fixed" meaning that no more data will be appended to the array after the UTF-8 characters. And, it is a "fixed" array because the values of the array are limited to a certain range of numbers, from 0 to 255. 
-
-			// Convert UTF-8 array [non-fixed length array] to a binary arrayBuffer [fixed-length array]
-			const arrayBuffer = uint8Array.buffer;
-			console.log('arrayBuffer: ', arrayBuffer);
-			// -----------------------------------------------
-			
-			return binaryString;
-		});
+		.then(async function(binaryString) { return binaryString; });
 	console.log('binaryString: ', binaryString);
 	
 
 
 	
 	// Way 0: Need to try binary output into object
-	const filename = url.split('/').pop(); // text.mp3
-	console.log('filename: ', filename);
+	// ORconst filename = url.split('/').pop(); // text.mp3
+	// ORconsole.log('filename: ', filename);
 	
-	const file_extention_type = filename.split('.').pop();  // mp3
-	console.log('file_extention_type: ', file_extention_type);
+	// ORconst file_extention_type = filename.split('.').pop();  // mp3
+	// ORconsole.log('file_extention_type: ', file_extention_type);
 	
-	const jQuery_output_blob = new Blob([binaryString], { type: `audio/${file_extention_type}` });
-	console.log('jQuery_output_blob: ', jQuery_output_blob);
+	// ORconst jQuery_output_blob = new Blob([binaryString], { type: `audio/${file_extention_type}` });
+	// ORconsole.log('jQuery_output_blob: ', jQuery_output_blob);
 	
-	const jQuery_output_blob_url = URL.createObjectURL(jQuery_output_blob); // Create a url for the data object
-	console.log('jQuery_output_blob_url: ', jQuery_output_blob_url);
+	// ORconst jQuery_output_blob_url = URL.createObjectURL(jQuery_output_blob); // Create a url for the data object
+	// ORconsole.log('jQuery_output_blob_url: ', jQuery_output_blob_url);
 	
 	// const arrayBuffer_object0 = await fetch(decoded_arraybuffer_blob_url)
 	// 	.then(response => response.arrayBuffer())
@@ -1439,10 +1412,8 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	//  		    })
 	// console.log('arrayBuffer_object0: ', arrayBuffer_object0);
 	// arrayBuffer_object0: ArrayBuffer { byteLength: 38190 }
-	// console.log('arrayBuffer_object0[0]: ', arrayBuffer_object0[0]);
-	// console.log('arrayBuffer_object0[1]: ', arrayBuffer_object0[1]);
-	// console.log('arrayBuffer_object0[0]: ', arrayBuffer_object0.at(0));
-	// console.log('arrayBuffer_object0[1]: ', arrayBuffer_object0.at(1));
+	// console.log('arrayBuffer_object0[0]: ', arrayBuffer_object0[0]); // undefined
+	// console.log('arrayBuffer_object0[1]: ', arrayBuffer_object0[1]); // undefined
 
 	
 
@@ -1497,25 +1468,20 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// DOMException: The buffer passed to decodeAudioData contains an unknown content type.
 	// So, the AudioContext has nothing to do with the error
 
-	// Way 0: call the function with output_uint8Array.buffer
-	// var decoded_audiobuffer = audioContext.decodeAudioData(await response.arrayBuffer());
+	// Way 4: return the callback with error output
+	// try {
+	// 	var decoded_audiobuffer = audioContext.decodeAudioData(await fetch(jQuery_output_blob_url).then(response => response.arrayBuffer()).then(async function(arrayBuffer_object) { return arrayBuffer_object; }));
+		// DOMException: The buffer passed to decodeAudioData contains an unknown content type.
+	// } catch (error) {
+	// 	console.log('error: ', error);
+	// }
 	// console.log('decoded_audiobuffer: ', decoded_audiobuffer);
-	// No error message
-
-	// Way 1: return the callback with error output
-	try {
-		var decoded_audiobuffer = audioContext.decodeAudioData(await fetch(jQuery_output_blob_url).then(response => response.arrayBuffer()).then(async function(arrayBuffer_object) { return arrayBuffer_object; }));
-		// response.arrayBuffer is not a function
-	} catch (error) {
-		console.log('error: ', error);
-	}
-	console.log('decoded_audiobuffer: ', decoded_audiobuffer);
 	
 	
 	// [Step 2] Make an [empty array] that is the size of the channel data
 	// https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/createBufferSource
-	const channels_from_decoded_audbuf = decoded_audiobuffer.numberOfChannels;
-	console.log('channels_from_decoded_audbuf: ', channels_from_decoded_audbuf);
+	// ORconst channels_from_decoded_audbuf = decoded_audiobuffer.numberOfChannels;
+	// ORconsole.log('channels_from_decoded_audbuf: ', channels_from_decoded_audbuf);
 	// OR
 	var channels_from_audioContext = audioContext.channelCount; // 2
 	console.log('channels_from_audioContext: ', channels_from_audioContext);
@@ -1526,33 +1492,29 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 
 	
   
-	const frameCount_from_decoded_audbuf = decoded_audiobuffer.length; // sample_length
-	console.log('frameCount_from_decoded_audbuf: ', frameCount_from_decoded_audbuf);
+	// ORconst frameCount_from_decoded_audbuf = decoded_audiobuffer.length; // sample_length
+	// ORconsole.log('frameCount_from_decoded_audbuf: ', frameCount_from_decoded_audbuf);
 	// OR
-	const frameCount_from_timeseries_data = dataArray_ts.length / time_period;
-	console.log('frameCount_from_timeseries_data: ', frameCount_from_timeseries_data);
+	// ORconst frameCount_from_timeseries_data = dataArray_ts.length / time_period;
+	// ORconsole.log('frameCount_from_timeseries_data: ', frameCount_from_timeseries_data);
 	// OR
 	const frameCount_from_audioContext = audioContext.sampleRate * 2.0;
 	console.log('frameCount_from_audioContext: ', frameCount_from_audioContext);
 
 	
   
-	const sampleRate_from_decoded_audbuf = decoded_audiobuffer.sampleRate; // sample_rate
-	console.log('sampleRate_from_decoded_audbuf: ', sampleRate_from_decoded_audbuf);
+	// ORconst sampleRate_from_decoded_audbuf = decoded_audiobuffer.sampleRate; // sample_rate
+	// ORconsole.log('sampleRate_from_decoded_audbuf: ', sampleRate_from_decoded_audbuf);
 	// OR
 	const sampleRate_from_audioContext = audioContext.sampleRate; // 48000
 	console.log('sampleRate_from_audioContext: ', sampleRate_from_audioContext);
 
 
 	// [Step 3] Select channel data
-	const desired_audio_data = decoded_audiobuffer.getChannelData(channels_from_audioContext);
-	console.log('desired_audio_data: ', desired_audio_data);
-
-	// const desired_audio_data1 = decoded_audiobuffer1.getChannelData(channels_from_audioContext);
-	// console.log('desired_audio_data1: ', desired_audio_data1);
-
-	// const desired_audio_data2 = decoded_audiobuffer2.getChannelData(channels_from_audioContext);
-	// console.log('desired_audio_data2: ', desired_audio_data2);
+	// const desired_audio_data = decoded_audiobuffer.getChannelData(channels_from_audioContext);
+	// console.log('desired_audio_data: ', desired_audio_data);
+	// OR
+	const arrayBuffer = await decodeAudioData_from_binaryString(binaryString);
 
 	// ------------------------------------------
 
@@ -1566,13 +1528,49 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	
 	// -----------------------------------------------
 	
-	return dataArray_ts;
+	return arrayBuffer;
 }
 
 // -----------------------------------------------
-	
+
 async function decode_audio(audioContext, arrayBuffer_object) {
 	return audioContext.decodeAudioData(arrayBuffer_object);
+}
+
+// -----------------------------------------------
+
+async function decodeAudioData_from_binaryString(binaryString) {
+	
+	// -----------------------------------------------
+	// Decode the binaryString response
+	// -----------------------------------------------
+	var character_array = binaryString.split('');
+	console.log("character_array: ", character_array);
+	// Array(38190) [ "�", "�", "�", "d", "\u0000", "\u0000", "\u0000", "\u0000", "\u0000", "\u0000", … ]
+			
+	// Map each [binary string character; a subset of binary string characters is UTF-8] as an [ASCII number; a number from 0 to number_of_characters]
+	var byteArray = character_array.map((character) => { return character.charCodeAt(0); });
+	console.log("byteArray: ", byteArray);
+	// byteArray:  Array(38190) [ 65533, 65533, 65533, 100, 0, 0, 0, 0, 0, 0, … ]
+
+	// The importance of this mapping is to limit the array values from 0 to 255.
+	var uint8Array = new Uint8Array(byteArray);
+	console.log('uint8Array: ', uint8Array);
+	// uint8Array:  Uint8Array(38190) [ 253, 253, 253, 100, 0, 0, 0, 0, 0, 0, … ]
+
+	// In some ways a uint8Array is an arrayBuffer because the size is "fixed" meaning that no more data will be appended to the array after the UTF-8 characters. And, it is a "fixed" array because the values of the array are limited to a certain range of numbers, from 0 to 255. 
+
+	// Convert UTF-8 array [non-fixed length array] to a binary arrayBuffer [fixed-length array]
+	const arrayBuffer = uint8Array.buffer;
+	console.log('arrayBuffer: ', arrayBuffer);
+	// -----------------------------------------------
+
+	// Obtain the channel data from the arrayBuffer
+	// https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/createBufferSource
+
+
+
+	return arrayBuffer;
 }
 
 // -----------------------------------------------
