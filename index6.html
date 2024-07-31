@@ -1396,12 +1396,14 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 
 			// The importance of this mapping is to limit the array values from 0 to 255.
 			var uint8Array = new Uint8Array(byteArray);
+			console.log('uint8Array: ', uint8Array);
 			// uint8Array:  Uint8Array(38190) [ 253, 253, 253, 100, 0, 0, 0, 0, 0, 0, … ]
 
 			// In some ways a uint8Array is an arrayBuffer because the size is "fixed" meaning that no more data will be appended to the array after the UTF-8 characters. And, it is a "fixed" array because the values of the array are limited to a certain range of numbers, from 0 to 255. 
 
 			// Convert UTF-8 array [non-fixed length array] to a binary arrayBuffer [fixed-length array]
 			const arrayBuffer = uint8Array.buffer;
+			console.log('arrayBuffer: ', arrayBuffer);
 			
 			return arrayBuffer;
 		});
