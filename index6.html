@@ -1226,7 +1226,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// var audioContext = new (window.AudioContext || window.webkitAudioContext)();
 	// audioContext = new AudioContext();
 	// OR
-	const audioContext = new AudioContext();
+	var audioContext = new AudioContext();
 
 	// -----------------------------------------------
 
@@ -1247,13 +1247,17 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// -----------------------------------------------
 
 	// Create an AnalyserNode
-	const analyserNode = audioContext.createAnalyser();
+	var analyserNode = audioContext.createAnalyser();
 	console.log('analyserNode: ', analyserNode);
 
 	let channels = analyserNode.channelCount;     // 2
+	console.log('channels: ', channels);
+	
 	let time_length = analyserNode.context.currentTime;   // 354.976
+	console.log('time_length: ', time_length);
 	
 	let fs = analyserNode.context.sampleRate; // 48000
+	console.log('fs: ', fs);
 	
 	var time_period = (1/fs) * 1000; // every time_period there is a data point, 0.000020833333333333333
 	console.log('time_period: ', time_period);
@@ -1409,7 +1413,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	 		.then(async function(arrayBuffer_object) {
 	 			    // Print arrayBuffer_object
 	 			    console.log("arrayBuffer_object:", arrayBuffer_object);
-	 			    // arrayBuffer_object: ArrayBuffer { byteLength: 314308 }
+	 			    // arrayBuffer_object: ArrayBuffer { byteLength: 38190 }
 	 			    return arrayBuffer_object;
 	 		    })
 	console.log('arrayBuffer_object0: ', arrayBuffer_object0); 
@@ -1421,17 +1425,37 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// console.log('arrayBuffer_object1: ', arrayBuffer_object1); 
 	
 	// [Step 1] Decode the arraybuffer
-	var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer_object0);
-	console.log('decoded_audiobuffer: ', decoded_audiobuffer); 
-  
+	// var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer_object0);
+	// console.log('decoded_audiobuffer: ', decoded_audiobuffer); 
+	// DOMException: The buffer passed to decodeAudioData contains an unknown content type.
+
+	// Way 0: return the callback 
+	var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer_object0, buffer => {
+		return buffer;
+	}, error => {
+		console.error('Error decoding audio file:', error);
+	});
+	console.log('decoded_audiobuffer: ', decoded_audiobuffer);
+
+	// Way 1: use a different audioContext
+	var decoded_audiobuffer1 = await decode_audio(audioContext, arrayBuffer_object0)
+		.then(async function(decoded_audiobuffer) { return decoded_audiobuffer; })
+	console.log('decoded_audiobuffer1: ', decoded_audiobuffer1);
+	
+	
 	// [Step 2] Make an [empty array] that is the size of the channel data
 	// https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/createBufferSource
 	const channels_from_decoded_audbuf = decoded_audiobuffer.numberOfChannels;
 	console.log('channels_from_decoded_audbuf: ', channels_from_decoded_audbuf);
 	// OR
-	const channels_from_audioContext = audioContext.channelCount; // 2
+	var channels_from_audioContext = audioContext.channelCount; // 2
+	console.log('channels_from_audioContext: ', channels_from_audioContext);
+	if (channels_from_audioContext == undefined) { 
+		channels_from_audioContext = analyserNode.channelCount;
+	}
 	console.log('channels_from_audioContext: ', channels_from_audioContext);
 
+	
   
 	const frameCount_from_decoded_audbuf = decoded_audiobuffer.length; // sample_length
 	console.log('frameCount_from_decoded_audbuf: ', frameCount_from_decoded_audbuf);
@@ -1442,6 +1466,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	const frameCount_from_audioContext = audioContext.sampleRate * 2.0;
 	console.log('frameCount_from_audioContext: ', frameCount_from_audioContext);
 
+	
   
 	const sampleRate_from_decoded_audbuf = decoded_audiobuffer.sampleRate; // sample_rate
 	console.log('sampleRate_from_decoded_audbuf: ', sampleRate_from_decoded_audbuf);
@@ -1451,9 +1476,12 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 
 
 	// [Step 3] Select channel data
-	const desired_audio_data = decoded_audiobuffer.getChannelData(channels_from_decoded_audbuf);
+	const desired_audio_data = decoded_audiobuffer.getChannelData(channels_from_audioContext);
 	console.log('desired_audio_data: ', desired_audio_data);
 
+	const desired_audio_data1 = decoded_audiobuffer1.getChannelData(channels_from_audioContext);
+	console.log('desired_audio_data1: ', desired_audio_data1);
+	
 	// ------------------------------------------
   
 	// Way 1: fetch on URL -> output a base64string -> blob -> Array?
@@ -1471,6 +1499,11 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// -----------------------------------------------
 	
 	return dataArray_ts;
+}
+
+
+async function decode_audio(audioContext, arrayBuffer_object) {
+	return audioContext.decodeAudioData(arrayBuffer_object);
 }
 
 // -----------------------------------------------
