@@ -1412,11 +1412,13 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	 			    // arrayBuffer_object: ArrayBuffer { byteLength: 314308 }
 	 			    return arrayBuffer_object;
 	 		    })
+	console.log('arrayBuffer_object0: ', arrayBuffer_object0); 
 	
 	// Way 1: 
+	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer/ArrayBuffer
 	// const arrayBuffer_object1 = new ArrayBuffer(arrayBuffer_array); // Need to return the promise
-	const arrayBuffer_object1 = await new Promise(arrayBuffer_array => new ArrayBuffer(arrayBuffer_array));
-	console.log('arrayBuffer_object1: ', arrayBuffer_object1); 
+	// const arrayBuffer_object1 = await new Promise(arrayBuffer_array => new ArrayBuffer(arrayBuffer_array));
+	// console.log('arrayBuffer_object1: ', arrayBuffer_object1); 
 	
 	// [Step 1] Decode the arraybuffer
 	var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer_object0);
