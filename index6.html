@@ -1569,10 +1569,13 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	return dataArray_ts;
 }
 
-async functon output_response(response) {
+// -----------------------------------------------
+	
+async function output_response(response) {
 	return response;
 }
 
+// -----------------------------------------------
 	
 async function decode_audio(audioContext, arrayBuffer_object) {
 	return audioContext.decodeAudioData(arrayBuffer_object);
