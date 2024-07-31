@@ -1381,70 +1381,92 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	return_type = 'arrayBuffer';  // return_type: json, blob, arrayBuffer, text, html
   
 	// for responseType: arrayBuffer, dataType = binary 
-	var arrayBuffer_array = await jQuery_CORS(url, method, data, headers, return_type)
+	var arrayBuffer = await jQuery_CORS(url, method, data, headers, return_type)
 		.then(res => res)
-		.then(async function(binaryString) { 
+		.then(async function(binaryString) {
+			
 			var character_array = binaryString.split('');
 			console.log("character_array: ", character_array);
+			// Array(38190) [ "�", "�", "�", "d", "\u0000", "\u0000", "\u0000", "\u0000", "\u0000", "\u0000", … ]
 					
-			// Map each binary string character as an ASCII number
+			// Map each [binary string character; a subset of binary string characters is UTF-8] as an [ASCII number; a number from 0 to number_of_characters]
 			var byteArray = character_array.map((character) => { return character.charCodeAt(0); });
 			console.log("byteArray: ", byteArray);
+			// byteArray:  Array(38190) [ 65533, 65533, 65533, 100, 0, 0, 0, 0, 0, 0, … ]
+
+			// The importance of this mapping is to limit the array values from 0 to 255.
+			var uint8Array = new Uint8Array(byteArray);
+			// uint8Array:  Uint8Array(38190) [ 253, 253, 253, 100, 0, 0, 0, 0, 0, 0, … ]
+
+			// In some ways a uint8Array is an arrayBuffer because the size is "fixed" meaning that no more data will be appended to the array after the UTF-8 characters. And, it is a "fixed" array because the values of the array are limited to a certain range of numbers, from 0 to 255. 
+
+			// Convert UTF-8 array [non-fixed length array] to a binary arrayBuffer [fixed-length array]
+			const arrayBuffer = uint8Array.buffer;
 			
-			return new Uint8Array(byteArray); });
-	console.log('arrayBuffer_array: ', arrayBuffer_array);
+			return arrayBuffer;
+		});
+	console.log('arrayBuffer: ', arrayBuffer);
+	
 
 
+	
 	// Way 0: Need to try binary output into object
-	const filename = url.split('/').pop(); // text.mp3
-	console.log('filename: ', filename);
+	// const filename = url.split('/').pop(); // text.mp3
+	// console.log('filename: ', filename);
 	
-	const file_extention_type = filename.split('.').pop();  // mp3
-	console.log('file_extention_type: ', file_extention_type);
+	// const file_extention_type = filename.split('.').pop();  // mp3
+	// console.log('file_extention_type: ', file_extention_type);
 	
-	const decoded_arraybuffer_blob = new Blob([arrayBuffer_array], { type: `audio/${file_extention_type}` });
-	console.log('decoded_arraybuffer_blob: ', decoded_arraybuffer_blob);
+	// const decoded_arraybuffer_blob = new Blob([arrayBuffer], { type: `audio/${file_extention_type}` });
+	// console.log('decoded_arraybuffer_blob: ', decoded_arraybuffer_blob);
 	
-	const decoded_arraybuffer_blob_url = URL.createObjectURL(decoded_arraybuffer_blob); // Create a url for the data object
-	console.log('decoded_arraybuffer_blob_url: ', decoded_arraybuffer_blob_url);
+	// const decoded_arraybuffer_blob_url = URL.createObjectURL(decoded_arraybuffer_blob); // Create a url for the data object
+	// console.log('decoded_arraybuffer_blob_url: ', decoded_arraybuffer_blob_url);
 	
-	const arrayBuffer_object0 = await fetch(decoded_arraybuffer_blob_url)
-		.then(response => response.arrayBuffer())
-	 		.then(async function(arrayBuffer_object) {
+	// const arrayBuffer_object0 = await fetch(decoded_arraybuffer_blob_url)
+	// 	.then(response => response.arrayBuffer())
+	//  		.then(async function(arrayBuffer_object) {
 	 			    // Print arrayBuffer_object
-	 			    console.log("arrayBuffer_object:", arrayBuffer_object);
-	 			    // arrayBuffer_object: ArrayBuffer { byteLength: 38190 }
-	 			    return arrayBuffer_object;
-	 		    })
-	console.log('arrayBuffer_object0: ', arrayBuffer_object0);
+	//  			    console.log("arrayBuffer_object:", arrayBuffer_object);
+	//  			    // arrayBuffer_object: ArrayBuffer { byteLength: 38190 }
+	//  			    return arrayBuffer_object;
+	//  		    })
+	// console.log('arrayBuffer_object0: ', arrayBuffer_object0);
 	// arrayBuffer_object0: ArrayBuffer { byteLength: 38190 }
-	console.log('arrayBuffer_object0[0]: ', arrayBuffer_object0[0]);
-	console.log('arrayBuffer_object0[1]: ', arrayBuffer_object0[1]);
+	// console.log('arrayBuffer_object0[0]: ', arrayBuffer_object0[0]);
+	// console.log('arrayBuffer_object0[1]: ', arrayBuffer_object0[1]);
+	// console.log('arrayBuffer_object0[0]: ', arrayBuffer_object0.at(0));
+	// console.log('arrayBuffer_object0[1]: ', arrayBuffer_object0.at(1));
+
+	
 
 	
 	// Way 1: 
 	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer/ArrayBuffer
-	// const arrayBuffer_object1 = new ArrayBuffer(arrayBuffer_array); // Returned 0 bytes
-	var arrayBuffer_object1 = new ArrayBuffer(arrayBuffer_array.length); // create an arraybuffer of zeros
-	console.log('arrayBuffer_object1 before assignment: ', arrayBuffer_object1);
-	console.log('arrayBuffer_object1[0]: ', arrayBuffer_object1[0]);
-	console.log('arrayBuffer_object1[1]: ', arrayBuffer_object1[1]);
+	
+	// var buffer = new ArrayBuffer(arrayBuffer_array.length); // create an arraybuffer of undefined
+	
+	// UTF-8 array is a [non-fixed length array]
+	// const output_uint8Array = new Uint8Array(buffer); 
 
 	// Fill the arrayBuffer with the correct values
-	for (var i=0; i < arrayBuffer_object1.length; i++) {
-		arrayBuffer_object1[i] = arrayBuffer_array.at(i);
-	}
-	console.log('arrayBuffer_object1 after assignment: ', arrayBuffer_object1);
-	// Unable to view the contents of the arrayBuffer_object1
-	console.log('arrayBuffer_object1[0]: ', arrayBuffer_object1[0]);
-	console.log('arrayBuffer_object1[1]: ', arrayBuffer_object1[1]);
+	// Way 0
+	// for (var i=0; i < arrayBuffer_array.length; i++) {
+	// 	output_uint8Array[i] = arrayBuffer_array.at(i);
+	// }
+	// OR
+	// Way 1
+	// arrayBuffer_array.forEach((num, index) => { output_uint8Array[index] = num; });
 	
+	// console.log('output_uint8Array: ', output_uint8Array);
+	// console.log('View the arraybuffer of the output_uint8Array: ', output_uint8Array.buffer);
+	
+
 	
 	// [Step 1] Decode the arraybuffer
-	// Way 0: call the function
-	var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer_object1);
+	// Way 0: call the function with output_uint8Array.buffer
+	var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer);
 	console.log('decoded_audiobuffer: ', decoded_audiobuffer); 
-	// DOMException: The buffer passed to decodeAudioData contains an unknown content type.
 
 	// Way 1: return the callback 
 	// var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer_object0, buffer => { return buffer; }, error => { console.error('Error decoding audio file:', error); });
@@ -1452,12 +1474,12 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// DOMException: The buffer passed to decodeAudioData contains an unknown content type.
 
 	// Way 2: return the promise  
-	var decoded_audiobuffer2 = await decode_audio(audioContext, arrayBuffer_object0)
-	 	.then(res => res)
-	 	.then(async function(decoded_audiobuffer) { return decoded_audiobuffer; })
-		.catch(error => { console.log('error: ', error); })
-	console.log('decoded_audiobuffer2: ', decoded_audiobuffer2);
-	// Returned no error and no response
+	// var decoded_audiobuffer2 = await decode_audio(audioContext, arrayBuffer_object0)
+	//  	.then(res => res)
+	//  	.then(async function(decoded_audiobuffer) { return decoded_audiobuffer; })
+	// 	.catch(error => { console.log('error: ', error); })
+	// console.log('decoded_audiobuffer2: ', decoded_audiobuffer2);
+	// error:  DOMException: The buffer passed to decodeAudioData contains an unknown content type.
 	
 	// Way 3: use a different audioContext and return the promise
 	// var audioContext1 = new AudioContext();
