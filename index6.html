@@ -1414,11 +1414,12 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	 		    })
 	
 	// Way 1: 
-	const arrayBuffer_object = new ArrayBuffer(arrayBuffer_array);
-	console.log('arrayBuffer_object: ', arrayBuffer_object); 
+	// const arrayBuffer_object1 = new ArrayBuffer(arrayBuffer_array); // Need to return the promise
+	const arrayBuffer_object1 = await new Promise(arrayBuffer_array => new ArrayBuffer(arrayBuffer_array));
+	console.log('arrayBuffer_object1: ', arrayBuffer_object1); 
 	
 	// [Step 1] Decode the arraybuffer
-	var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer_object);
+	var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer_object0);
 	console.log('decoded_audiobuffer: ', decoded_audiobuffer); 
   
 	// [Step 2] Make an [empty array] that is the size of the channel data
