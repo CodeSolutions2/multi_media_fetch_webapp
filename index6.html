@@ -1563,6 +1563,11 @@ async function decodeAudioData_from_binaryString(binaryString) {
 	// Convert UTF-8 array [non-fixed length array] to a binary arrayBuffer [fixed-length array]
 	const arrayBuffer = uint8Array.buffer;
 	console.log('arrayBuffer: ', arrayBuffer);
+	
+	// -----------------------------------------------
+
+	await plot_line_graph_dataArray(arrayBuffer);
+
 	// -----------------------------------------------
 
 	// Obtain the channel data from the arrayBuffer
@@ -1573,6 +1578,50 @@ async function decodeAudioData_from_binaryString(binaryString) {
 	return arrayBuffer;
 }
 
+// -----------------------------------------------
+
+async function plot_line_graph_dataArray(dataArray) {
+
+	const width = 928;
+	const height = 500;
+
+        const svg = d3.select("#data_display")
+		.append("svg")
+		.attr("class", 'line')
+		.attr("width", width)
+		.attr("height", height);
+
+        const x_scale = d3.scaleLinear()
+            .domain([0, d3.max(dataArray, (d,i) => i)])
+            .range([0, width]);
+
+        const y_scale = d3.scaleLinear()
+            .domain([0, d3.max(dataArray, d => d)])
+            .range([height, 0]);
+
+        const line = d3.line()
+		.x((d, i) => x_scale(i))
+		.y(d => y_scale(d));
+
+        svg.append("path")
+            .datum(dataArray)
+            .attr("fill", "none")
+            .attr("stroke", "steelblue")
+            .attr("stroke-width", 2)
+            .attr("d", line);
+
+	// Add the x-axis
+	svg.append("g")
+		.attr('class', 'x-axis')
+		.call(d3.axisBottom(x_scale));
+
+	// Add the y-axis
+	svg.append("g")
+		.attr('class', 'y-axis')
+		.call(d3.axisLeft(y_scale));
+}
+
+	
 // -----------------------------------------------
 
 async function plot_frequency_histogram_audio_data(dataArray_freq) {
