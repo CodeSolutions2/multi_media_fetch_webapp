@@ -1032,8 +1032,6 @@ async function jQuery_CORS(url, method, data, headers, return_type) {
 
 	// --------------------------------
 	
-  	// return $.ajax(settings).done(function(response) { console.log('response: ', response); return response; });
-	
 }
 
 // -----------------------------------------------
@@ -1348,8 +1346,8 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// const dataArray_ts = new Uint8Array(bufferLength_ts);
 	// OR
 	const dataArray_ts = new Float32Array(bufferLength_ts);
-
-  console.log('dataArray_ts.length: ', dataArray_ts.length);
+	
+	console.log('dataArray_ts.length: ', dataArray_ts.length);
 	
 	// [Step 1] Fill the timeseries dataArray with converted data
 	// https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getByteTimeDomainData
@@ -1366,49 +1364,63 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// -----------------------------------------------
 
 
-  // -----------------------------------------------
+	// -----------------------------------------------
 	// [Way B]: Obtain the audio data using the URL, transform the fetched data to an Array
-  // -----------------------------------------------
+	// -----------------------------------------------
  
-  // Need to obtain the audio data using fetch [ Way 0: fetch on URL -> output audiobuffer ]
+	// Need to obtain the audio data using fetch [ Way 0: fetch on URL -> output audiobuffer ]
   
-  // [Step 0] Fetch arrayBuffer
-  method = 'GET';
-  data = {};
-  headers = {};
-  return_type = 'arrayBuffer';  // return_type: json, blob, arrayBuffer, text, html
+	// [Step 0] Fetch arrayBuffer
+	method = 'GET';
+	data = {};
+	headers = {};
+	return_type = 'arrayBuffer';  // return_type: json, blob, arrayBuffer, text, html
   
 	// for responseType: arrayBuffer, dataType = binary 
 	var arrayBuffer_array = await jQuery_CORS(url, method, data, headers, return_type)
 		.then(res => res)
-		.then(async function(arrayBuffer) { return arrayBuffer; });
+		.then(async function(binaryString) { 
+			var character_array = binaryString.split('');
+			console.log("character_array: ", character_array);
+					
+			// Map each binary string character as an ASCII number
+			var byteArray = character_array.map((character) => { return character.charCodeAt(0); });
+			console.log("byteArray: ", byteArray);
+			
+			return new Uint8Array(byteArray); });
 	console.log('arrayBuffer_array: ', arrayBuffer_array);
 
 
 	// Way 0: Need to try binary output into object
-	const file_extention_type = url.split('/').split('.').pop();
+	const filename = url.split('/').pop(); // text.mp3
+	console.log('filename: ', filename);
+	
+	const file_extention_type = filename.split('.').pop();  // mp3
 	console.log('file_extention_type: ', file_extention_type);
 	
-	let decoded_arraybuffer_blob = new Blob([arrayBuffer_array], { type: file_extention_type });
+	const decoded_arraybuffer_blob = new Blob([arrayBuffer_array], { type: `audio/${file_extention_type}` });
+	console.log('decoded_arraybuffer_blob: ', decoded_arraybuffer_blob);
+	
 	const decoded_arraybuffer_blob_url = URL.createObjectURL(decoded_arraybuffer_blob); // Create a url for the data object
+	console.log('decoded_arraybuffer_blob_url: ', decoded_arraybuffer_blob_url);
 	
 	await fetch(decoded_arraybuffer_blob_url)
 		.then(response => response.arrayBuffer())
-			.then(async function(arraybuffer) {
-				    // Print arraybuffer
-				    console.log("arraybuffer:", arraybuffer);
-				    // arraybuffer: ArrayBuffer { byteLength: 314308 }
-				
-				    // Decode the arraybuffer
-				    return audioContext.decodeAudioData(arraybuffer);
-			    })
-			.then(async function(decoded_audiobuffer) {
-
+	 		.then(async function(arraybuffer) {
+	 			    // Print arraybuffer
+	 			    console.log("arraybuffer:", arraybuffer);
+	 			    // arraybuffer: ArrayBuffer { byteLength: 314308 }
+	 			
+	 			    // Decode the arraybuffer
+	 			    return audioContext.decodeAudioData(arraybuffer);
+	 		    })
+	 		.then(async function(decoded_audiobuffer) { 
 				console.log('decoded_audiobuffer Way 0: ', decoded_audiobuffer)
-			});
+	 		});
 	
 	// Way 1: 
 	const arrayBuffer_object = new ArrayBuffer(arrayBuffer_array);
+	console.log('arrayBuffer_object: ', arrayBuffer_object); 
 	
 	// [Step 1] Decode the arraybuffer
 	var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer_object);
@@ -1418,15 +1430,15 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/createBufferSource
 	const channels_from_decoded_audbuf = decoded_audiobuffer.numberOfChannels;
 	console.log('channels_from_decoded_audbuf: ', channels_from_decoded_audbuf);
-  // OR
-  const channels_from_audioContext = audioContext.channelCount; // 2
-  console.log('channels_from_audioContext: ', channels_from_audioContext);
+	// OR
+	const channels_from_audioContext = audioContext.channelCount; // 2
+	console.log('channels_from_audioContext: ', channels_from_audioContext);
 
   
-  const frameCount_from_decoded_audbuf = decoded_audiobuffer.length; // sample_length
-  console.log('frameCount_from_decoded_audbuf: ', frameCount_from_decoded_audbuf);
-  // OR
-  const frameCount_from_timeseries_data = dataArray_ts.length / time_period;
+	const frameCount_from_decoded_audbuf = decoded_audiobuffer.length; // sample_length
+	console.log('frameCount_from_decoded_audbuf: ', frameCount_from_decoded_audbuf);
+	// OR
+	const frameCount_from_timeseries_data = dataArray_ts.length / time_period;
   console.log('frameCount_from_timeseries_data: ', frameCount_from_timeseries_data);
   // OR
   const frameCount_from_audioContext = audioContext.sampleRate * 2.0;
