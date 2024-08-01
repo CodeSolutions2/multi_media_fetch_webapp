@@ -1564,21 +1564,17 @@ async function decodeAudioData_from_binaryString_to_uint8Array(binaryString) {
 	// Determine the length of the normalArray.length
 	console.log('normalArray.length: ', normalArray.length);
 
-	// --------------------
-  
 	var arr_char = obtain_array_characteristics(normalArray);
 	console.log('arr_char: ', arr_char);
-	
-	var normalArray_standardized = normalArray.map((val, ind) => { return (val - arr_char.mu) / arr_char.sigma; });
-
-	var arr_char_standardized = obtain_array_characteristics(normalArray_standardized);
-	console.log('arr_char_standardized: ', arr_char_standardized);
 
 	// --------------------
 
 	// Normalize the audio data in arrayBuffer from [-1, 1]
 	// audio needs to be in [-1.0; 1.0]
-	var normalArray_normalized = normalArray_standardized.map((val, ind) => { return val/arr_char_standardized.max_amp; });
+	var normalArray_normalized = normalArray.map((val, ind) => { return val/arr_char.max_amp; });
+
+	var arr_char_normalized = obtain_array_characteristics(normalArray_normalized);
+	console.log('arr_char_normalized: ', arr_char_normalized);
 	
 	// --------------------
 
