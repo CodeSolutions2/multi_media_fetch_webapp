@@ -1342,7 +1342,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	for (var i=0; i<channels_from_audioContext; i++) {
 		ind = ind + length_of_channels-1;
 		stop_index.push(ind);
-		if (normalArray.length-1 > ind+1) {
+		if (normalArray_normalized.length-1 > ind+1) {
 			start_index.push(ind+1);
 		}
 	}
@@ -1359,7 +1359,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// A: I think the start of an audio channels begins with a specific value
 
 
-	// Way 0: the MDN functions are used - input is arrayBuffer data (normalArray), output is timeseries data (dataArray_ts) 
+	// Way 0: the MDN functions are used - input is arrayBuffer data (normalArray_normalized), output is timeseries data (dataArray_ts) 
 	
 	// Create an AudioBuffer, and have it obtain the channel data
 	// https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/createBufferSource
@@ -1369,7 +1369,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	for (let i=0; i < length_of_channels; i++) {
 		const nowBuffering = AudioBuffer.getChannelData(i+1);
 		for (var j=start_index.at(i); j<stop_index.at(i)+1; j++) {
-			// the arrayBuffer was converted into a normalArray, because in the mdn example a scalar is given to nowBuffering. So to avoid confusion, each value of the arrayBuffer data is given from a simple array. 
+			// the arrayBuffer was converted into a normalArray_normalized, because in the mdn example a scalar is given to nowBuffering. So to avoid confusion, each value of the arrayBuffer data is given from a simple array. 
 			nowBuffering[j] = normalArray_normalized.at(j);
 		}
 	}
@@ -1396,7 +1396,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	console.log('analyserNode: ', analyserNode);
 	
 	// The time series data from the analyserNode will be copied to dataArray_ts
-	const dataArray_ts = new Uint8Array(normalArray.length);
+	const dataArray_ts = new Uint8Array(normalArray_normalized.length);
 	analyserNode.getByteTimeDomainData(dataArray_ts);
 	console.log('dataArray_ts: ', dataArray_ts);
 
