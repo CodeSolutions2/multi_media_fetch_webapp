@@ -1259,81 +1259,162 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	let fs = analyserNode.context.sampleRate; // 48000
 	console.log('fs: ', fs);
 	
-	var time_period = (1/fs) * 1000; // every time_period there is a data point, 0.000020833333333333333
+	var time_period = (1/fs) * 1000; // every time_period there is a data point, 0.020833333333333333
 	console.log('time_period: ', time_period);
 	
 	// -----------------------------------------------
 
-	// Set up audio node network
+  // -----------------------------------------------
+	// [Way A]: Obtain the audio data from the audioElement/sourceElement and NOT the URL directly
+	// -----------------------------------------------
+	// Way 0: Set up audio node network
 	// sourceElement.connect(analyserNode);  // *** returns an error ***
 	// analyserNode.connect(audioContext.destination);	// *** returns an error ***
 
 	// -----------------------------------------------
 
+  // Way 1
 	// *** returns an error ***
 	// sourceElement.connect(audioContext.destination);
 
 	// -----------------------------------------------
 
+  // Way 2
 	// *** returns an error ***
 	// audioElement.connect(audioContext.destination);
 
 	// -----------------------------------------------
 	
+
+  // -----------------------------------------------
+	// [Way B]: Obtain the audio data using the URL, transform the fetched data to an Array
 	// -----------------------------------------------
-	// [Way A]: Obtain the audio data from the audioElement and NOT the URL directly
+	// Way 0: fetch on URL -> output audiobuffer
+
+  // --------------------
+  
+	// [Step 0] Fetch binaryString of audio data
+	method = 'GET';
+	data = {};
+	headers = {};
+	return_type = 'arrayBuffer';  // return_type: json, blob, arrayBuffer, text, html
+  
+	// for responseType: arrayBuffer, dataType = binary 
+	var binaryString = await jQuery_CORS(url, method, data, headers, return_type)
+		.then(res => res)
+		.then(async function(binaryString) { return binaryString; });
+	console.log('binaryString: ', binaryString);
+
+  // --------------------
+  
+  // [Step 1] Determine the [channels, frameCount, sampleRate] from the audioContext and analyserNode
+  var channels_from_audioContext = audioContext.channelCount;
+	console.log('channels_from_audioContext: ', channels_from_audioContext);
+	if (channels_from_audioContext == undefined) { 
+		channels_from_audioContext = analyserNode.channelCount;
+	}
+	console.log('channels_from_audioContext: ', channels_from_audioContext);
+
+  const frameCount_from_audioContext = audioContext.sampleRate * 2.0;
+	console.log('frameCount_from_audioContext: ', frameCount_from_audioContext);
+
+  const sampleRate_from_audioContext = audioContext.sampleRate; // 48000
+	console.log('sampleRate_from_audioContext: ', sampleRate_from_audioContext);
+
+  // --------------------
+  
+  // [Step 2] 
+	// const all_channels_in_an_arrayBuffer = decoded_audiobuffer.getChannelData(channels_from_audioContext);
+	// console.log('all_channels_in_an_arrayBuffer: ', all_channels_in_an_arrayBuffer);
+  // *** returns an error because [sourceElement.connect(analyser); analyser.connect(audioContext.destination);] does not function ***
+	// OR
+	const all_channels_in_a_typedArray_arrayBuffer = await decodeAudioData_from_binaryString_to_uint8Array(binaryString);
+
+  // --------------------
+  
+  // Determine the length of the typedArray_arrayBuffer
+  console.log('all_channels_in_a_typedArray_arrayBuffer.length: ', all_channels_in_a_typedArray_arrayBuffer.length);
+
+  // --------------------
+  
+  // Normalize the audio data in arrayBuffer from [-1, 1]
+  // audio needs to be in [-1.0; 1.0]
+  const normalArray = Array.from(all_channels_in_a_typedArray_arrayBuffer); 
+  
+  var arr_char = obtain_array_characteristics(normalArray);
+  console.log('arr_char: ', arr_char);
+  
+  // --------------------
+
+  
+  const length_of_channels = all_channels_in_an_arrayBuffer.length / channels_from_audioContext;
+  console.log('length_of_channels: ', length_of_channels);
+
+  var index_split = [];
+  var ind = 0;
+  for (var i=0; i<channels_from_audioContext; i++) {
+    ind = ind + length_of_channels-1;
+    index_split.push(ind);
+  }
+  console.log('index_split: ', index_split);
+  
+  // --------------------
+  
+  // [Step 3] Split the [arrayBuffer into channels]
+  // What I read is that channel data is concatenated into a single arrayBuffer.
+  
+  // Where to split the arrayBuffer using channels_from_audioContext?
+  // Q: how does one know the number of audio channels in an arrayBuffer?  
+  // A: I think the start of an audio channels begins with a specific value
+
+
+  // Way 0: create an AudioBuffer, and have it obtain the channel data
+  // https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/createBufferSource
+
+  const AudioBuffer = audioContext.createBuffer(channels_from_audioContext, frameCount_from_audioContext, sampleRate_from_audioContext);
+  
+  const ch0 = AudioBuffer.getChannelData(1);
+  
+  // for (let i = 0; i < frameCount; i++) {
+  for (let i = 0; i < length_of_channels; i++) {
+      // Math.random() is in [0; 1.0]
+      
+      ch0[i] = Math.random() * 2 - 1;
+    }
+  
+  // --------------------
+
+  // -----------------------------------------------
+  
+
+
+	
 	// -----------------------------------------------
 
-	// [A] Process frequency data: histogram of frequency Uinit8Array data
-	console.log('[A] Process frequency data: histogram of frequency Uinit8Array data');
-
-	console.log('analyserNode.minDecibels: ', analyserNode.minDecibels);
-	console.log('analyserNode.maxDecibels: ', analyserNode.maxDecibels);
-	console.log('analyserNode.smoothingTimeConstant: ', analyserNode.smoothingTimeConstant);
-	
-	const bufferLength_freq = analyserNode.frequencyBinCount;
-	console.log('bufferLength_freq: ', bufferLength_freq);
-
-	
-	// [Step 0] Create a Uint8Array to store the frequency data
-	const dataArray_freq = new Uint8Array(bufferLength_freq);
-	
-	// [Step 1] Fill the frequency dataArray with converted data
-	analyserNode.getByteFrequencyData(dataArray_freq);
-	console.log('dataArray_freq: ', dataArray_freq);
-
-	// [Step 2] Display frequency histogram data
-	await plot_frequency_histogram_audio_data(dataArray_freq);
-
-	// RESULT: the output data contains all zeros
-	
-	// -----------------------------------------------
-
-	// [B] Process frequency data: spectrogram of frequency Float32Array data
-	// https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getFloatFrequencyData
-	
-	// console.log('analyserNode.minDecibels: ', analyserNode.minDecibels);
-	// console.log('analyserNode.maxDecibels: ', analyserNode.maxDecibels);
-	// console.log('analyserNode.smoothingTimeConstant: ', analyserNode.smoothingTimeConstant);
-	
-	// const bufferLength_freq1 = analyserNode.frequencyBinCount;
-	// console.log('bufferLength_freq1: ', bufferLength_freq1);
-
-	// [Step 0] Create a Float32Array to store the frequency data
-	// const dataArray_freq1 = new Float32Array(bufferLength_freq1);
-
-	// [Step 1] Fill the frequency dataArray with converted data
-	// analyserNode.getByteFrequencyData(dataArray_freq1);
-	// console.log('dataArray_freq1: ', dataArray_freq1);
-
-	// [Step 2] Display frequency histogram data
-	// await plot_frequency_spectrogram_audio_data(bufferLength_freq1, dataArray_freq1); 
-	
-	// RESULT: returned an error because I can not use sourceElement.connect(analyserNode); analyserNode.connect(audioContext.destination);	
+	await plot_line_graph_dataArray(uint8Array);
+	await plot_timeseries_audio_data(uint8Array);
 
 	// -----------------------------------------------
-	
-	// [C] Process timeseries data
+// 
+  
+  // Steps to figure out how to get audio data without the Web API which does not seem to work
+  
+  
+  
+  // [Step 2] signal in time domain
+  // Downsample time series to a [desired_sampleRate]
+
+  // --------------------
+  
+  // Plot the time series
+
+  // --------------------
+  
+  // (optional) [get natural frequency from time series if it waveform is sinusoidal/stationary]
+
+  // --------------------
+  
+  // MDN tutorial to process timeseries data
 	console.log('[C] Process timeseries data');
 	
 	// Select sampling frequency for Inverse Discrete Fourier Transform
@@ -1364,159 +1445,66 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	await plot_timeseries_audio_data(dataArray_ts);
 
 	// RESULT: the output data contains all zeros
-	
-	// -----------------------------------------------
 
-
-	// -----------------------------------------------
-	// [Way B]: Obtain the audio data using the URL, transform the fetched data to an Array
-	// -----------------------------------------------
- 
-	// Need to obtain the audio data using fetch [ Way 0: fetch on URL -> output audiobuffer ]
+  // --------------------
   
-	// [Step 0] Fetch arrayBuffer
-	method = 'GET';
-	data = {};
-	headers = {};
-	return_type = 'arrayBuffer';  // return_type: json, blob, arrayBuffer, text, html
+  // [Step 3] signal in frequecy domain
+  // Use [sampleRate_from_audioContext OR desired_sampleRate] to perform DFT to obtain cutoff frequency, for filtering/smoothing the signal without loosing important data
+
+  // --------------------
   
-	// for responseType: arrayBuffer, dataType = binary 
-	var binaryString = await jQuery_CORS(url, method, data, headers, return_type)
-		.then(res => res)
-		.then(async function(binaryString) { return binaryString; });
-	console.log('binaryString: ', binaryString);
-	
+  // Plot the frequency spectrum
 
-
-	
-	// Way 0: Need to try binary output into object
-	// ORconst filename = url.split('/').pop(); // text.mp3
-	// ORconsole.log('filename: ', filename);
-	
-	// ORconst file_extention_type = filename.split('.').pop();  // mp3
-	// ORconsole.log('file_extention_type: ', file_extention_type);
-	
-	// ORconst jQuery_output_blob = new Blob([binaryString], { type: `audio/${file_extention_type}` });
-	// ORconsole.log('jQuery_output_blob: ', jQuery_output_blob);
-	
-	// ORconst jQuery_output_blob_url = URL.createObjectURL(jQuery_output_blob); // Create a url for the data object
-	// ORconsole.log('jQuery_output_blob_url: ', jQuery_output_blob_url);
-	
-	// const arrayBuffer_object0 = await fetch(decoded_arraybuffer_blob_url)
-	// 	.then(response => response.arrayBuffer())
-	//  		.then(async function(arrayBuffer_object) {
-	 			    // Print arrayBuffer_object
-	//  			    console.log("arrayBuffer_object:", arrayBuffer_object);
-	//  			    // arrayBuffer_object: ArrayBuffer { byteLength: 38190 }
-	//  			    return arrayBuffer_object;
-	//  		    })
-	// console.log('arrayBuffer_object0: ', arrayBuffer_object0);
-	// arrayBuffer_object0: ArrayBuffer { byteLength: 38190 }
-	// console.log('arrayBuffer_object0[0]: ', arrayBuffer_object0[0]); // undefined
-	// console.log('arrayBuffer_object0[1]: ', arrayBuffer_object0[1]); // undefined
-
-	
-
-	
-	// Way 1: 
-	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer/ArrayBuffer
-	
-	// var buffer = new ArrayBuffer(arrayBuffer_array.length); // create an arraybuffer of undefined
-	
-	// UTF-8 array is a [non-fixed length array]
-	// const output_uint8Array = new Uint8Array(buffer); 
-
-	// Fill the arrayBuffer with the correct values
-	// Way 0
-	// for (var i=0; i < arrayBuffer_array.length; i++) {
-	// 	output_uint8Array[i] = arrayBuffer_array.at(i);
-	// }
-	// OR
-	// Way 1
-	// arrayBuffer_array.forEach((num, index) => { output_uint8Array[index] = num; });
-	
-	// console.log('output_uint8Array: ', output_uint8Array);
-	// console.log('View the arraybuffer of the output_uint8Array: ', output_uint8Array.buffer);
-	
-
-	
-	// [Step 1] Decode the arraybuffer
-	// Way 0: call the function with output_uint8Array.buffer
-	// var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer);
-	// console.log('decoded_audiobuffer: ', decoded_audiobuffer); 
-	//  DOMException: The buffer passed to decodeAudioData contains an unknown content type.
-
-	// Way 1: return the callback 
-	// var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer_object0, buffer => { return buffer; }, error => { console.error('Error decoding audio file:', error); });
-	// console.log('decoded_audiobuffer: ', decoded_audiobuffer);
-	// DOMException: The buffer passed to decodeAudioData contains an unknown content type.
-
-	// Way 2: return the promise  
-	// var decoded_audiobuffer2 = await decode_audio(audioContext, arrayBuffer_object0)
-	//  	.then(res => res)
-	//  	.then(async function(decoded_audiobuffer) { return decoded_audiobuffer; })
-	// 	.catch(error => { console.log('error: ', error); })
-	// console.log('decoded_audiobuffer2: ', decoded_audiobuffer2);
-	// error:  DOMException: The buffer passed to decodeAudioData contains an unknown content type.
-	
-	// Way 3: use a different audioContext and return the promise
-	// var audioContext1 = new AudioContext();
-	// var decoded_audiobuffer2 = audioContext1.decodeAudioData(arrayBuffer_object0, 
-	// 					buffer => { return buffer; }, 
-	// 					error => { console.error('Error decoding audio file:', error); });
-	// console.log('decoded_audiobuffer2: ', decoded_audiobuffer2);
-	// DOMException: The buffer passed to decodeAudioData contains an unknown content type.
-	// So, the AudioContext has nothing to do with the error
-
-	// Way 4: return the callback with error output
-	// try {
-	// 	var decoded_audiobuffer = audioContext.decodeAudioData(await fetch(jQuery_output_blob_url).then(response => response.arrayBuffer()).then(async function(arrayBuffer_object) { return arrayBuffer_object; }));
-		// DOMException: The buffer passed to decodeAudioData contains an unknown content type.
-	// } catch (error) {
-	// 	console.log('error: ', error);
-	// }
-	// console.log('decoded_audiobuffer: ', decoded_audiobuffer);
-	
-	
-	// [Step 2] Make an [empty array] that is the size of the channel data
-	// https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/createBufferSource
-	// ORconst channels_from_decoded_audbuf = decoded_audiobuffer.numberOfChannels;
-	// ORconsole.log('channels_from_decoded_audbuf: ', channels_from_decoded_audbuf);
-	// OR
-	var channels_from_audioContext = audioContext.channelCount; // 2
-	console.log('channels_from_audioContext: ', channels_from_audioContext);
-	if (channels_from_audioContext == undefined) { 
-		channels_from_audioContext = analyserNode.channelCount;
-	}
-	console.log('channels_from_audioContext: ', channels_from_audioContext);
-
-	
+  // --------------------
   
-	// ORconst frameCount_from_decoded_audbuf = decoded_audiobuffer.length; // sample_length
-	// ORconsole.log('frameCount_from_decoded_audbuf: ', frameCount_from_decoded_audbuf);
-	// OR
-	// ORconst frameCount_from_timeseries_data = dataArray_ts.length / time_period;
-	// ORconsole.log('frameCount_from_timeseries_data: ', frameCount_from_timeseries_data);
-	// OR
-	const frameCount_from_audioContext = audioContext.sampleRate * 2.0;
-	console.log('frameCount_from_audioContext: ', frameCount_from_audioContext);
+  // MDN tutorial to process frequency data spectrogram of frequency Float32Array data
+	// https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getFloatFrequencyData
+	
+	// console.log('analyserNode.minDecibels: ', analyserNode.minDecibels);
+	// console.log('analyserNode.maxDecibels: ', analyserNode.maxDecibels);
+	// console.log('analyserNode.smoothingTimeConstant: ', analyserNode.smoothingTimeConstant);
+	
+	// const bufferLength_freq1 = analyserNode.frequencyBinCount;
+	// console.log('bufferLength_freq1: ', bufferLength_freq1);
+
+	// [Step 0] Create a Float32Array to store the frequency data
+	// const dataArray_freq1 = new Float32Array(bufferLength_freq1);
+
+	// [Step 1] Fill the frequency dataArray with converted data
+	// analyserNode.getByteFrequencyData(dataArray_freq1);
+	// console.log('dataArray_freq1: ', dataArray_freq1);
+
+	// [Step 2] Display frequency histogram data
+	// await plot_frequency_spectrogram_audio_data(bufferLength_freq1, dataArray_freq1); 
+	
+	// RESULT: returned an error because I can not use sourceElement.connect(analyserNode); 
+
+  // --------------------
+  
+  // MDN tutorial to process frequency data histogram of frequency Uinit8Array data
+	console.log('[A] Process frequency data: histogram of frequency Uinit8Array data');
+
+	console.log('analyserNode.minDecibels: ', analyserNode.minDecibels);
+	console.log('analyserNode.maxDecibels: ', analyserNode.maxDecibels);
+	console.log('analyserNode.smoothingTimeConstant: ', analyserNode.smoothingTimeConstant);
+	
+	const bufferLength_freq = analyserNode.frequencyBinCount;
+	console.log('bufferLength_freq: ', bufferLength_freq);
 
 	
-  
-	// ORconst sampleRate_from_decoded_audbuf = decoded_audiobuffer.sampleRate; // sample_rate
-	// ORconsole.log('sampleRate_from_decoded_audbuf: ', sampleRate_from_decoded_audbuf);
-	// OR
-	const sampleRate_from_audioContext = audioContext.sampleRate; // 48000
-	console.log('sampleRate_from_audioContext: ', sampleRate_from_audioContext);
+	// [Step 0] Create a Uint8Array to store the frequency data
+	const dataArray_freq = new Uint8Array(bufferLength_freq);
+	
+	// [Step 1] Fill the frequency dataArray with converted data
+	analyserNode.getByteFrequencyData(dataArray_freq);
+	console.log('dataArray_freq: ', dataArray_freq);
 
+	// [Step 2] Display frequency histogram data
+	await plot_frequency_histogram_audio_data(dataArray_freq);
 
-	// [Step 3] Select channel data
-	// const desired_audio_data = decoded_audiobuffer.getChannelData(channels_from_audioContext);
-	// console.log('desired_audio_data: ', desired_audio_data);
-	// OR
-	const arrayBuffer = await decodeAudioData_from_binaryString(binaryString);
-
-	// ------------------------------------------
+	// RESULT: the output data contains all zeros
+	
+  // ------------------------------------------
 
 	// If one wants to play this data on the [audio interface], one needs to assign the data to the audioContext
 	// How to play the desired_audio_data on the [audio interface]
@@ -1539,7 +1527,7 @@ async function decode_audio(audioContext, arrayBuffer_object) {
 
 // -----------------------------------------------
 
-async function decodeAudioData_from_binaryString(binaryString) {
+async function decodeAudioData_from_binaryString_to_uint8Array(binaryString) {
 	
 	// -----------------------------------------------
 	// Decode the binaryString response
@@ -1563,22 +1551,34 @@ async function decodeAudioData_from_binaryString(binaryString) {
 	// Convert UTF-8 array [non-fixed length array] to a binary arrayBuffer [fixed-length array]
 	const arrayBuffer = uint8Array.buffer;
 	console.log('arrayBuffer: ', arrayBuffer);
-	
-	// -----------------------------------------------
-
-	await plot_line_graph_dataArray(uint8Array);
-	await plot_timeseries_audio_data(uint8Array);
-
-	// -----------------------------------------------
-
-	// Obtain the channel data from the arrayBuffer
-	// https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/createBufferSource
-
-
 
 	return arrayBuffer;
 }
 
+
+async function decodeAudioData_from_binaryString_to_float32Array(binaryString) {
+	
+	// -----------------------------------------------
+	// Decode the binaryString response
+	// -----------------------------------------------
+	var character_array = binaryString.split('');
+	console.log("character_array: ", character_array);
+	// Array(38190) [ "�", "�", "�", "d", "\u0000", "\u0000", "\u0000", "\u0000", "\u0000", "\u0000", … ]
+			
+	// Map each [binary string character; a subset of binary string characters is UTF-8] as an [ASCII number; a number from 0 to number_of_characters]
+	var byteArray = character_array.map((character) => { return character.charCodeAt(0); });
+	console.log("byteArray: ", byteArray);
+	// byteArray:  Array(38190) [ 65533, 65533, 65533, 100, 0, 0, 0, 0, 0, 0, … ]
+
+	var float32Array = new Float32Array(byteArray);
+	console.log('float32Array: ', float32Array);
+  
+	const arrayBuffer = float32Array.buffer;
+	console.log('arrayBuffer: ', arrayBuffer);
+
+	return arrayBuffer;
+}
+  
 // -----------------------------------------------
 
 async function plot_line_graph_dataArray(dataArray) {
