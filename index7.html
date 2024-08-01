@@ -1329,6 +1329,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// *** returns an error because [sourceElement.connect(analyser); analyser.connect(audioContext.destination);] does not function ***
 	// OR
 	const all_channels_in_a_typedArray_arrayBuffer = await decodeAudioData_from_binaryString_to_uint8Array(binaryString);
+	console.log('all_channels_in_a_typedArray_arrayBuffer: ', all_channels_in_a_typedArray_arrayBuffer);
 
 	// --------------------
   
@@ -1560,6 +1561,20 @@ async function decodeAudioData_from_binaryString_to_uint8Array(binaryString) {
 	// Convert UTF-8 array [non-fixed length array] to a binary arrayBuffer [fixed-length array]
 	const arrayBuffer = uint8Array.buffer;
 	console.log('arrayBuffer: ', arrayBuffer);
+
+	// Determine the length of the typedArray_arrayBuffer
+	console.log('arrayBuffer.length: ', arrayBuffer.length);
+
+	// --------------------
+  
+	// Normalize the audio data in arrayBuffer from [-1, 1]
+	// audio needs to be in [-1.0; 1.0]
+	const normalArray = Array.from(arrayBuffer); 
+  
+	var arr_char = obtain_array_characteristics(normalArray);
+	console.log('arr_char: ', arr_char);
+
+	// --------------------
 
 	return arrayBuffer;
 }
