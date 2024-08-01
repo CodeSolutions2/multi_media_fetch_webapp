@@ -1264,7 +1264,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	
 	// -----------------------------------------------
 
-  // -----------------------------------------------
+	// -----------------------------------------------
 	// [Way A]: Obtain the audio data from the audioElement/sourceElement and NOT the URL directly
 	// -----------------------------------------------
 	// Way 0: Set up audio node network
@@ -1273,7 +1273,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 
 	// -----------------------------------------------
 
-  // Way 1
+	// Way 1
 	// *** returns an error ***
 	// sourceElement.connect(audioContext.destination);
 
@@ -1286,7 +1286,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// -----------------------------------------------
 	
 
-  // -----------------------------------------------
+	// -----------------------------------------------
 	// [Way B]: Obtain the audio data using the URL, transform the fetched data to an Array
 	// -----------------------------------------------
 	// Way 0: fetch on URL -> output audiobuffer
@@ -1305,159 +1305,179 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 		.then(async function(binaryString) { return binaryString; });
 	console.log('binaryString: ', binaryString);
 
-  // --------------------
+	// --------------------
   
-  // [Step 1] Determine the [channels, frameCount, sampleRate] from the audioContext and analyserNode
-  var channels_from_audioContext = audioContext.channelCount;
+	// [Step 1] Determine the [channels, frameCount, sampleRate] from the audioContext and analyserNode
+	var channels_from_audioContext = audioContext.channelCount;
 	console.log('channels_from_audioContext: ', channels_from_audioContext);
 	if (channels_from_audioContext == undefined) { 
 		channels_from_audioContext = analyserNode.channelCount;
 	}
 	console.log('channels_from_audioContext: ', channels_from_audioContext);
 
-  const frameCount_from_audioContext = audioContext.sampleRate * 2.0;
+	const frameCount_from_audioContext = audioContext.sampleRate * 2.0;
 	console.log('frameCount_from_audioContext: ', frameCount_from_audioContext);
 
-  const sampleRate_from_audioContext = audioContext.sampleRate; // 48000
+	const sampleRate_from_audioContext = audioContext.sampleRate; // 48000
 	console.log('sampleRate_from_audioContext: ', sampleRate_from_audioContext);
 
-  // --------------------
+	// --------------------
   
-  // [Step 2] 
+	// [Step 2] 
 	// const all_channels_in_an_arrayBuffer = decoded_audiobuffer.getChannelData(channels_from_audioContext);
 	// console.log('all_channels_in_an_arrayBuffer: ', all_channels_in_an_arrayBuffer);
-  // *** returns an error because [sourceElement.connect(analyser); analyser.connect(audioContext.destination);] does not function ***
+	// *** returns an error because [sourceElement.connect(analyser); analyser.connect(audioContext.destination);] does not function ***
 	// OR
 	const all_channels_in_a_typedArray_arrayBuffer = await decodeAudioData_from_binaryString_to_uint8Array(binaryString);
 
-  // --------------------
+	// --------------------
   
-  // Determine the length of the typedArray_arrayBuffer
-  console.log('all_channels_in_a_typedArray_arrayBuffer.length: ', all_channels_in_a_typedArray_arrayBuffer.length);
+	// Determine the length of the typedArray_arrayBuffer
+	console.log('all_channels_in_a_typedArray_arrayBuffer.length: ', all_channels_in_a_typedArray_arrayBuffer.length);
 
-  // --------------------
+	// --------------------
   
-  // Normalize the audio data in arrayBuffer from [-1, 1]
-  // audio needs to be in [-1.0; 1.0]
-  const normalArray = Array.from(all_channels_in_a_typedArray_arrayBuffer); 
+	// Normalize the audio data in arrayBuffer from [-1, 1]
+	// audio needs to be in [-1.0; 1.0]
+	const normalArray = Array.from(all_channels_in_a_typedArray_arrayBuffer); 
   
-  var arr_char = obtain_array_characteristics(normalArray);
-  console.log('arr_char: ', arr_char);
+	var arr_char = obtain_array_characteristics(normalArray);
+	console.log('arr_char: ', arr_char);
   
-  // --------------------
+	// --------------------
 
-  
-  const length_of_channels = all_channels_in_an_arrayBuffer.length / channels_from_audioContext;
-  console.log('length_of_channels: ', length_of_channels);
+	// Obtain the start and stop index for each channel
+	const length_of_channels = normalArray.length / channels_from_audioContext;
+	console.log('length_of_channels: ', length_of_channels);
 
-  var index_split = [];
-  var ind = 0;
-  for (var i=0; i<channels_from_audioContext; i++) {
-    ind = ind + length_of_channels-1;
-    index_split.push(ind);
-  }
-  console.log('index_split: ', index_split);
+	var start_index = [0];
+	var stop_index = [];
+	var ind = 0;
+	for (var i=0; i<channels_from_audioContext; i++) {
+		ind = ind + length_of_channels-1;
+		stop_index.push(ind);
+		if (normalArray.length-1 > ind+1) {
+			start_index.push(ind+1);
+		}
+	}
+	console.log('start_index: ', start_index);
+	console.log('stop_index: ', stop_index);
   
-  // --------------------
+	// --------------------
   
-  // [Step 3] Split the [arrayBuffer into channels]
-  // What I read is that channel data is concatenated into a single arrayBuffer.
+	// [Step 3] Split the [arrayBuffer into channels] and obtain a timeseries
+	// What I read is that channel data is concatenated into a single arrayBuffer.
   
-  // Where to split the arrayBuffer using channels_from_audioContext?
-  // Q: how does one know the number of audio channels in an arrayBuffer?  
-  // A: I think the start of an audio channels begins with a specific value
-
-
-  // Way 0: create an AudioBuffer, and have it obtain the channel data
-  // https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/createBufferSource
-
-  const AudioBuffer = audioContext.createBuffer(channels_from_audioContext, frameCount_from_audioContext, sampleRate_from_audioContext);
-  
-  const ch0 = AudioBuffer.getChannelData(1);
-  
-  // for (let i = 0; i < frameCount; i++) {
-  for (let i = 0; i < length_of_channels; i++) {
-      // Math.random() is in [0; 1.0]
-      
-      ch0[i] = Math.random() * 2 - 1;
-    }
-  
-  // --------------------
-
-  // -----------------------------------------------
-  
+	// Where to split the arrayBuffer using channels_from_audioContext?
+	// Q: how does one know the number of audio channels in an arrayBuffer?  
+	// A: I think the start of an audio channels begins with a specific value
 
 
+	// Way 0: the MDN functions are used - input is arrayBuffer data (normalArray), output is timeseries data (dataArray_ts) 
 	
-	// -----------------------------------------------
+	// Create an AudioBuffer, and have it obtain the channel data
+	// https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/createBufferSource
+	const AudioBuffer = audioContext.createBuffer(channels_from_audioContext, frameCount_from_audioContext, sampleRate_from_audioContext);
+  
+	// for (let i = 0; i < frameCount; i++) {
+	for (let i=0; i < length_of_channels; i++) {
+		const nowBuffering = AudioBuffer.getChannelData(i+1);
+		for (var j=start_index.at(i); j<stop_index.at(i)+1; j++) {
+			// the arrayBuffer was converted into a normalArray, because in the mdn example a scalar is given to nowBuffering. So to avoid confusion, each value of the arrayBuffer data is given from a simple array. 
+			nowBuffering[j] = normalArray.at(j);
+		}
+	}
 
-	await plot_line_graph_dataArray(uint8Array);
-	await plot_timeseries_audio_data(uint8Array);
-
-	// -----------------------------------------------
-// 
-  
-  // Steps to figure out how to get audio data without the Web API which does not seem to work
-  
-  
-  
-  // [Step 2] signal in time domain
-  // Downsample time series to a [desired_sampleRate]
-
-  // --------------------
-  
-  // Plot the time series
-
-  // --------------------
-  
-  // (optional) [get natural frequency from time series if it waveform is sinusoidal/stationary]
-
-  // --------------------
-  
-  // MDN tutorial to process timeseries data
-	console.log('[C] Process timeseries data');
+	// var source = audioContext.createBufferSource(audioElement); // to play the data on the [audio interface]
+	// OR
+	const source = audioContext.createBufferSource();
 	
+	// set the buffer in the AudioBufferSourceNode
+	source.buffer = AudioBuffer;
+	
+	// connect the AudioBufferSourceNode to the destination, to play the data on the [audio interface]
+	// source.type = file_extention_type;
+	// source.connect(audioContext.destination);	// *** function with array of whitenoise ***
+	// source.start(0);
+	// OR
+	// connect the AudioBufferSourceNode to the analyserNode to perform DFT and IDFT
+	source.connect(analyserNode);  // *** returned an error with sourceElement HTML element ***
+	analyserNode.connect(audioContext.destination);	// *** returned an error with sourceElement HTML element ***
+	
+	// The time series data from the analyserNode will be copied to dataArray_ts
+	const dataArray_ts = new Uint8Array(normalArray.length);
+	analyserNode.getByteTimeDomainData(dataArray_ts);
+	console.log('dataArray_ts: ', dataArray_ts);
+
+	// --------------------
+	
+	// Way 0: Do not use MDN functions
+	
+  
+
+
+  
+  
+	// [Step 4] Evaluate the time domain
+	
+	// Downsample time series to a [desired_sampleRate]
+
+	// --------------------
+  
+	// Plot the time series
+	// await plot_line_graph_dataArray(uint8Array);
+	// await plot_timeseries_audio_data(uint8Array);
+
+	// --------------------
+  
+	// (optional) [get natural frequency from time series if it waveform is sinusoidal/stationary]
+
+	// --------------------
+  
+	// MDN tutorial to process timeseries data
+	// console.log('[C] Process timeseries data');
+
 	// Select sampling frequency for Inverse Discrete Fourier Transform
-	const bin_count_using_natural_freq = analyserNode.frequencyBinCount; // bin count using natural frequency (fs) = 1024
-	console.log('bin_count_using_natural_freq: ', bin_count_using_natural_freq);
-	
-	const bin_count_using_nyquist_freq = analyserNode.fftSize; // bin count using Nyquist frequency (2*fs) = 2048
-	console.log('bin_count_using_nyquist_freq: ', bin_count_using_nyquist_freq);
-	
-	const bufferLength_ts = bin_count_using_nyquist_freq;
-	console.log('bufferLength_ts: ', bufferLength_ts);
-	
+	// const bin_count_using_natural_freq = analyserNode.frequencyBinCount; // bin count using natural frequency (fs) = 1024
+	// console.log('bin_count_using_natural_freq: ', bin_count_using_natural_freq);
+
+	// const bin_count_using_nyquist_freq = analyserNode.fftSize; // bin count using Nyquist frequency (2*fs) = 2048
+	// console.log('bin_count_using_nyquist_freq: ', bin_count_using_nyquist_freq);
+
+	// const bufferLength_ts = bin_count_using_nyquist_freq;
+	// console.log('bufferLength_ts: ', bufferLength_ts);
+
 	// [Step 0] Create a Uint8Array to store the timeseries data
 	// const dataArray_ts = new Uint8Array(bufferLength_ts);
 	// OR
-	const dataArray_ts = new Float32Array(bufferLength_ts);
+	// const dataArray_ts = new Float32Array(bufferLength_ts);
 	
-	console.log('dataArray_ts.length: ', dataArray_ts.length);
-	
+	// console.log('dataArray_ts.length: ', dataArray_ts.length);
+
 	// [Step 1] Fill the timeseries dataArray with converted data
 	// https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getByteTimeDomainData
 	// analyserNode.getByteTimeDomainData(dataArray_ts);
 	// OR
-	analyserNode.getFloatTimeDomainData(dataArray_ts);
-	console.log('dataArray_ts: ', dataArray_ts);
-	
+	// analyserNode.getFloatTimeDomainData(dataArray_ts);
+	// console.log('dataArray_ts: ', dataArray_ts);
+
 	// [Step 2] Display the timeseries data
-	await plot_timeseries_audio_data(dataArray_ts);
+	// await plot_timeseries_audio_data(dataArray_ts);
 
 	// RESULT: the output data contains all zeros
 
-  // --------------------
+	// --------------------
   
-  // [Step 3] signal in frequecy domain
-  // Use [sampleRate_from_audioContext OR desired_sampleRate] to perform DFT to obtain cutoff frequency, for filtering/smoothing the signal without loosing important data
+	// [Step 3] signal in frequecy domain
+	// Use [sampleRate_from_audioContext OR desired_sampleRate] to perform DFT to obtain cutoff frequency, for filtering/smoothing the signal without loosing important data
 
-  // --------------------
+	// --------------------
   
-  // Plot the frequency spectrum
+	// Plot the frequency spectrum
 
-  // --------------------
+	// --------------------
   
-  // MDN tutorial to process frequency data spectrogram of frequency Float32Array data
+	// MDN tutorial to process frequency data spectrogram of frequency Float32Array data
 	// https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getFloatFrequencyData
 	
 	// console.log('analyserNode.minDecibels: ', analyserNode.minDecibels);
@@ -1479,42 +1499,31 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	
 	// RESULT: returned an error because I can not use sourceElement.connect(analyserNode); 
 
-  // --------------------
+	// --------------------
   
-  // MDN tutorial to process frequency data histogram of frequency Uinit8Array data
-	console.log('[A] Process frequency data: histogram of frequency Uinit8Array data');
+	// MDN tutorial to process frequency data histogram of frequency Uinit8Array data
+	// console.log('[A] Process frequency data: histogram of frequency Uinit8Array data');
 
-	console.log('analyserNode.minDecibels: ', analyserNode.minDecibels);
-	console.log('analyserNode.maxDecibels: ', analyserNode.maxDecibels);
-	console.log('analyserNode.smoothingTimeConstant: ', analyserNode.smoothingTimeConstant);
+	// console.log('analyserNode.minDecibels: ', analyserNode.minDecibels);
+	// console.log('analyserNode.maxDecibels: ', analyserNode.maxDecibels);
+	// console.log('analyserNode.smoothingTimeConstant: ', analyserNode.smoothingTimeConstant);
 	
-	const bufferLength_freq = analyserNode.frequencyBinCount;
-	console.log('bufferLength_freq: ', bufferLength_freq);
-
+	// const bufferLength_freq = analyserNode.frequencyBinCount;
+	// console.log('bufferLength_freq: ', bufferLength_freq);
 	
 	// [Step 0] Create a Uint8Array to store the frequency data
-	const dataArray_freq = new Uint8Array(bufferLength_freq);
+	// const dataArray_freq = new Uint8Array(bufferLength_freq);
 	
 	// [Step 1] Fill the frequency dataArray with converted data
-	analyserNode.getByteFrequencyData(dataArray_freq);
-	console.log('dataArray_freq: ', dataArray_freq);
+	// analyserNode.getByteFrequencyData(dataArray_freq);
+	// console.log('dataArray_freq: ', dataArray_freq);
 
 	// [Step 2] Display frequency histogram data
-	await plot_frequency_histogram_audio_data(dataArray_freq);
+	// await plot_frequency_histogram_audio_data(dataArray_freq);
 
 	// RESULT: the output data contains all zeros
 	
-  // ------------------------------------------
-
-	// If one wants to play this data on the [audio interface], one needs to assign the data to the audioContext
-	// How to play the desired_audio_data on the [audio interface]
-	// var source = audioContext.createBufferSource(audioElement);
-	// source.buffer = desired_audio_data;
-	// source.type = file_extention_type;
-	// source.connect(audioContext.destination);
-	// source.start(0);
-	
-	// -----------------------------------------------
+	// ------------------------------------------
 	
 	return arrayBuffer;
 }
