@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html>
+<head></head>
+<body>
+
+<h1>Multimedia fetch data webapp</h1>
+<ol type="A">
+	<li>Select Automatic REST API fetch with data url only or Manual REST API fetch.</li>
+		<ul>
+			<li>Discrete data: https://nominatim.openstreetmap.org/search?q=LOCATION_NAME&format=json</li>
+			<li>Time-series data: https://api.open-meteo.com/v1/forecast?latitude=LATITUDE&longitude=LONGITUDE&hourly=temperature_2m</li>
+			<li>Text PDF: https://s3-us-west-2.amazonaws.com/openai-assets/research-covers/language-unsupervised/language_understanding_paper.pdf</li>
+			<li>Image PDF: https://raw.githubusercontent.com/CodeSolutions2/multi_media_fetch_webapp/main/document_imagepdf.pdf</li>
+			<li>Image: https://storage.googleapis.com/on-the-way2selfrespect/yellow.png</li>
+			<li>Audio: https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3</li>
+			<li>Video: https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm</li>
+		</ul>
+	<li>View fetched data.</li>
+</ol>
+
+  
+<!-- ---------------------------------------- -->
+<!-- View two split window -->
+<fieldset>
+<input type="radio" id="automatic_fetch" name="radio_name" value="automatic_fetch" />
+<label for="automatic_fetch">Automatic Fetch</label>
+<br>
+<input type="radio" id="manual_fetch" name="radio_name" value="manual_fetch" />
+<label for="manual_fetch">Manual Fetch</label>
+</fieldset>
+<div align="left">
+<table>
+	<tr>
+		<th id="data_viewer_input">[Step A] Input a data url.</th>
+		<th id="data_viewer_output">[Step B] View fetched data.</th>
+	</tr>
+	<tr>
+		<td><input id="url" type="text" value="" placeholder="url" rows="10" cols="100" style="display:none; text-align: left; width: 600px;">
+		<input id="method" type="text" value="" placeholder="method: 'GET' or 'POST' or 'PUT'" rows="10" cols="100" style="display:none; text-align: left; width: 600px;">
+		<input id="data" type="text" value="" placeholder="data: {'key0': 'value0', 'key1': 'value1'}" rows="10" cols="100" style="display:none; text-align: left; width: 600px;">
+		<input id="headers" type="text" value="" placeholder="headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + API_KEY}" rows="10" cols="100" style="display:none; text-align: left; width: 600px;">
+		<input id="return_type" type="text" value="" placeholder="return_type: json or blob or arrayBuffer or text" rows="10" cols="100" style="display:none; text-align: left; width: 600px;"><br><button id="display_data" onclick="display_data()" style="display:none;">Display data</button><br><div id="notification"></div><div id="error"></div>
+		</td>
+		<td><div id="data_display" style="display:block; text-align: left; width: 600px;"></div></td>
+	</tr>
+</table>
+</div>  
+<!-- ---------------------------------------- -->
+
+
+<!-- ---------------------------------------- -->
+<!-- CSS -->
+<style>
+div { padding: 10px; display:block; font-family:courier; font-size:15px; height:300px; }
+	
+div#notification { position: relative; color: #3236a8; }
+div#error { position: relative; color: #bd1f17; }
+
+table {vertical-align: top; border-collapse: collapse; position: relative; z-index: 0; border: 0px solid black; letter-spacing: 1px; text-align: left; width: 100%; display:block}
+
+tr {vertical-align: top; border: 0px solid black; padding: 30px 30px; }
+
+th, td {vertical-align: top; border: 0px solid black; padding: 10px 10px; width: 50%; }
+th#pdf_viewer_input {width: 100%; background-color: #d6ecd4;}
+th#pdf_viewer_output {width: 100%; background-color: #d6ecd4;}
+
+object#pdf_object_element {position: absolute; vertical-align: top; top: 200; z-index: 200; }
+embed#pdf_embed_element {position: absolute; vertical-align: top; top: 200; z-index: 200; }
+iframe#pdf_iframe_element {position: absolute; vertical-align: top; top: 200; z-index: 200; }
+</style>
+
+<!-- --------------------------------------------------- -->
+	
+	
+<!-- <script src='https://code.jquery.com/jquery-3.6.3.min.js'></script> -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script src='https://d3js.org/d3.v7.min.js'></script>
+
+	
+<script>
+	
+// -----------------------------------------------
+	
+window.addEventListener('beforeunload', function() {
+    window.location.href = window.location.href + '?nocache=' + new Date().getTime();
+});
+
+// ----------------------------------------------------
+
+const w = 150;
+
+// ----------------------------------------------------
+	
+async function processEvent_automatic_fetch(event) {
+	if (this.getAttribute("checked") == false) {
+		document.getElementById("url").style.display = 'none';
+		document.getElementById("method").style.display = 'none';
+		document.getElementById("data").style.display = 'none';
+		document.getElementById("headers").style.display = 'none';
+		document.getElementById("return_type").style.display = 'none';
+		document.getElementById("display_data").style.display = 'none';
+	} else  {
+		document.getElementById("url").style.display = 'block';
+		document.getElementById("method").style.display = 'none';
+		document.getElementById("data").style.display = 'none';
+		document.getElementById("headers").style.display = 'none';
+		document.getElementById("return_type").style.display = 'none';
+		document.getElementById("display_data").style.display = 'block';
+	}
+}
+
+async function processEvent_manual_fetch(event) {
+	if (this.getAttribute("checked") == false) {
+		document.getElementById("url").style.display = 'none';
+		document.getElementById("method").style.display = 'none';
+		document.getElementById("data").style.display = 'none';
+		document.getElementById("headers").style.display = 'none';
+		document.getElementById("return_type").style.display = 'none';
+		document.getElementById("display_data").style.display = 'none';
+	} else  {
+		document.getElementById("url").style.display = 'block';
+		document.getElementById("method").style.display = 'block';
+		document.getElementById("data").style.display = 'block';
+		document.getElementById("headers").style.display = 'block';
+		document.getElementById("return_type").style.display = 'block';
+		document.getElementById("display_data").style.display = 'block';
+	}
+}
+	
+document.getElementById("automatic_fetch").addEventListener("click", processEvent_automatic_fetch, false);
+document.getElementById("manual_fetch").addEventListener("click", processEvent_manual_fetch, false);
+
+// ----------------------------------------------------
+
+async function detect_type_of_media(url) {
+	
+	// Determine which type of media
+	const media_type = url.split('/').pop();
+	console.log('media_type: ', media_type);
+
+	// --------------------------------
+
+	// Sometimes regex does not function - solution without regex
+	var found_image = (/\.png|\.jpg|\.jpeg|\.gif/i).test(media_type);
+	console.log('found_image: ', found_image);
+	var first_found_image_index = await find_sequential_characters_simple(media_type, ['.png', '.jpg', '.jpeg', '.gif']);
+	console.log('first_found_image_index: ', first_found_image_index);
+  
+	var found_pdf = (/\.pdf/i).test(media_type);
+	console.log('found_pdf: ', found_pdf);
+	var first_found_pdf_index = await find_sequential_characters_simple(media_type, ['.pdf']);
+	console.log('first_found_pdf_index: ', first_found_pdf_index);
+
+	var found_text = (/\.text|\.txt|\.yaml|\.rtf|/i).test(media_type);
+	console.log('found_text: ', found_text);
+	var first_found_text_index = await find_sequential_characters_simple(media_type, ['.text', '.txt', '.yaml', '.rtf']);
+	console.log('first_found_text_index: ', first_found_text_index);
+
+	var found_html = (/\.html/i).test(media_type);
+	console.log('found_html: ', found_html);
+	var first_found_html_index = await find_sequential_characters_simple(media_type, ['.html']);
+	console.log('first_found_html_index: ', first_found_html_index);
+  
+	var found_jsonp = (/\?/i).test(media_type);
+	console.log('found_jsonp: ', found_jsonp);
+	var first_found_jsonp_index = await find_sequential_characters_simple(media_type, ['?']);
+	console.log('first_found_jsonp_index: ', first_found_jsonp_index);
+
+	var found_audio = (/\.mp3|\.wav/i).test(media_type);
+	console.log('found_audio: ', found_audio);
+	var first_found_audio_index = await find_sequential_characters_simple(media_type, ['.mp3', '.wav']);
+	console.log('first_found_audio_index: ', first_found_audio_index);
+	
+	var found_video = (/\.mov|\.mp4|\.ogv|\.webm/i).test(media_type);
+	console.log('found_video: ', found_video);
+	var first_found_video_index = await find_sequential_characters_simple(media_type, ['.mov', '.mp4', '.ogv', '.webm']);
+	console.log('first_found_video_index: ', first_found_video_index);
+
+	// --------------------------------
+	
+	if (found_image == true && first_found_image_index.length > 0) {
+		console.log('Image data');
+		var desired_media_type = 'image';
+
+	} else if (found_pdf == true && first_found_pdf_index.length > 0) {
+		console.log('PDF data');
+		var desired_media_type = 'pdf';
+
+	} else if (found_text == true && first_found_text_index.length > 0) {
+		console.log('Text data');
+		var desired_media_type = 'text';
+    
+	} else if (found_html == true && first_found_html_index.length > 0) {
+		console.log('Html data: web scraping');
+		var desired_media_type = 'html';
+		
+	} else if (found_jsonp == true && first_found_jsonp_index.length > 0) {
+		console.log('GET JSONP query string');
+		var desired_media_type = 'GET_JSONP_endpoint';
+
+	} else if (found_audio == true && first_found_audio_index.length > 0) {
+		console.log('Audio data');
+		var desired_media_type = 'audio';
+	
+	} else if (found_video == true && first_found_video_index.length > 0) {
+		console.log('Video data');
+		var desired_media_type = 'video';
+
+	} else if ((/https:\/\/.*\//g).test(url)) {
+		console.log('Html data: web scraping');
+		var desired_media_type = 'html';
+		
+	} else {
+		console.log('Unclear: recommend using manual_fetch');
+		// It could be an end point(ie: GET https://api.openai.com/v1/threads/"+THREAD_ID+"/runs/"+RUN_ID, OR it could be a POST) OR a file without a file extension
+		// maybe ask the user if it is GET, POST, or file request
+		document.getElementById('notification').innerHTML = "It is not clear which type of data fetch request you would like to perform. Fill out the manual data fetch request."
+		var desired_media_type = 'Unclear';
+	}
+	
+	return desired_media_type;
+}
+	
+// ----------------------------------------------------
+	
+async function display_data() {
+	
+	const url = document.getElementById("url").value;
+	console.log('url: ', url);
+	
+	// --------------------------------
+
+	// Detect type of media to fetch
+	var desired_media_type = await detect_type_of_media(url);
+	console.log('desired_media_type: ', desired_media_type);
+	
+	// --------------------------------
+	
+	const automatic_fetch = document.getElementById("automatic_fetch").checked;
+	const manual_fetch = document.getElementById("manual_fetch").checked;
+	
+	// --------------------------------
+
+	if (automatic_fetch == false && manual_fetch == false) {
+		document.getElementById('error').innerHTML = "Please select automatic or manual fetch.";
+	}
+	
+	if (automatic_fetch == true && manual_fetch == false) {
+		var automatic_OR_manual = "automatic";
+		await determine_same_or_different_domain(url, desired_media_type, automatic_OR_manual);
+	}
+	
+	if (automatic_fetch == false && manual_fetch == true) {
+		var automatic_OR_manual = "manual";
+		await determine_same_or_different_domain(url, desired_media_type, automatic_OR_manual);
+	}
+
+	// --------------------------------
+}
+
+// ----------------------------------------------------
+	
+async function determine_same_or_different_domain(url, desired_media_type, automatic_OR_manual) {
+
+	var fetch_method;
+	
+	// Determine if the data is in the same domain or different domain
+	var found_github = (/github/g).test(url);
+	console.log('found_github: ', found_github);
+	// if (found_github == true) {   // with regex
+	// OR
+	// let first_found_index = await find_sequential_characters_simple(url, ['github']);  // without regex
+	let first_found_index = await find_sequential_characters_simple(url, ['https://raw.githubusercontent.com/CodeSolutions2/multi_media_fetch_webapp']);  // without regex
+	console.log('first_found_index: ', first_found_index);
+	
+	if (found_github == true && first_found_index.length > 0) {
+		// it is from github, next check to see if it is from the same repository
+		
+		console.log('nonCORS url');
+		fetch_method = 'fetch_nonCORS';
+		await fetch_parameters_for_media_type(url, desired_media_type, fetch_method, automatic_OR_manual);
+	} else {
+		console.log('CORS url');
+
+		// --------------------------------
+		
+		// *** List of which methods are most reliable for CORS ***
+		var CORS_method_list;
+		if (desired_media_type == "image") {
+			// CORS_method_list = ['fetch_CORS'];    // CORS error often
+			// CORS_method_list = ['Image_CORS'];    // OK
+      			// CORS_method_list = ['jQuery_CORS'];	 // OK, but media resource could not be decoded.
+      			CORS_method_list = ['fetch_CORS', 'Image_CORS', 'jQuery_CORS'];    
+			
+		} else if (desired_media_type == "pdf") {
+			// CORS_method_list = ['fetch_CORS'];	// OK
+			//CORS_method_list = ['jQuery_CORS'];	// OK, but media resource could not be decoded.
+      			CORS_method_list = ['fetch_CORS', 'jQuery_CORS', 'fetch_CORS'];
+			
+		} else if (desired_media_type == "text") {
+			// CORS_method_list = ['fetch_CORS'];	// OK
+			// CORS_method_list = ['jQuery_CORS'];	// OK
+      			CORS_method_list = ['fetch_CORS', 'jQuery_CORS', 'fetch_CORS'];
+			
+		} else if (desired_media_type == "html") {
+			CORS_method_list = ['jQuery_CORS', 'fetch_CORS', 'fetch_CORS'];	// OK
+			
+		} else if (desired_media_type == "GET_JSONP_endpoint") {
+			// CORS_method_list = ['fetch_CORS'];	// OK
+			// CORS_method_list = ['jQuery_CORS'];	// OK GET, never tried POST, JSONP notation did not work
+      			CORS_method_list = ['fetch_CORS', 'jQuery_CORS', 'fetch_CORS'];
+
+		} else if (desired_media_type == "audio") {
+			// CORS_method_list = ['fetch_CORS'];	// CORS error often
+			// CORS_method_list = ['Audio_CORS'];	// OK
+			// CORS_method_list = ['jQuery_CORS'];	// OK, but media resource could not be decoded.
+			CORS_method_list = ['fetch_CORS', 'Audio_CORS', 'jQuery_CORS'];
+			
+		} else if (desired_media_type == "video") {
+			// CORS_method_list = ['fetch_CORS'];	// CORS error often
+      			// CORS_method_list = ['Video_CORS'];	// OK
+			// CORS_method_list = ['jQuery_CORS'];	// OK, but media resource could not be decoded.
+      			CORS_method_list = ['fetch_CORS', 'Video_CORS', 'jQuery_CORS'];
+		}
+		console.log('CORS_method_list: ', CORS_method_list);
+		
+		// --------------------------------
+
+		// var response = undefined;
+		// var count = 0;
+		// while(response == undefined && count < CORS_method_list.length) {
+		// while(response == undefined && count < 3) {
+		// 	fetch_method = CORS_method_list.at(count);
+		// 	// need to keep calling the function for the next CORS_method_list, until there is no error
+		// 	try {
+		// 		response = await fetch_parameters_for_media_type(url, desired_media_type, fetch_method, automatic_OR_manual);
+		// 		console.log('response: ', response);
+		// 		count += 1;
+		// 	} catch (err) {
+		// 		document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + err;
+		// 	}
+		// }
+		// OR 
+		for (var i=0; i<3; i++) {
+			fetch_method = CORS_method_list.at(i);
+			try {
+				response = await fetch_parameters_for_media_type(url, desired_media_type, fetch_method, automatic_OR_manual);
+				console.log('response: ', response);
+			} catch (err) {
+				document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + err;
+			}
+			if (response != undefined) {
+				break;
+			}
+		}
+		
+		// --------------------------------
+		
+	}
+
+}
+
+// -----------------------------------------------
+
+async function fetch_parameters_for_media_type(url, desired_media_type, fetch_method, automatic_OR_manual) {
+
+	console.log('desired_media_type: ', desired_media_type);
+	console.log('fetch_method: ', fetch_method);
+	console.log('automatic_OR_manual: ', automatic_OR_manual);
+
+	var method;
+	var data
+	var headers;
+	var return_type;
+
+	// --------------------------------
+	
+	// Ensure that data_display is empty
+	if (document.getElementById('data_display').lastElementChild != null) {
+		console.log("data_display lastElement: ", document.getElementById('data_display').lastElementChild);
+		document.getElementById('data_display').removeChild(document.getElementById('data_display').lastElementChild);
+	}
+
+	// --------------------------------
+
+	// Clear previous errors 
+	document.getElementById('error').innerHTML = '';
+
+	// Clear previous notifications 
+	document.getElementById('notification').innerHTML = '';
+	
+	// --------------------------------
+	
+	if (desired_media_type == 'pdf') {
+
+		if (automatic_OR_manual == 'automatic') {
+			console.log('automatic');
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
+		} else {
+			console.log('manual');
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
+		}
+		
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+
+		// Display data
+		if (data_out != undefined) {
+			// var blob_object = new Blob([data_out], {type:"application/pdf"});
+			// var blob_object = new Blob([data_out], { type: 'application/octet-stream' });
+			// console.log('blob_object: ', blob_object);
+			
+			var file_blob_object = await new File ([data_out], "file_download", {type: "application/pdf"});
+			let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
+			await show_pdf_on_page_objectElement(github_url_of_externally_downloaded_data);
+			
+			// a file was loaded before, so remove the blob URL from memory to use resources effectively
+			await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
+		}
+		
+	} else if (desired_media_type == 'text') {
+
+		if (automatic_OR_manual == 'automatic') {
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'text';  // return_type: json or blob or arrayBuffer or text
+		} else {
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
+		}
+		
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+		
+		// Display data
+		document.getElementById('data_display').innerHTML = data_out;
+		
+	} else if (desired_media_type == 'html') {
+
+		if (automatic_OR_manual == 'automatic') {
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'html';  // return_type: json or blob or arrayBuffer or text, html
+		} else {
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
+		}
+		
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+	
+		// Display data
+		document.getElementById('data_display').innerHTML = data_out;
+	
+	} else if (desired_media_type == 'image') {
+
+		if (automatic_OR_manual == 'automatic') {
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'blob';  // return_type: json or blob or arrayBuffer or text
+		} else {
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
+		}
+		
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+
+		// Display data
+		if (fetch_method != 'Image_CORS' && data_out != undefined) {
+			// fetch_CORS or jQuery_CORS - display image from a blob url
+			var file_blob_object = await new File ([data_out], "file_download", {type: "image/png"});
+			let github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
+			
+			try {	
+			  	const imgElement = document.createElement('img');
+			  	imgElement.setAttribute("id", "img_element");
+			  	imgElement.setAttribute("width", w);
+			  	imgElement.setAttribute("height", w);
+			  	imgElement.setAttribute("src", github_url_of_externally_downloaded_data);
+			  	document.getElementById('data_display').appendChild(imgElement);
+			} catch (error) {
+				document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + error;
+			}
+			
+			// a file was loaded before, so remove the blob URL from memory to use resources effectively
+			await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
+		}
+		
+	} else if (desired_media_type == 'GET_JSONP_endpoint') {
+		
+		if (automatic_OR_manual == 'automatic') {
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'json';  // return_type: json or blob or arrayBuffer or text
+		} else {
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
+		}
+		
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+
+		// Display data
+		document.getElementById('data_display').innerHTML = JSON.stringify(data_out);
+
+	} else if (desired_media_type == 'audio') {
+		
+		if (automatic_OR_manual == 'automatic') {
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'blob';  // return_type: json, blob, arrayBuffer, text, html
+		} else {
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
+		}
+
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+
+		// Display data
+		if (fetch_method != 'Audio_CORS' && data_out != undefined) {
+			// fetch_CORS or jQuery_CORS - display image from a blob url
+			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+			const file_blob_object = await new File ([data_out], "file_download", {type: "audio/mp3"});
+			const github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
+
+			try {
+				const audioElement = document.createElement('audio');
+				audioElement.setAttribute("id", "audio_element");
+				audioElement.setAttribute("controls", true);
+				
+				// Create the audio source
+				var sourceElement = document.createElement('source');
+				
+				// audioElement.setAttribute("width", w);
+				// audioElement.setAttribute("height", w);
+				sourceElement.setAttribute("src", github_url_of_externally_downloaded_data);
+				sourceElement.setAttribute("type", "audio/mp3");
+	
+				audioElement.appendChild(sourceElement);
+				document.getElementById('data_display').appendChild(audioElement);
+				audioElement.load();
+				
+			} catch (error) {
+				document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + error;
+			}
+			
+			// a file was loaded before, so remove the blob URL from memory to use resources effectively
+			await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
+		}
+	
+	} else if (desired_media_type == 'video') {
+		
+		if (automatic_OR_manual == 'automatic') {
+			method = 'GET';
+			data = {};
+			headers = {};
+			return_type = 'blob';  // return_type: json, blob, arrayBuffer, text, html
+			// return_type = 'arrayBuffer';  // return_type: json, blob, arrayBuffer, text, html
+		} else {
+			method = document.getElementById("method").value;
+			data = document.getElementById("data").value;
+			headers = document.getElementById("headers").value;
+			return_type = document.getElementById("return_type").value;
+		}
+
+		var data_out = await fetch_methods(fetch_method, url, method, data, headers, return_type);
+
+		// Display data
+		if (fetch_method != 'Video_CORS' && data_out != undefined) {
+			// fetch_CORS or jQuery_CORS - display image from a blob url
+			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+			const file_blob_object = await new File ([data_out], "file_download", {type: "video/webm"});
+			const github_url_of_externally_downloaded_data = URL.createObjectURL(file_blob_object);
+
+			try {
+				const videoElement = document.createElement('video');
+				videoElement.setAttribute("id", "video_element");
+				videoElement.setAttribute("controls", true);
+				
+				// Create the video source
+				var sourceElement = document.createElement('source');
+				
+				videoElement.setAttribute("width", w);
+				videoElement.setAttribute("height", w);
+				sourceElement.setAttribute("src", github_url_of_externally_downloaded_data);
+				sourceElement.setAttribute("type", "video/webm");
+	
+				videoElement.appendChild(sourceElement);
+				document.getElementById('data_display').appendChild(videoElement);
+				videoElement.load();
+				
+			} catch (error) {
+				document.getElementById('error').innerHTML = 'Check if url is typed in correctly. ' + error;
+			}
+			
+			// a file was loaded before, so remove the blob URL from memory to use resources effectively
+			await setTimeout(function() { URL.revokeObjectURL(github_url_of_externally_downloaded_data); }, 200);
+		}
+	}
+
+	console.log('data_out: ', data_out);
+	return data_out;
+}
+
+// -----------------------------------------------
+
+async function fetch_methods(fetch_method, url, method, data, headers, return_type) {
+	
+	if (fetch_method == 'fetch_nonCORS') {
+		return await fetch_nonCORS(url, method, data, headers, return_type)
+			.then(res => res)
+			.then(async function(response) { return response; });
+		
+	} else if (fetch_method == 'fetch_CORS') {
+		return await fetch_CORS(url, method, data, headers, return_type)
+			.then(res => res)
+			.then(async function(response) { return response; });
+		
+	} else if (fetch_method == 'jQuery_CORS') {
+		return await jQuery_CORS(url, method, data, headers, return_type)
+			.then(res => res)
+			.then(async function(response) { return response; });
+		
+	} else if (fetch_method == 'Image_CORS') {
+		return await Image_CORS(url, method, data, headers, return_type)
+			.then(res => res)
+			.then(async function(response) { return response; });
+		
+	} else if (fetch_method == 'Video_CORS') {
+		return await Video_CORS(url, method, data, headers, return_type)
+			.then(res => res)
+			.then(async function(response) { return response; });
+		
+	} else if (fetch_method == 'Audio_CORS') {
+		return await Audio_CORS(url, method, data, headers, return_type)
+			.then(res => res)
+			.then(async function(response) { return response; });
+	}
+}
+
+
+
+// -----------------------------------------------
+// NON-CORS methods
+// -----------------------------------------------
+async function fetch_nonCORS(url, method, data, headers, return_type) {
+
+	// url: url address
+	// method: 'GET', 'POST'
+	// data: required data format for url address
+	var w_or_wo_proxyhandler = 'wo_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
+	// return_type: json, blob, arrayBuffer, text
+
+	// --------------------------------
+
+	// Determine request method
+	var headers_final = {
+		"Content-Type": "application/json",
+		"Referer": url,
+		"Origin": "https://codesolutions2.github.io",
+		"Connection": "keep-alive",
+		//"Sec-Fetch-Dest": "empty",
+		//"Sec-Fetch-Mode": "no-cors", 
+		//"Sec-Fetch-Site": "cross-site",
+		//"Sec-Fetch-User": "?1",
+		"User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
+		"Access-Control-Allow-Origin": "*",
+		//'Access-Control-Allow-Credentials': false, 
+		//"Access-Control-Request-Method": method,
+		//"Access-Control-Request-Headers": 'content-type,x-pingother',
+		//'Cache-Control': 'max-age=0',
+	};
+
+	headers_final = Object.assign({}, headers_final, headers);
+	
+	var options = { 
+		method : method,
+		headers: new Headers(headers_final),
+		cache: "no-cache",
+		redirect: "follow"
+	};
+
+	if (method == 'POST') {
+		options.body = JSON.stringify(data);
+	}
+
+	// --------------------------------
+
+	// Determine the type of output to return 
+	
+	if (return_type == 'json') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(response => response.json())
+				.then(async function(data) { console.log('data: ', data); return data; })
+				.catch(error => console.error("error: ", error));
+		} else { 
+			return await fetch(url)
+				.then(response => response.json())
+				.then(async function(data) { console.log('data: ', data); return data; })
+				.catch(error => console.error("error: ", error));
+		}
+		
+	} else if (return_type == 'blob') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(response => response.blob())
+				.then(async function(blob_object) { console.log('blob_object: ', blob_object); return blob_object; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url)
+				.then(response => response.blob())
+				.then(async function(blob_object) { console.log('blob_object: ', blob_object); return blob_object; })
+				.catch(error => console.error("error: ", error));
+		}
+		
+	} else if (return_type == 'arrayBuffer') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(response => response.arrayBuffer())
+				.then(async function(arraybuffer) { console.log("arraybuffer:", arraybuffer); return arraybuffer; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url)
+				.then(response => response.arrayBuffer())
+				.then(async function(arraybuffer) { console.log("arraybuffer:", arraybuffer); return arraybuffer; })
+				.catch(error => console.error("error: ", error));
+		}
+		
+	} else if (return_type == 'text') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(res => res.text())
+				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url)
+				.then(res => res.text())
+				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
+				.catch(error => console.error("error: ", error));
+		}
+			
+	} else if (return_type == 'html') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(res => res.text())
+				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url)
+				.then(res => res.text())
+				.then(str_data => { console.log('str_data: ', str_data); return str_data; })
+				.catch(error => console.error("error: ", error));
+		}
+	}
+
+	// --------------------------------
+}
+
+// ----------------------------------------------------
+
+
+// -----------------------------------------------
+// CORS methods
+// -----------------------------------------------
+async function fetch_CORS(url, method, data, headers, return_type) {
+
+	// url: url address
+	// method: 'GET', 'POST'
+	// data: required data format for url address
+	var w_or_wo_proxyhandler = 'w_proxyhandler';  // w_or_wo_proxyhandler: 'w_proxyhandler', 'wo_proxyhandler'
+	// return_type: json, blob, arrayBuffer, text
+
+	// --------------------------------
+
+	// Determine request method
+	var headers_final = {
+		"Content-Type": "application/json",
+		"Referer": url,
+		"Origin": "https://codesolutions2.github.io",
+		"Connection": "keep-alive",
+		//"Sec-Fetch-Dest": "empty",
+		//"Sec-Fetch-Mode": "cors", 
+		//"Sec-Fetch-Site": "cross-site",
+		//"Sec-Fetch-User": "?1",
+		"User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
+		"Access-Control-Allow-Origin": "*",
+		//'Access-Control-Allow-Credentials': false, 
+		//"Access-Control-Request-Method": method,
+		//"Access-Control-Request-Headers": 'content-type,x-pingother',
+		//'Cache-Control': 'max-age=0',
+	};
+
+	headers_final = Object.assign({}, headers_final, headers);
+	
+	var options = { 
+		method : method,
+		mode: 'cors',
+		headers: new Headers(headers_final),
+		cache: "no-cache",
+		// crossorigin: 'anonymous',
+		crossorigin: '*',
+		redirect: "follow"
+	};
+
+	if (method == 'POST') {
+		options.body = JSON.stringify(data);
+	}
+
+	// --------------------------------
+
+	// Determine the type of output to return 
+	
+	if (return_type == 'json') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(response => response.json())
+				.then(async function(data) { return data; })
+				.catch(error => console.error("error: ", error));
+		} else { 
+			return await fetch(url, options)
+				.then(response => response.json())
+				.then(async function(data) { return data; })
+				.catch(error => console.error("error: ", error));
+		}
+		
+	} else if (return_type == 'blob') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(response => response.blob())
+				.then(async function(blob_object) { return blob_object; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url, options)
+				.then(response => response.blob())
+				.then(async function(blob_object) { return blob_object; })
+				.catch(error => console.error("error: ", error));
+		}
+		
+	} else if (return_type == 'arrayBuffer') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(response => response.arrayBuffer())
+				.then(async function(arraybuffer) { return arraybuffer; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url, options)
+				.then(response => response.arrayBuffer())
+				.then(async function(arraybuffer) { return arraybuffer; })
+				.catch(error => console.error("error: ", error));
+		}
+		
+	} else if (return_type == 'text') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(res => res.text())
+				.then(str_data => { return str_data; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url, options)
+				.then(res => res.text())
+				.then(str_data => { return str_data; })
+				.catch(error => console.error("error: ", error));
+		}
+
+	} else if (return_type == 'html') {
+		if (w_or_wo_proxyhandler == 'w_proxyhandler') {
+			const proxy3 = await define_proxy_handler();
+			return await proxy3(url, options)
+				.then(res => res.text())
+				.then(str_data => { return str_data; })
+				.catch(error => console.error("error: ", error));
+		} else {
+			return await fetch(url, options)
+				.then(res => res.text())
+				.then(str_data => { return str_data; })
+				.catch(error => console.error("error: ", error));
+		}
+	}
+
+	// --------------------------------
+}
+
+
+async function define_proxy_handler() {
+	// Parameters to influence Response Header
+	// The `handler` object defines a `apply` method that intercepts the `fetch` function calls and adds the "Access-Control-Allow-Origin" header with a value of "*" to the request options. The `new Proxy(fetch, handler)` creates a proxied version of the `fetch` function that applies the defined handler.
+	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers
+	const handler = {
+		apply: function(target, thisArg, args) {
+			// One needs to re-define the input arguments of the handler because a constant variable is used as a function (ie: await proxy3(url, options))
+			const [url, options] = args;
+			if (options && options.headers) {
+				options.headers['Access-Control-Allow-Origin'] = '*';
+				options.headers['Access-Control-Allow-Credentials'] = false;
+				options.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE';
+				// options.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept';
+				options.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+				options.headers['Access-Control-Max-Age'] = 0;
+			} else {
+				args[1] = {
+					headers: { 
+						'Access-Control-Allow-Origin': '*',
+						'Access-Control-Allow-Credentials': false,
+						'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE',
+						'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+						'Access-Control-Max-Age': 0
+					}
+				};
+			}
+			// console.log('args: ', args);
+			return Reflect.apply(target, thisArg, args);
+		}
+	};
+
+	// Proxy sturcture works! 
+	// Calls the function WITHOUT input variables to assign a proxy definition to a constant variable. 
+	// The constant variable is called as a function, where it resolves promises. 
+	// Call the constant variable proxy3 as a function to resolve the promise correctly
+	return await new Proxy(fetch, handler);
+}
+
+// -----------------------------------------------
+	
+async function jQuery_CORS(url, method, data, headers, return_type) {
+
+	// https://api.jquery.com/jQuery.ajax/
+	
+	// url: url address
+	// method: 'GET', 'POST', 'PUT'
+	// data: required data format for url address
+	// return_type: json, blob, arrayBuffer, text
+
+	var headers_final = {
+		"Accept": "application/json",
+		"Referer": url,
+		"Origin": "https://codesolutions2.github.io",
+		"Connection": "keep-alive",
+		//"Sec-Fetch-Dest": "empty",
+		//"Sec-Fetch-Mode": "cors", 
+		//"Sec-Fetch-Site": "cross-site",
+		//"Sec-Fetch-User": "?1",
+		"User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
+		"Access-Control-Allow-Origin": "*",
+		//'Access-Control-Allow-Credentials': false, 
+		//"Access-Control-Request-Method": method,
+		//"Access-Control-Request-Headers": 'content-type,x-pingother',
+		//'Cache-Control': 'max-age=0',
+	};
+
+	headers_final = Object.assign({}, headers_final, headers);
+	
+	var settings = {
+		// url: url,
+		type : method,
+		async: true,
+		crossDomain: true,
+		beforeSend: function(xhr) {xhr.withCredentials = true;},
+		// headers: new Headers(headers_final),
+		success: function(response) { console.log('Success'); },
+		error: function(xhr, status, error) { console.log('Error:', error); }
+	};
+
+	// --------------------------------
+	
+	if (method == 'POST') {
+		settings.body = JSON.stringify(data);
+	}
+
+	// --------------------------------
+
+	// Determine the type of output to return 
+	
+	if (return_type == 'json') {
+		settings.xhrFields = {responseType: 'json'};
+		settings.dataType = 'json'; // data type response format: 'xml', html, script, json, jsonp, text
+		return $.ajax(url, [,settings])
+			.done(function(response) { return response; });
+		
+	} else if (return_type == 'blob') {
+		settings.xhrFields = {responseType: 'blob'};
+		settings.dataType = 'binary'; // data type response format: 'xml', html, script, json, jsonp, text, binary
+		return $.ajax(url, [,settings])
+			.done(function(response) { return response; });
+		
+	} else if (return_type == 'arrayBuffer') {
+		settings.xhrFields = {responseType: 'arrayBuffer'};
+		settings.dataType = 'binary'; // data type response format: 'xml', html, script, json, jsonp, text, binary
+		return $.ajax(url, [,settings])
+			.done(function(response) { return response; });
+		
+	} else if (return_type == 'text') {
+		settings.xhrFields = {responseType: 'text'};
+		settings.dataType = 'text'; // data type response format: 'xml', html, script, json, jsonp, text, binary
+		return $.ajax(url, [,settings])
+			.done(function(response) { return response; });
+
+	} else if (return_type == 'html') {
+		settings.xhrFields = {responseType: 'text'};
+		settings.dataType = 'html'; // data type response format: 'xml', html, script, json, jsonp, text, binary
+		return $.ajax(url, [,settings])
+			.done(function(response) { return response; });
+	}
+
+	// --------------------------------
+	
+}
+
+// -----------------------------------------------
+
+async function create_dynamic_canvasElement(w) {
+
+  	const index = 0;
+  
+	// Create a canvas element
+	var canvasElement = document.createElement('canvas');
+
+	// Set the width and height of the canvas
+	canvasElement.width = w;
+	canvasElement.height = canvasElement.width;
+	      
+	// Get the 2D rendering context of the canvas
+	var ctx = canvasElement.getContext("2d");
+	
+	if (index == 0) {
+		canvasElement.style.left = 40+'px';
+	} else {
+		let tot = index*canvasElement.width + 40;
+		canvasElement.style.left = tot+'px';
+	}
+	
+	// Add the canvas to the document body or any other desired element
+	document.getElementById('data_display').appendChild(canvasElement);
+
+	return ctx;
+}
+
+// -----------------------------------------------
+  
+async function Image_CORS(url, method, data, headers, return_type) {
+	
+	const ctx = await create_dynamic_canvasElement(w);
+	
+	const imageElement = new Image();  // image is 'HTMLImageElement'
+	imageElement.setAttribute('crossOrigin', ""); // OR "anonymous"
+	imageElement.setAttribute('headers', {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"});
+	imageElement.onload = async () => { ctx.drawImage(imageElement, 0, 0, w, w); };
+	imageElement.src = url;
+
+	// drawImage(imageElement, dist_from_canvas_left_to_image_topleft=dx, dist_from_canvas_top_to_image_topleft=dy, image_Width, image_Height)
+	
+	const imageData = ctx.getImageData(0, 0, w, w);
+	const oneD_array = imageData.data; // data is a 1D array
+
+	// convert pixel data (1D array) to 2D Array
+	// var twoD_array = [];
+	// for (let i = 0; i < oneD_array.length; i += 4) {
+	//   twoD_array.push([oneD_array[i], oneD_array[i + 1], oneD_array[i + 2], oneD_array[i + 3]]);
+	// }
+	// OR
+	const twoD_array = Array.from(oneD_array)
+	
+	return twoD_array;
+}
+
+// -----------------------------------------------
+
+async function Video_CORS(url, method, data, headers, return_type) {
+	
+	var videoElement = document.createElement('video');
+	videoElement.setAttribute("controls", true);
+	videoElement.setAttribute('crossOrigin', "anonymous"); // OR "anonymous"
+	console.log('videoElement: ', videoElement);
+
+	// -----------------------------------------------
+	
+	var sourceElement = document.createElement('source');
+	sourceElement.setAttribute("src", url);
+	// sourceElement.start(0); // start the video at t=0secs
+	console.log('sourceElement: ', sourceElement);
+
+	// -----------------------------------------------
+	
+	videoElement.appendChild(sourceElement);
+
+	// View video on page
+	document.getElementById('data_display').appendChild(videoElement);
+
+	// -----------------------------------------------
+	
+	const ts0 = videoElement.duration;
+	console.log('ts0: ', ts0);
+
+	const ts = videoElement.mozFragmentEnd;
+	console.log('ts: ', ts);
+
+	const videoHeight = videoElement.videoHeight;
+	console.log('videoHeight: ', videoHeight);
+
+	const videoWidth = videoElement.videoWidth;
+	console.log('videoWidth: ', videoWidth);
+
+	// -----------------------------------------------
+
+	// -----------------------------------------------
+	// Goal: get the video data from the videoElement and NOT the url
+	// -----------------------------------------------
+	
+	// Way 0 - Stop the video at desired locations and obtain the video frame as an image
+	// Save two video frames to file
+	
+	// var threeD_array = [];
+	
+	// const ctx = await create_dynamic_canvasElement(w);
+
+	// A snapshot of the video at t=0secs
+	// ctx.drawImage(videoElement, 0, 0, w, w);
+	// var imageData = ctx.getImageData(0, 0, w, w);
+	// console.log('imageData: ', imageData);
+  
+	// var oneD_array = imageData.data; // data is a 1D array
+	// console.log('oneD_array: ', oneD_array);
+  
+	// var twoD_array = Array.from(oneD_array);
+	// console.log('twoD_array: ', twoD_array);
+  
+	// threeD_array.push(twoD_array);
+
+	// videoElement.removeChild(sourceElement);
+
+	// A snapshot of the video at t=1secs
+	// sourceElement.start(1); // start the video at t=1secs
+	// videoElement.appendChild(sourceElement);
+	// ctx.drawImage(videoElement, 0, 0, w, w);
+	// imageData = ctx.getImageData(0, 0, w, w);
+	// oneD_array = imageData.data; // data is a 1D array
+	// twoD_array = Array.from(oneD_array);
+	// threeD_array.push(twoD_array);
+
+	// console.log('threeD_array: ', threeD_array);
+	
+	// -----------------------------------------------
+	
+	// Way 1
+	// Obtain a video frame
+	// await videoElement.play();
+	// const [track] = videoElement.captureStream().getVideoTracks();
+	// console.log('track: ', track);
+  
+	// videoElement.onended = (evt) => track.stop();
+	
+	// const processor = new MediaStreamTrackProcessor(track);
+	// console.log('processor: ', processor);
+  
+	// const reader = processor.readable.getReader();
+	// console.log('reader: ', reader);
+
+	// -----------------------------------------------
+
+	// Way 2
+	// const track = videoElement.captureStream();
+	// console.log('track: ', track);
+
+	// Obtain a snapshot from PC camera
+	// const track = navigator.mediaDevices.getUserMedia({ video: true }).then((mediaStream) => {
+	//  	document.querySelector("video").srcObject = mediaStream;
+	// 	return mediaStream.getVideoTracks()[0]; });
+	// console.log('track: ', track);
+	// const imageCapture = new ImageCapture(track);
+	// imageCapture.getPhotoCapabilities();
+	
+
+	// -----------------------------------------------
+	
+	return videoElement;
+}
+
+// -----------------------------------------------
+	
+async function Audio_CORS(url, method, data, headers, return_type) {
+
+	// Create an AudioElement
+	const audioElement = document.createElement('audio');
+	// OR
+	// const audioElement = new Audio();
+	
+	audioElement.setAttribute("controls", true);
+	audioElement.setAttribute('crossOrigin', "anonymous"); // OR "anonymous"
+	audioElement.setAttribute('autoplay', true);
+	audioElement.setAttribute('preload', "auto");
+	// audioElement.setAttribute('loop', true);
+	// OR
+	audioElement.setAttribute('src', url);
+
+	// -----------------------------------------------
+
+	// Create an AudioContext
+	// var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+	// audioContext = new AudioContext();
+	// OR
+	var audioContext = new AudioContext();
+
+	// -----------------------------------------------
+
+	// Create an SourceElement (audioSourceNode)
+	var sourceElement = document.createElement('source');
+	// OR
+	// var sourceElement = audioContext.createMediaElementSource(audioElement); // *** returns an error ***
+	
+	sourceElement.setAttribute("src", url);
+	console.log('sourceElement: ', sourceElement);
+
+	// -----------------------------------------------
+	
+	audioElement.appendChild(sourceElement);
+	
+	document.getElementById('data_display').appendChild(audioElement);
+
+	// -----------------------------------------------
+
+	// Create an AnalyserNode
+	var analyserNode = audioContext.createAnalyser();
+	console.log('analyserNode: ', analyserNode);
+
+	let channels = analyserNode.channelCount;     // 2
+	console.log('channels: ', channels);
+	
+	let time_length = analyserNode.context.currentTime;   // 354.976
+	console.log('time_length: ', time_length);
+	
+	let fs = analyserNode.context.sampleRate; // 48000
+	console.log('fs: ', fs);
+	
+	var time_period = (1/fs) * 1000; // every time_period there is a data point, 0.000020833333333333333
+	console.log('time_period: ', time_period);
+	
+	// -----------------------------------------------
+
+	// Set up audio node network
+	// sourceElement.connect(analyserNode);  // *** returns an error ***
+	// analyserNode.connect(audioContext.destination);	// *** returns an error ***
+
+	// -----------------------------------------------
+
+	// *** returns an error ***
+	// sourceElement.connect(audioContext.destination);
+
+	// -----------------------------------------------
+
+	// *** returns an error ***
+	// audioElement.connect(audioContext.destination);
+
+	// -----------------------------------------------
+	
+	// -----------------------------------------------
+	// [Way A]: Obtain the audio data from the audioElement and NOT the URL directly
+	// -----------------------------------------------
+
+	// [A] Process frequency data: histogram of frequency Uinit8Array data
+	console.log('[A] Process frequency data: histogram of frequency Uinit8Array data');
+
+	console.log('analyserNode.minDecibels: ', analyserNode.minDecibels);
+	console.log('analyserNode.maxDecibels: ', analyserNode.maxDecibels);
+	console.log('analyserNode.smoothingTimeConstant: ', analyserNode.smoothingTimeConstant);
+	
+	const bufferLength_freq = analyserNode.frequencyBinCount;
+	console.log('bufferLength_freq: ', bufferLength_freq);
+
+	
+	// [Step 0] Create a Uint8Array to store the frequency data
+	const dataArray_freq = new Uint8Array(bufferLength_freq);
+	
+	// [Step 1] Fill the frequency dataArray with converted data
+	analyserNode.getByteFrequencyData(dataArray_freq);
+	console.log('dataArray_freq: ', dataArray_freq);
+
+	// [Step 2] Display frequency histogram data
+	await plot_frequency_histogram_audio_data(dataArray_freq);
+
+	// RESULT: the output data contains all zeros
+	
+	// -----------------------------------------------
+
+	// [B] Process frequency data: spectrogram of frequency Float32Array data
+	// https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getFloatFrequencyData
+	
+	// console.log('analyserNode.minDecibels: ', analyserNode.minDecibels);
+	// console.log('analyserNode.maxDecibels: ', analyserNode.maxDecibels);
+	// console.log('analyserNode.smoothingTimeConstant: ', analyserNode.smoothingTimeConstant);
+	
+	// const bufferLength_freq1 = analyserNode.frequencyBinCount;
+	// console.log('bufferLength_freq1: ', bufferLength_freq1);
+
+	// [Step 0] Create a Float32Array to store the frequency data
+	// const dataArray_freq1 = new Float32Array(bufferLength_freq1);
+
+	// [Step 1] Fill the frequency dataArray with converted data
+	// analyserNode.getByteFrequencyData(dataArray_freq1);
+	// console.log('dataArray_freq1: ', dataArray_freq1);
+
+	// [Step 2] Display frequency histogram data
+	// await plot_frequency_spectrogram_audio_data(bufferLength_freq1, dataArray_freq1); 
+	
+	// RESULT: returned an error because I can not use sourceElement.connect(analyserNode); analyserNode.connect(audioContext.destination);	
+
+	// -----------------------------------------------
+	
+	// [C] Process timeseries data
+	console.log('[C] Process timeseries data');
+	
+	// Select sampling frequency for Inverse Discrete Fourier Transform
+	const bin_count_using_natural_freq = analyserNode.frequencyBinCount; // bin count using natural frequency (fs) = 1024
+	console.log('bin_count_using_natural_freq: ', bin_count_using_natural_freq);
+	
+	const bin_count_using_nyquist_freq = analyserNode.fftSize; // bin count using Nyquist frequency (2*fs) = 2048
+	console.log('bin_count_using_nyquist_freq: ', bin_count_using_nyquist_freq);
+	
+	const bufferLength_ts = bin_count_using_nyquist_freq;
+	console.log('bufferLength_ts: ', bufferLength_ts);
+	
+	// [Step 0] Create a Uint8Array to store the timeseries data
+	// const dataArray_ts = new Uint8Array(bufferLength_ts);
+	// OR
+	const dataArray_ts = new Float32Array(bufferLength_ts);
+	
+	console.log('dataArray_ts.length: ', dataArray_ts.length);
+	
+	// [Step 1] Fill the timeseries dataArray with converted data
+	// https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getByteTimeDomainData
+	// analyserNode.getByteTimeDomainData(dataArray_ts);
+	// OR
+	analyserNode.getFloatTimeDomainData(dataArray_ts);
+	console.log('dataArray_ts: ', dataArray_ts);
+	
+	// [Step 2] Display the timeseries data
+	await plot_timeseries_audio_data(dataArray_ts);
+
+	// RESULT: the output data contains all zeros
+	
+	// -----------------------------------------------
+
+
+	// -----------------------------------------------
+	// [Way B]: Obtain the audio data using the URL, transform the fetched data to an Array
+	// -----------------------------------------------
+ 
+	// Need to obtain the audio data using fetch [ Way 0: fetch on URL -> output audiobuffer ]
+  
+	// [Step 0] Fetch arrayBuffer
+	method = 'GET';
+	data = {};
+	headers = {};
+	return_type = 'arrayBuffer';  // return_type: json, blob, arrayBuffer, text, html
+  
+	// for responseType: arrayBuffer, dataType = binary 
+	var binaryString = await jQuery_CORS(url, method, data, headers, return_type)
+		.then(res => res)
+		.then(async function(binaryString) { return binaryString; });
+	console.log('binaryString: ', binaryString);
+	
+
+
+	
+	// Way 0: Need to try binary output into object
+	// ORconst filename = url.split('/').pop(); // text.mp3
+	// ORconsole.log('filename: ', filename);
+	
+	// ORconst file_extention_type = filename.split('.').pop();  // mp3
+	// ORconsole.log('file_extention_type: ', file_extention_type);
+	
+	// ORconst jQuery_output_blob = new Blob([binaryString], { type: `audio/${file_extention_type}` });
+	// ORconsole.log('jQuery_output_blob: ', jQuery_output_blob);
+	
+	// ORconst jQuery_output_blob_url = URL.createObjectURL(jQuery_output_blob); // Create a url for the data object
+	// ORconsole.log('jQuery_output_blob_url: ', jQuery_output_blob_url);
+	
+	// const arrayBuffer_object0 = await fetch(decoded_arraybuffer_blob_url)
+	// 	.then(response => response.arrayBuffer())
+	//  		.then(async function(arrayBuffer_object) {
+	 			    // Print arrayBuffer_object
+	//  			    console.log("arrayBuffer_object:", arrayBuffer_object);
+	//  			    // arrayBuffer_object: ArrayBuffer { byteLength: 38190 }
+	//  			    return arrayBuffer_object;
+	//  		    })
+	// console.log('arrayBuffer_object0: ', arrayBuffer_object0);
+	// arrayBuffer_object0: ArrayBuffer { byteLength: 38190 }
+	// console.log('arrayBuffer_object0[0]: ', arrayBuffer_object0[0]); // undefined
+	// console.log('arrayBuffer_object0[1]: ', arrayBuffer_object0[1]); // undefined
+
+	
+
+	
+	// Way 1: 
+	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer/ArrayBuffer
+	
+	// var buffer = new ArrayBuffer(arrayBuffer_array.length); // create an arraybuffer of undefined
+	
+	// UTF-8 array is a [non-fixed length array]
+	// const output_uint8Array = new Uint8Array(buffer); 
+
+	// Fill the arrayBuffer with the correct values
+	// Way 0
+	// for (var i=0; i < arrayBuffer_array.length; i++) {
+	// 	output_uint8Array[i] = arrayBuffer_array.at(i);
+	// }
+	// OR
+	// Way 1
+	// arrayBuffer_array.forEach((num, index) => { output_uint8Array[index] = num; });
+	
+	// console.log('output_uint8Array: ', output_uint8Array);
+	// console.log('View the arraybuffer of the output_uint8Array: ', output_uint8Array.buffer);
+	
+
+	
+	// [Step 1] Decode the arraybuffer
+	// Way 0: call the function with output_uint8Array.buffer
+	// var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer);
+	// console.log('decoded_audiobuffer: ', decoded_audiobuffer); 
+	//  DOMException: The buffer passed to decodeAudioData contains an unknown content type.
+
+	// Way 1: return the callback 
+	// var decoded_audiobuffer = audioContext.decodeAudioData(arrayBuffer_object0, buffer => { return buffer; }, error => { console.error('Error decoding audio file:', error); });
+	// console.log('decoded_audiobuffer: ', decoded_audiobuffer);
+	// DOMException: The buffer passed to decodeAudioData contains an unknown content type.
+
+	// Way 2: return the promise  
+	// var decoded_audiobuffer2 = await decode_audio(audioContext, arrayBuffer_object0)
+	//  	.then(res => res)
+	//  	.then(async function(decoded_audiobuffer) { return decoded_audiobuffer; })
+	// 	.catch(error => { console.log('error: ', error); })
+	// console.log('decoded_audiobuffer2: ', decoded_audiobuffer2);
+	// error:  DOMException: The buffer passed to decodeAudioData contains an unknown content type.
+	
+	// Way 3: use a different audioContext and return the promise
+	// var audioContext1 = new AudioContext();
+	// var decoded_audiobuffer2 = audioContext1.decodeAudioData(arrayBuffer_object0, 
+	// 					buffer => { return buffer; }, 
+	// 					error => { console.error('Error decoding audio file:', error); });
+	// console.log('decoded_audiobuffer2: ', decoded_audiobuffer2);
+	// DOMException: The buffer passed to decodeAudioData contains an unknown content type.
+	// So, the AudioContext has nothing to do with the error
+
+	// Way 4: return the callback with error output
+	// try {
+	// 	var decoded_audiobuffer = audioContext.decodeAudioData(await fetch(jQuery_output_blob_url).then(response => response.arrayBuffer()).then(async function(arrayBuffer_object) { return arrayBuffer_object; }));
+		// DOMException: The buffer passed to decodeAudioData contains an unknown content type.
+	// } catch (error) {
+	// 	console.log('error: ', error);
+	// }
+	// console.log('decoded_audiobuffer: ', decoded_audiobuffer);
+	
+	
+	// [Step 2] Make an [empty array] that is the size of the channel data
+	// https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/createBufferSource
+	// ORconst channels_from_decoded_audbuf = decoded_audiobuffer.numberOfChannels;
+	// ORconsole.log('channels_from_decoded_audbuf: ', channels_from_decoded_audbuf);
+	// OR
+	var channels_from_audioContext = audioContext.channelCount; // 2
+	console.log('channels_from_audioContext: ', channels_from_audioContext);
+	if (channels_from_audioContext == undefined) { 
+		channels_from_audioContext = analyserNode.channelCount;
+	}
+	console.log('channels_from_audioContext: ', channels_from_audioContext);
+
+	
+  
+	// ORconst frameCount_from_decoded_audbuf = decoded_audiobuffer.length; // sample_length
+	// ORconsole.log('frameCount_from_decoded_audbuf: ', frameCount_from_decoded_audbuf);
+	// OR
+	// ORconst frameCount_from_timeseries_data = dataArray_ts.length / time_period;
+	// ORconsole.log('frameCount_from_timeseries_data: ', frameCount_from_timeseries_data);
+	// OR
+	const frameCount_from_audioContext = audioContext.sampleRate * 2.0;
+	console.log('frameCount_from_audioContext: ', frameCount_from_audioContext);
+
+	
+  
+	// ORconst sampleRate_from_decoded_audbuf = decoded_audiobuffer.sampleRate; // sample_rate
+	// ORconsole.log('sampleRate_from_decoded_audbuf: ', sampleRate_from_decoded_audbuf);
+	// OR
+	const sampleRate_from_audioContext = audioContext.sampleRate; // 48000
+	console.log('sampleRate_from_audioContext: ', sampleRate_from_audioContext);
+
+
+	// [Step 3] Select channel data
+	// const desired_audio_data = decoded_audiobuffer.getChannelData(channels_from_audioContext);
+	// console.log('desired_audio_data: ', desired_audio_data);
+	// OR
+	const arrayBuffer = await decodeAudioData_from_binaryString(binaryString);
+
+	// ------------------------------------------
+
+	// If one wants to play this data on the [audio interface], one needs to assign the data to the audioContext
+	// How to play the desired_audio_data on the [audio interface]
+	// var source = audioContext.createBufferSource(audioElement);
+	// source.buffer = desired_audio_data;
+	// source.type = file_extention_type;
+	// source.connect(audioContext.destination);
+	// source.start(0);
+	
+	// -----------------------------------------------
+	
+	return arrayBuffer;
+}
+
+// -----------------------------------------------
+
+async function decode_audio(audioContext, arrayBuffer_object) {
+	return audioContext.decodeAudioData(arrayBuffer_object);
+}
+
+// -----------------------------------------------
+
+async function decodeAudioData_from_binaryString(binaryString) {
+	
+	// -----------------------------------------------
+	// Decode the binaryString response
+	// -----------------------------------------------
+	var character_array = binaryString.split('');
+	console.log("character_array: ", character_array);
+	// Array(38190) [ "�", "�", "�", "d", "\u0000", "\u0000", "\u0000", "\u0000", "\u0000", "\u0000", … ]
+			
+	// Map each [binary string character; a subset of binary string characters is UTF-8] as an [ASCII number; a number from 0 to number_of_characters]
+	var byteArray = character_array.map((character) => { return character.charCodeAt(0); });
+	console.log("byteArray: ", byteArray);
+	// byteArray:  Array(38190) [ 65533, 65533, 65533, 100, 0, 0, 0, 0, 0, 0, … ]
+
+	// The importance of this mapping is to limit the array values from 0 to 255.
+	var uint8Array = new Uint8Array(byteArray);
+	console.log('uint8Array: ', uint8Array);
+	// uint8Array:  Uint8Array(38190) [ 253, 253, 253, 100, 0, 0, 0, 0, 0, 0, … ]
+
+	// In some ways a uint8Array is an arrayBuffer because the size is "fixed" meaning that no more data will be appended to the array after the UTF-8 characters. And, it is a "fixed" array because the values of the array are limited to a certain range of numbers, from 0 to 255. 
+
+	// Convert UTF-8 array [non-fixed length array] to a binary arrayBuffer [fixed-length array]
+	const arrayBuffer = uint8Array.buffer;
+	console.log('arrayBuffer: ', arrayBuffer);
+	
+	// -----------------------------------------------
+
+	await plot_line_graph_dataArray(uint8Array);
+	await plot_timeseries_audio_data(uint8Array);
+
+	// -----------------------------------------------
+
+	// Obtain the channel data from the arrayBuffer
+	// https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/createBufferSource
+
+
+
+	return arrayBuffer;
+}
+
+// -----------------------------------------------
+
+async function plot_line_graph_dataArray(dataArray) {
+
+	const width = 928;
+	const height = 500;
+
+        const svg = d3.select("#data_display")
+		.append("svg")
+		.attr("class", 'line')
+		.attr("width", width)
+		.attr("height", height);
+
+        const x_scale = d3.scaleLinear()
+            .domain([0, d3.max(dataArray, (d,i) => i)])
+            .range([0, width]);
+
+        const y_scale = d3.scaleLinear()
+            .domain([0, d3.max(dataArray, d => d)])
+            .range([height, 0]);
+
+        const line = d3.line()
+		.x((d, i) => x_scale(i))
+		.y(d => y_scale(d));
+
+        svg.append("path")
+            .datum(dataArray)
+            .attr("fill", "none")
+            .attr("stroke", "steelblue")
+            .attr("stroke-width", 2)
+            .attr("d", line);
+
+	// Add the x-axis
+	svg.append("g")
+		.attr('class', 'x-axis')
+		.call(d3.axisBottom(x_scale));
+
+	// Add the y-axis
+	svg.append("g")
+		.attr('class', 'y-axis')
+		.call(d3.axisLeft(y_scale));
+}
+
+	
+// -----------------------------------------------
+
+async function plot_frequency_histogram_audio_data(dataArray_freq) {
+
+	// [Step 0] Verify frequency signal characteristics
+	const arr_char_freq = await obtain_array_characteristics(dataArray_freq);
+	console.log('arr_char_freq: ', arr_char_freq);
+
+	
+	// [Step 1] Display the frequency data
+	const ctx = await create_dynamic_canvasElement(w);
+
+	var WIDTH = w;
+	var HEIGHT = w;  // height of the canvas
+	
+	ctx.clearRect(0, 0, WIDTH, HEIGHT);
+	
+	ctx.fillStyle = "rgb(200 200 200)"; 	// gray background
+	ctx.fillRect(0, 0, WIDTH, HEIGHT);
+	
+	var barWidth = (WIDTH / dataArray_freq.length) * 2.5;
+	console.log('barWidth: ', barWidth);
+	
+	var y_normalized;
+	var y_scaled;
+	var x = 0;
+
+	console.log('dataArray_freq.length: ', dataArray_freq.length);
+	
+	for (let i = 0; i < dataArray_freq.length; i++) {
+
+		if (arr_char_freq.sigma == 0) {
+			y_normalized = 0;
+		} else {
+			y_normalized = (dataArray_ts.at(i) - arr_char_ts.mu) / arr_char_ts.sigma; // [-1, 1]
+		}
+		// console.log('y_normalized:', y_normalized);
+		
+		y_scaled = y_normalized * (HEIGHT/2); // To make the line centered
+		// console.log('y_scaled:', y_scaled);
+		
+		//https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/fillRect
+		// barWidth: Positive values are to the right, and negative to the left.
+		// it is -y_scaled because Positive values are down, and negative are up.
+		ctx.fillRect(x, HEIGHT, barWidth, -y_scaled);  
+		ctx.fillStyle = "rgb(0 0 200 / 50%)";
+		
+		x = x + barWidth;
+	}
+	
+}
+
+// -----------------------------------------------
+
+async function plot_frequency_spectrogram_audio_data(bufferLength_freq, dataArray_freq) {
+	
+	// [Step 0] Verify frequency signal characteristics
+	const arr_char_freq = await obtain_array_characteristics(dataArray_freq);
+	console.log('arr_char_freq: ', arr_char_freq);
+	
+	// [Step 1] Create a canvas to plot timeseries data on
+	const ctx = await create_dynamic_canvasElement(w);
+	
+	ctx.fillStyle = "rgb(200 200 200)"; 	// gray background
+	var WIDTH = w;
+	var HEIGHT = w;  // height of the canvas
+	ctx.fillRect(0, 0, WIDTH, HEIGHT);
+	
+	// Draw spectrum
+	const barWidth = (WIDTH / bufferLength_freq) * 2.5;
+	let posX = 0;
+	for (let i = 0; i < bufferLength_freq; i++) {
+		const barHeight = (dataArray_ts.at(i) + 140) * 2;
+		
+		ctx.fillStyle = `rgb(${Math.floor(barHeight + 100)} 50 50)`;
+		ctx.fillRect(posX, HEIGHT-barHeight/2, barWidth, barHeight/2);
+		posX += barWidth + 1;
+	}
+
+}
+
+// -----------------------------------------------
+
+async function plot_timeseries_audio_data(dataArray_ts) {
+
+	// [Step 0] Verify timeseries signal characteristics
+	const arr_char_ts = await obtain_array_characteristics(dataArray_ts);
+	console.log('arr_char_ts: ', arr_char_ts);
+	
+	// [Step 1] Create a canvas to plot timeseries data on
+	const ctx = await create_dynamic_canvasElement(w);
+	
+	ctx.fillStyle = "rgb(200 200 200)"; 	// gray background
+	const WIDTH = w;
+	const HEIGHT = w;  // height of the canvas
+	ctx.fillRect(0, 0, WIDTH, HEIGHT);
+	ctx.lineWidth = 2;
+	ctx.strokeStyle = "rgb(0 0 0)"; 	// black waveform line
+	ctx.fillStyle = 'black';
+	
+	const time_step = WIDTH/dataArray_ts.length;
+	console.log('time_step: ', time_step);
+	
+	var x_scaled = 0;
+	var y_normalized = 0;
+	var y_scaled = 0;
+	
+	ctx.beginPath();
+	for (let i = 0; i < dataArray_ts.length; i++) {
+
+		if (arr_char_ts.sigma == 0) {
+			y_normalized = 0;
+		} else {
+			y_normalized = (dataArray_ts.at(i) - arr_char_ts.mu) / arr_char_ts.sigma; // [-1, 1]
+		}
+		// console.log('y_normalized:', y_normalized);
+		
+		y_scaled = y_normalized*(HEIGHT/2); // To make the line centered
+		// console.log('y_scaled:', y_scaled);
+		// console.log('x_scaled:', x_scaled);
+		
+		if (i === 0) {
+			ctx.moveTo(x_scaled, y_scaled);
+		} else {
+			ctx.lineTo(x_scaled, y_scaled);
+		}
+		x_scaled = x_scaled + time_step;
+	}
+	ctx.stroke();
+	
+}
+
+// -----------------------------------------------
+
+async function obtain_array_characteristics(arr) {
+
+	var arr_char = {};
+	
+	arr_char.mu = await mean(arr);
+	arr_char.sigma = await std(arr);
+
+	const arr_sort = arr.sort();
+	arr_char.max_val = arr_sort.at(arr.length-1);
+	arr_char.min_val = arr_sort.at(0);
+	
+	return arr_char;
+}
+	
+// -----------------------------------------------
+
+async function sum(arr) {
+	return arr.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+}
+
+// -----------------------------------------------
+  
+async function mean(arr) {
+	return await sum(arr)/arr.length;
+}
+
+// -----------------------------------------------
+
+async function std(arr) {
+	const mu =  await mean(arr);
+	console.log('mu: ', mu);
+
+	var arr1 = arr.map((x) => { return x-mu; });
+	const summ = await sum(arr1);
+	console.log('summ: ', summ);
+
+	const out = Math.sqrt( Math.pow(summ, 2)/arr.length );
+	console.log('out: ', out);
+	
+	return out;
+}
+
+// -----------------------------------------------
+	
+async function show_pdf_on_page_objectElement(github_url_of_externally_downloaded_data) {
+
+	try {
+	  	var objectElement = document.createElement('object');
+	  	objectElement.setAttribute("id", "pdf_object_element");
+	  	objectElement.setAttribute("type", "application/pdf");
+	  	objectElement.setAttribute("width", 800);
+	  	objectElement.setAttribute("height", 1200);
+	  	objectElement.setAttribute("data", github_url_of_externally_downloaded_data);
+	  	document.getElementById('data_display').appendChild(objectElement);
+	} catch (error) {
+		document.getElementById('error').innerHTML = 'Check if pdf url is typed in correctly. ' + error;
+	}
+}
+
+// -----------------------------------------------
+
+async function automatically_download(file_download_url_name) {
+
+ 	var link = document.createElement('a');
+ 	link.href = file_download_url_name;  // link.href = canvas.toDataURL("image/png");
+ 	link.download = file_download_url_name.split('/').pop();
+ 	link.click();
+}
+
+
+// ----------------------------------------------------
+
+
+async function find_sequential_characters_simple(str_to_search, strarr_to_find) {
+	
+	// In some cases, the str_to_search has unique sequential characters per interval of [search_index_start to search_index_end], that one may want to identify. This function allows one to search str_to_search over specific intervals of the string.
+	
+	// search_index_start: it is the index of str_to_search_char_arr, where one STARTS searching for sequencial matches of str_to_find_char_arr
+	// search_index_end: it is the index of str_to_search_char_arr, where one STOPS searching for sequencial matches of str_to_find_char_arr
+		
+	var str_to_search_char_arr_org = str_to_search.split('');
+	const isNotEmpty = (num) => num.length > 0;
+	
+	var total_index = [];
+	strarr_to_find.forEach(async function(str_to_find, index) {
+		
+		var str_to_find_char_arr = str_to_find.split('');
+		// console.log('str_to_find_char_arr: ', str_to_find_char_arr);
+		
+		var sequential_range = str_to_find_char_arr.length;
+		// console.log('sequential_range: ', sequential_range);
+
+		// pad the last sequential_range character on the end of str_to_find_char_arr. Below we search from 0 to the entire [length of the string to find] minus sequential_range, thus we miss the last sequential_range if we do not pad.
+		var pad_arr = str_to_find_char_arr.map((x) => {return '0';});
+		var str_to_search_char_arr = str_to_search_char_arr_org.concat(pad_arr);
+
+		// --------------------------------------------
+		
+		var ind = [...Array(str_to_search_char_arr.length-sequential_range).keys()].map((x) => x);
+		// console.log('ind: ', ind);
+		
+		var first_found_index = ind.map((i) => {
+			if ( [str_to_search_char_arr.slice(i,i+sequential_range).join('')].includes(str_to_find) == true ) {
+				console.log('[simple] sequence found map: ', str_to_search_char_arr.slice(i,i+sequential_range).join(''));
+				return [i, str_to_search_char_arr.slice(i,i+sequential_range).join('')];
+			} else {
+				return '';
+			}
+		});
+		// console.log('first_found_index: ', first_found_index);
+
+		// --------------------------------------------
+		
+		// Remove empty spaces created by the map function
+		total_index = total_index.concat(first_found_index.filter(isNotEmpty));
+	});
+	return total_index;
+}
+	
+// -----------------------------------------------
+	
+</script>
+
+  
+</body>
+</html>
