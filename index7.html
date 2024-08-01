@@ -1328,22 +1328,7 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// console.log('all_channels_in_an_arrayBuffer: ', all_channels_in_an_arrayBuffer);
 	// *** returns an error because [sourceElement.connect(analyser); analyser.connect(audioContext.destination);] does not function ***
 	// OR
-	const all_channels_in_a_typedArray_arrayBuffer = await decodeAudioData_from_binaryString_to_uint8Array(binaryString);
-	console.log('all_channels_in_a_typedArray_arrayBuffer: ', all_channels_in_a_typedArray_arrayBuffer);
-
-	// --------------------
-  
-	// Determine the length of the typedArray_arrayBuffer
-	console.log('all_channels_in_a_typedArray_arrayBuffer.length: ', all_channels_in_a_typedArray_arrayBuffer.length);
-
-	// --------------------
-  
-	// Normalize the audio data in arrayBuffer from [-1, 1]
-	// audio needs to be in [-1.0; 1.0]
-	const normalArray = Array.from(all_channels_in_a_typedArray_arrayBuffer); 
-  
-	var arr_char = obtain_array_characteristics(normalArray);
-	console.log('arr_char: ', arr_char);
+	const normalArray = await decodeAudioData_from_binaryString_to_uint8Array(binaryString);
   
 	// --------------------
 
@@ -1563,20 +1548,23 @@ async function decodeAudioData_from_binaryString_to_uint8Array(binaryString) {
 	console.log('arrayBuffer: ', arrayBuffer);
 
 	// Determine the length of the typedArray_arrayBuffer
-	console.log('arrayBuffer.length: ', arrayBuffer.length);
+	console.log('arrayBuffer.byteLength: ', arrayBuffer.byteLength);
 
 	// --------------------
   
-	// Normalize the audio data in arrayBuffer from [-1, 1]
-	// audio needs to be in [-1.0; 1.0]
-	const normalArray = Array.from(arrayBuffer); 
+	// Convert the TypedArray into a normal array
+	const normalArray = Array.from(uint8Array);
+	console.log('normalArray: ', normalArray);
   
 	var arr_char = obtain_array_characteristics(normalArray);
 	console.log('arr_char: ', arr_char);
 
+	// Normalize the audio data in arrayBuffer from [-1, 1]
+	// audio needs to be in [-1.0; 1.0]
+
 	// --------------------
 
-	return arrayBuffer;
+	return normalArray;
 }
 
 
