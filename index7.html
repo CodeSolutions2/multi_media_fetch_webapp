@@ -1328,12 +1328,12 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// console.log('all_channels_in_an_arrayBuffer: ', all_channels_in_an_arrayBuffer);
 	// *** returns an error because [sourceElement.connect(analyser); analyser.connect(audioContext.destination);] does not function ***
 	// OR
-	const normalArray = await decodeAudioData_from_binaryString_to_uint8Array(binaryString);
+	const normalArray_normalized = await decodeAudioData_from_binaryString_to_uint8Array(binaryString);
   
 	// --------------------
 
 	// Obtain the start and stop index for each channel
-	const length_of_channels = normalArray.length / channels_from_audioContext;
+	const length_of_channels = normalArray_normalized.length / channels_from_audioContext;
 	console.log('length_of_channels: ', length_of_channels);
 
 	var start_index = [0];
@@ -1370,16 +1370,19 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 		const nowBuffering = AudioBuffer.getChannelData(i+1);
 		for (var j=start_index.at(i); j<stop_index.at(i)+1; j++) {
 			// the arrayBuffer was converted into a normalArray, because in the mdn example a scalar is given to nowBuffering. So to avoid confusion, each value of the arrayBuffer data is given from a simple array. 
-			nowBuffering[j] = normalArray.at(j);
+			nowBuffering[j] = normalArray_normalized.at(j);
 		}
 	}
+	console.log('AudioBuffer: ', AudioBuffer);
 
 	// var source = audioContext.createBufferSource(audioElement); // to play the data on the [audio interface]
 	// OR
 	const source = audioContext.createBufferSource();
+	console.log('source0: ', source);
 	
 	// set the buffer in the AudioBufferSourceNode
 	source.buffer = AudioBuffer;
+	console.log('source1: ', source);
 	
 	// connect the AudioBufferSourceNode to the destination, to play the data on the [audio interface]
 	// source.type = file_extention_type;
@@ -1388,7 +1391,9 @@ async function Audio_CORS(url, method, data, headers, return_type) {
 	// OR
 	// connect the AudioBufferSourceNode to the analyserNode to perform DFT and IDFT
 	source.connect(analyserNode);  // *** returned an error with sourceElement HTML element ***
+	console.log('source2: ', source);
 	analyserNode.connect(audioContext.destination);	// *** returned an error with sourceElement HTML element ***
+	console.log('analyserNode: ', analyserNode);
 	
 	// The time series data from the analyserNode will be copied to dataArray_ts
 	const dataArray_ts = new Uint8Array(normalArray.length);
@@ -1555,16 +1560,29 @@ async function decodeAudioData_from_binaryString_to_uint8Array(binaryString) {
 	// Convert the TypedArray into a normal array
 	const normalArray = Array.from(uint8Array);
 	console.log('normalArray: ', normalArray);
+
+	// Determine the length of the normalArray.length
+	console.log('normalArray.length: ', normalArray.length);
+
+	// --------------------
   
 	var arr_char = obtain_array_characteristics(normalArray);
 	console.log('arr_char: ', arr_char);
+	
+	var normalArray_standardized = normalArray.map((val, ind) => { return (val - arr_char.mu) / arr_char.sigma; });
 
-	// Normalize the audio data in arrayBuffer from [-1, 1]
-	// audio needs to be in [-1.0; 1.0]
+	var arr_char_standardized = obtain_array_characteristics(normalArray_standardized);
+	console.log('arr_char_standardized: ', arr_char_standardized);
 
 	// --------------------
 
-	return normalArray;
+	// Normalize the audio data in arrayBuffer from [-1, 1]
+	// audio needs to be in [-1.0; 1.0]
+	var normalArray_normalized = normalArray_standardized.map((val, ind) => { return val/arr_char_standardized.max_amp; });
+	
+	// --------------------
+
+	return normalArray_normalized;
 }
 
 
@@ -1779,6 +1797,9 @@ async function obtain_array_characteristics(arr) {
 	const arr_sort = arr.sort();
 	arr_char.max_val = arr_sort.at(arr.length-1);
 	arr_char.min_val = arr_sort.at(0);
+
+	// Maximum amplitude
+	arr_char.max_amp = [Math.abs(arr_char.min_val), arr_char.max_val].sort().pop();
 	
 	return arr_char;
 }
@@ -1799,14 +1820,14 @@ async function mean(arr) {
 
 async function std(arr) {
 	const mu =  await mean(arr);
-	console.log('mu: ', mu);
+	// console.log('mu: ', mu);
 
 	var arr1 = arr.map((x) => { return x-mu; });
 	const summ = await sum(arr1);
-	console.log('summ: ', summ);
+	// console.log('summ: ', summ);
 
 	const out = Math.sqrt( Math.pow(summ, 2)/arr.length );
-	console.log('out: ', out);
+	// console.log('out: ', out);
 	
 	return out;
 }
